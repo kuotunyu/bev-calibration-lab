@@ -1,0 +1,26 @@
+# The formal perturbation matrix for the calibration fault study.
+#
+# This file is the human-readable statement of the protocol. A test asserts that
+# `bevcalib.perturbations.schedule` reproduces it exactly, so the config and the
+# code cannot drift apart: changing one without the other turns the suite red.
+schema_version: bev-perturbation-matrix/v1
+
+# Single-axis metadata faults. Zero is present on every axis so that each axis
+# sweep passes through its own baseline point.
+rotation_single_axis_deg: [-2.0, -1.0, -0.5, -0.25, -0.1, 0.0, 0.1, 0.25, 0.5, 1.0, 2.0]
+translation_single_axis_m: [-0.20, -0.10, -0.05, -0.02, 0.0, 0.02, 0.05, 0.10, 0.20]
+timing_offset_ms: [-200, -100, -50, 0, 50, 100, 200]
+
+# A requested timing offset is served by the nearest real camera sweep. Beyond
+# this gap the request is recorded as unmet rather than silently approximated.
+timing_max_selection_error_ms: 25
+
+# Bounds for the keyed faults drawn during learned-corrector training. They match
+# the widest single-axis formal fault, so the corrector is never trained outside
+# the range it is evaluated on.
+learned_training_rotation_bound_deg: 2.0
+learned_training_translation_bound_m: 0.20
+
+# A recovery counts as successful below both thresholds at once.
+recovery_rotation_threshold_deg: 0.25
+recovery_translation_threshold_m: 0.05

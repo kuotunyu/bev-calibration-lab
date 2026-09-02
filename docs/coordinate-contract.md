@@ -115,6 +115,43 @@ three finite numbers. That is the failure this contract exists to make
 impossible, and `tests/unit/geometry/test_se3.py` asserts both the correct result
 and that the reversed order differs.
 
+## Where a calibration fault goes
+
+A fault is a transform, and there are two places to put it. Both produce a valid
+rigid transform, so the choice cannot be left to whoever writes the next caller.
+The convention is:
+
+```
+assumed = true ∘ fault
+```
+
+The fault is composed on the **source** side, in the sensor's own frame. That is
+what a miscalibrated extrinsic physically is: the sensor is believed to sit
+slightly rotated or shifted from where it really does, measured along its own
+axes. So a 0.2 m fault on the sensor x axis moves the assumed sensor 0.2 m along
+the direction the sensor points, not 0.2 m east.
+
+Composing on the target side is equally valid arithmetic and answers a different
+question, which is why `tests/unit/perturbations/test_apply.py` asserts both that
+the source-side result is produced and that the target-side result differs.
+
+The Euler convention inside a fault is likewise fixed:
+
+```
+R = Rz(yaw) · Ry(pitch) · Rx(roll)
+```
+
+Roll about x first, then pitch about y, then yaw about z, all about fixed axes.
+With only one angle nonzero every convention agrees, so the test that pins this
+uses all three at once.
+
+Two things a fault never does. It never touches an observation: no point and no
+pixel changes, because an error mixing a sensing change with a calibration change
+could not be attributed to either, and a test hashes the raw bytes before and
+after to keep it that way. And a timing fault never moves the geometry: it
+changes which camera frame is paired with the sweep, and it is refused as a
+learned 6DoF target because no pose expresses it.
+
 ## Enforcement
 
 `FramedTransform` carries `target` and `source` frame names alongside the
