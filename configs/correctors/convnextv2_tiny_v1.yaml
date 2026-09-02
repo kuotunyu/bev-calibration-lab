@@ -1,0 +1,33 @@
+# The learned corrector's training configuration, pinned before any formal run.
+#
+# Everything that could change a result is fixed here: the architecture, the
+# optimiser and its schedule, the batch size, the epoch count and the approved
+# seeds. Changing any of it after a locked evaluation requires a new protocol
+# version and a new evaluation, not an edit to this file.
+schema_version: bev-corrector-config/v1
+
+# Resolved relative to this file. Its hash becomes the run record's protocol hash,
+# because the perturbation matrix is what defines the experiment this corrector
+# is trained for.
+protocol_path: ../perturbations/formal_v1.yaml
+
+architecture: convnextv2_tiny
+input_channels: 5
+
+epochs: 30
+batch_size: 16
+optimizer: adamw
+learning_rate: 1.0e-4
+weight_decay: 0.05
+schedule: cosine
+warmup_epochs: 2
+
+# The same three seeds as P1, so a per-seed spread is comparable across the
+# portfolio rather than being an artefact of a different sampling plan.
+seeds: [17, 42, 73]
+
+# Passed through to the loss. They are the widest fault the study injects, which
+# is what puts degrees and metres on one scale.
+rotation_scale_deg: 2.0
+translation_scale_m: 0.2
+huber_delta: 1.0
