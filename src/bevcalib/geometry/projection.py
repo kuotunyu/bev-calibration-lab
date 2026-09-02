@@ -42,7 +42,14 @@ def validate_image_size(image_size_wh: tuple[int, int]) -> tuple[int, int]:
     return width, height
 
 
-def _validated_intrinsic(intrinsic_3x3: Float64Array) -> Float64Array:
+def validate_intrinsic(intrinsic_3x3: Float64Array) -> Float64Array:
+    """Return a validated pinhole camera matrix.
+
+    Shared with the ground-contact operator, which inverts the same matrix to
+    turn a pixel back into a ray, so the two cannot disagree about what counts
+    as a camera.
+    """
+
     intrinsic = np.asarray(intrinsic_3x3, dtype=np.float64)
     if intrinsic.shape != (3, 3):
         raise ValueError(f"intrinsic must have shape 3x3, got {intrinsic.shape}")
@@ -75,7 +82,7 @@ def project_camera(
     points = np.asarray(points_camera_n3, dtype=np.float64)
     if points.ndim != 2 or points.shape[1] != 3:
         raise ValueError(f"points must have shape [N, 3], got {points.shape}")
-    intrinsic = _validated_intrinsic(intrinsic_3x3)
+    intrinsic = validate_intrinsic(intrinsic_3x3)
     width, height = validate_image_size(image_size_wh)
 
     optical_depth = np.array(points[:, 2], dtype=np.float64)
