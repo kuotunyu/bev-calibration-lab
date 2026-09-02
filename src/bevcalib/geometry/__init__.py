@@ -18,6 +18,7 @@ __all__ = [
     "compose",
     "compose_framed",
     "inverse",
+    "inverse_framed",
     "matrix_to_quaternion",
     "normalize_quaternion_wxyz",
     "project_camera",

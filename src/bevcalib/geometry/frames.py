@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-from .se3 import SE3, compose
+from .se3 import SE3, compose, inverse
 
 FrameName = Literal["lidar_sensor", "lidar_ego", "global", "camera_ego", "camera_sensor"]
 
@@ -57,4 +57,20 @@ def compose_framed(left: FramedTransform, right: FramedTransform) -> FramedTrans
         target=left.target,
         source=right.source,
         value=compose(left.value, right.value),
+    )
+
+
+def inverse_framed(framed: FramedTransform) -> FramedTransform:
+    """Return the same transform read the other way, with its frames swapped.
+
+    Half of the sensor chain runs backwards: nuScenes stores the sensor pose in
+    ego and the ego pose in global, so reaching the camera means inverting both
+    of the camera-side links. Doing it here keeps the labels and the arithmetic
+    inverted together, which is the only way the frame check stays meaningful.
+    """
+
+    return FramedTransform(
+        target=framed.source,
+        source=framed.target,
+        value=inverse(framed.value),
     )

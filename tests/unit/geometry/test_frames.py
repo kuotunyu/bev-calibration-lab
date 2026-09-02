@@ -138,3 +138,27 @@ def test_the_declared_frames_are_the_five_the_protocol_names() -> None:
         "camera_ego",
         "camera_sensor",
     )
+
+
+def test_inverting_a_framed_transform_swaps_its_two_frames() -> None:
+    """Reversing a link in the sensor chain is not optional; the camera half runs backwards."""
+
+    from bevcalib.geometry.frames import inverse_framed
+
+    inverted = inverse_framed(framed("global", "lidar_ego", (1.0, 2.0, 3.0)))
+
+    assert (inverted.target, inverted.source) == ("lidar_ego", "global")
+    assert inverted.value.translation_xyz_m == pytest.approx((-1.0, -2.0, -3.0))
+
+
+def test_a_framed_transform_composed_with_its_inverse_is_an_identity_in_one_frame() -> None:
+    """The frame labels must survive the round trip, not only the numbers."""
+
+    from bevcalib.geometry.frames import compose_framed, inverse_framed
+
+    forward = framed("camera_sensor", "camera_ego", (4.0, -5.0, 6.0))
+
+    identity = compose_framed(forward, inverse_framed(forward))
+
+    assert (identity.target, identity.source) == ("camera_sensor", "camera_sensor")
+    assert identity.value.translation_xyz_m == pytest.approx((0.0, 0.0, 0.0), abs=1e-12)

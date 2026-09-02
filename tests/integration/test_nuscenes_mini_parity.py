@@ -1,0 +1,132 @@
+"""Parity against the official devkit on real nuScenes mini samples.
+
+This is the only test in the repository that reads the dataset, and it is the one
+that can tell us the adapter agrees with the reference implementation rather than
+merely agreeing with its own fixtures. It is skipped unless `NUSCENES_ROOT` points
+at a mini installation, and it is marked `slow` so an ordinary run never waits on
+it.
+
+Nothing else depends on it. Every rule the adapter implements is covered by unit
+tests on synthetic records, so a skip here reduces confidence in one specific
+thing, agreement with the devkit, and weakens no coverage.
+
+The dataset itself is gated: under the 2026-09-02 plan revision, P2 may not read
+real nuScenes data until P1 is released. This test therefore skips by design for
+now, and the skip reason says so rather than being silent about it.
+"""
+
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+pytestmark = pytest.mark.slow
+
+TOLERANCE = 1e-6
+# Fixed tokens from the nuScenes mini split, so the comparison is reproducible.
+SAMPLE_TOKENS = (
+    "ca9a282c9e77460f8360f564131a8af5",
+    "39586f9d59004284a7114a68825e8eec",
+)
+
+
+def nuscenes_root() -> Path:
+    root = os.environ.get("NUSCENES_ROOT")
+    if root is None:
+        pytest.skip(
+            "NUSCENES_ROOT is not set. The nuScenes dataset is not installed, and under the "
+            "2026-09-02 plan revision P2 may not read it until P1 is released. Every adapter "
+            "rule is covered by unit tests on synthetic records; this test adds agreement with "
+            "the official devkit, which cannot be checked without the data."
+        )
+    return Path(root)
+
+
+@pytest.fixture(scope="module")
+def devkit():  # type: ignore[no-untyped-def]
+    root = nuscenes_root()
+    nuscenes = pytest.importorskip("nuscenes.nuscenes", reason="nuscenes-devkit is not installed")
+    return nuscenes.NuScenes(version="v1.0-mini", dataroot=str(root), verbose=False)
+
+
+@pytest.mark.parametrize("sample_token", SAMPLE_TOKENS)
+def test_transformed_lidar_points_match_the_devkit(devkit, sample_token: str) -> None:  # type: ignore[no-untyped-def]
+    """The whole chain, compared against the reference implementation point for point."""
+
+    from bevcalib.geometry.se3 import transform_points
+    from bevcalib.nuscenes_adapter.frames import lidar_to_camera_chain
+    from bevcalib.nuscenes_adapter.samples import read_lidar_points, read_sensor_packet
+
+    def lookup(table: str, token: str) -> dict:
+        return devkit.get(table, token)
+
+    sample = devkit.get("sample", sample_token)
+    lidar = read_sensor_packet(
+        lookup, sample["data"]["LIDAR_TOP"], ego_frame="lidar_ego", sensor_frame="lidar_sensor"
+    )
+    camera = read_sensor_packet(
+        lookup, sample["data"]["CAM_FRONT"], ego_frame="camera_ego", sensor_frame="camera_sensor"
+    )
+
+    points = read_lidar_points(nuscenes_root() / lidar.file_relative_path)[:, :3]
+    ours = transform_points(lidar_to_camera_chain(lidar, camera).value, points)
+
+    theirs = devkit_chain_points(devkit, lidar, camera, points)
+
+    np.testing.assert_allclose(ours, theirs, atol=TOLERANCE)
+
+
+def devkit_chain_points(devkit, lidar, camera, points: np.ndarray) -> np.ndarray:  # type: ignore[no-untyped-def]
+    """Apply the same four links using the devkit's own quaternion and pose helpers."""
+
+    from pyquaternion import Quaternion
+
+    def pose(record: dict) -> tuple[np.ndarray, np.ndarray]:
+        return Quaternion(record["rotation"]).rotation_matrix, np.array(record["translation"])
+
+    lidar_data = devkit.get("sample_data", lidar.sample_data_token)
+    camera_data = devkit.get("sample_data", camera.sample_data_token)
+    sensor_rotation, sensor_translation = pose(
+        devkit.get("calibrated_sensor", lidar_data["calibrated_sensor_token"])
+    )
+    ego_rotation, ego_translation = pose(devkit.get("ego_pose", lidar_data["ego_pose_token"]))
+    camera_ego_rotation, camera_ego_translation = pose(
+        devkit.get("ego_pose", camera_data["ego_pose_token"])
+    )
+    camera_rotation, camera_translation = pose(
+        devkit.get("calibrated_sensor", camera_data["calibrated_sensor_token"])
+    )
+
+    moved = points @ sensor_rotation.T + sensor_translation
+    moved = moved @ ego_rotation.T + ego_translation
+    moved = (moved - camera_ego_translation) @ camera_ego_rotation
+    return (moved - camera_translation) @ camera_rotation
+
+
+@pytest.mark.parametrize("sample_token", SAMPLE_TOKENS)
+def test_box_centres_match_the_devkit(devkit, sample_token: str) -> None:  # type: ignore[no-untyped-def]
+    """Boxes are natively global, so this checks the origin convention as well as the chain."""
+
+    from bevcalib.nuscenes_adapter.boxes import transform_global_box_to_camera
+    from bevcalib.nuscenes_adapter.samples import read_sensor_packet
+
+    def lookup(table: str, token: str) -> dict:
+        return devkit.get(table, token)
+
+    sample = devkit.get("sample", sample_token)
+    camera = read_sensor_packet(
+        lookup, sample["data"]["CAM_FRONT"], ego_frame="camera_ego", sensor_frame="camera_sensor"
+    )
+    _, reference_boxes, _ = devkit.get_sample_data(sample["data"]["CAM_FRONT"])
+
+    for reference in reference_boxes:
+        global_box = devkit.get_box(reference.token)
+        ours, _ = transform_global_box_to_camera(
+            np.asarray(global_box.center, dtype=np.float64),
+            tuple(float(value) for value in global_box.orientation.elements),
+            camera,
+        )
+        np.testing.assert_allclose(ours, np.asarray(reference.center), atol=TOLERANCE)
