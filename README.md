@@ -30,6 +30,9 @@ fixed in one place and enforced by types and tests.
 - 3D boxes are natively in global coordinates.
 - LiDAR features keep `x, y, z, intensity, ring`.
 
+The full rules, the row-vector boundary, the two ego timestamps and a worked numeric
+example are in [docs/coordinate-contract.md](docs/coordinate-contract.md).
+
 ## Sensors and cohort
 
 `CAM_FRONT` and `LIDAR_TOP`. The formal cohort is 150 nuScenes scenes: 100 official-train

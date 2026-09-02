@@ -16,6 +16,9 @@ LiDAR 與相機之間的外參標定只要偏一點點，代價有多大？又�
 - 3D 邊界框的原生座標系是 global。
 - LiDAR 特徵保留 `x, y, z, intensity, ring`。
 
+完整規則、列向量邊界、兩個 ego 時間戳與一個可手算驗證的數值範例，見
+[docs/coordinate-contract.md](docs/coordinate-contract.md)。
+
 ## 感測器與 cohort
 
 只用 `CAM_FRONT` 與 `LIDAR_TOP`。正式 cohort 是 150 個 nuScenes 場景：100 個官方 train 開發用、20 個來自不同 log 的校準場景、30 個官方 validation 保留給鎖定評估。場景分派依 location 分層並以 token SHA-256 排序，可完整重現，且與任何量測結果無關。nuScenes mini 只用於開發與整合測試，不會出現在任何回報結果中。
