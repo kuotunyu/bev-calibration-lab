@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The private guard reads the Git index, and the docs-link stage walks
+          # the tree, so both need a real checkout rather than a shallow blobless one.
+          fetch-depth: 1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.11.18"
+          enable-cache: true
+
+      - name: Install Python 3.12
+        run: uv python install 3.12
+
+      - name: Sync the locked environment
+        run: uv sync --frozen --all-groups
+
+      - name: Verify
+        # One command, eight stages, stops at the first failure. Anything that
+        # would fail here fails identically on a developer machine.
+        run: uv run python -m bevcalib.dev verify
+
+      - name: Build and install the wheel in a clean environment
+        run: |
+          uv build
+          uv venv /tmp/clean
+          VIRTUAL_ENV=/tmp/clean uv pip install dist/*.whl
+          VIRTUAL_ENV=/tmp/clean uv run --no-project bev-calib --help

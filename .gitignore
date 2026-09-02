@@ -1,0 +1,43 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.hypothesis/
+.coverage
+coverage.json
+htmlcov/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# nuScenes is licensed to the account holder and is never committed. The frozen
+# scene manifest in artifacts/ records the exact tokens and file hashes behind
+# any reported result; the sensor data itself stays out of the repository.
+/data/
+/artifacts/
+/.tmp/
+*.zip
+*.tar.gz
+*.tgz
+
+# Model artefacts
+*.pt
+*.pth
+*.onnx
+*.npz
+checkpoints/
+
+# Generated figures and the rendered report are rebuilt from committed JSON in
+# one command, and the HTML embeds every figure, so committing them would add
+# hundreds of kilobytes per regeneration for no information the JSON lacks.
+reports/figures/
+reports/report*.html
+
+# Training and evaluation outputs
+predictions/
+runs/
+
+!docs/assets/
