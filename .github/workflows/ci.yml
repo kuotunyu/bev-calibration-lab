@@ -33,7 +33,10 @@ jobs:
         run: uv python install 3.12
 
       - name: Sync the locked environment
-        run: uv sync --frozen --all-groups
+        # The train extra is required, not optional: the learned corrector's stem
+        # adaptation and its loss are first-party code, so the 100% coverage gate
+        # cannot pass with their tests skipped for want of torch.
+        run: uv sync --frozen --all-groups --extra train
 
       - name: Verify
         # One command, eight stages, stops at the first failure. Anything that

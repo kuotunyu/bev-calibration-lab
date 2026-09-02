@@ -198,3 +198,47 @@ def test_the_perturbed_transform_is_still_rigid() -> None:
     probe = np.array([[3.0, -4.0, 12.0]])
     moved = transform_points(assumed, probe) - np.asarray(assumed.translation_xyz_m)
     assert float(np.linalg.norm(moved)) == pytest.approx(13.0, abs=1e-9)
+
+
+def test_a_fault_survives_a_round_trip_through_a_transform() -> None:
+    """`se3_to_fault` is the exact inverse of `fault_to_se3`, or a target is built wrong."""
+
+    from bevcalib.perturbations.apply import fault_to_se3, se3_to_fault
+
+    original = fault(rotation=(1.5, -0.75, 2.0), translation=(0.2, -0.1, 0.05))
+
+    recovered = se3_to_fault(fault_to_se3(original))
+
+    assert recovered.rotation_rpy_deg == pytest.approx(original.rotation_rpy_deg, abs=1e-9)
+    assert recovered.translation_xyz_m == pytest.approx(original.translation_xyz_m, abs=1e-12)
+
+
+def test_a_rotation_at_a_quarter_turn_of_pitch_cannot_be_decomposed() -> None:
+    """Roll and yaw collapse into one degree of freedom there, and zeros would be a lie."""
+
+    from bevcalib.perturbations.apply import fault_to_se3, se3_to_fault
+
+    with pytest.raises(ValueError, match="quarter turn"):
+        se3_to_fault(fault_to_se3(fault(rotation=(0.0, 90.0, 0.0))))
+
+
+def test_the_inverse_of_a_fault_undoes_it_exactly() -> None:
+    """Composed with its inverse a fault must leave the transform where it started."""
+
+    from bevcalib.perturbations.apply import apply_metadata_fault, inverse_fault
+
+    original = fault(rotation=(0.0, 0.0, 1.0), translation=(0.10, 0.0, 0.0))
+
+    restored = apply_metadata_fault(apply_metadata_fault(TRUE, original), inverse_fault(original))
+
+    assert restored.rotation_wxyz == pytest.approx(TRUE.rotation_wxyz, abs=1e-12)
+    assert restored.translation_xyz_m == pytest.approx(TRUE.translation_xyz_m, abs=1e-12)
+
+
+def test_a_timing_fault_has_no_six_degree_inverse() -> None:
+    """Timing changes which frames are paired; there is no pose that undoes it."""
+
+    from bevcalib.perturbations.apply import inverse_fault
+
+    with pytest.raises(ValueError, match="timing"):
+        inverse_fault(fault(time_ms=50))

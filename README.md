@@ -47,7 +47,9 @@ Python 3.12 and [uv](https://docs.astral.sh/uv/) 0.11.x. nuScenes data is licens
 account holder, is not distributed here, and is never committed.
 
 ```bash
-uv sync --frozen
+# The train extra is not optional for development: the learned corrector is
+# first-party code and the coverage gate covers it.
+uv sync --frozen --all-groups --extra train
 uv run bev-calib --help
 ```
 

@@ -28,7 +28,8 @@ LiDAR 與相機之間的外參標定只要偏一點點，代價有多大？又�
 Python 3.12 與 [uv](https://docs.astral.sh/uv/) 0.11.x。nuScenes 資料授權給帳號持有者，不在此散布，也永遠不會提交進版控。
 
 ```bash
-uv sync --frozen
+# 開發時 train extra 不是選配：學習式修正器是第一方程式碼，覆蓋率關卡涵蓋它。
+uv sync --frozen --all-groups --extra train
 uv run bev-calib --help
 ```
 
