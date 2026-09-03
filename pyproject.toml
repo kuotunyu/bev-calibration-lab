@@ -126,3 +126,30 @@ check_untyped_defs = true
 ignore_missing_imports = true
 no_implicit_optional = true
 warn_unused_configs = true
+
+[tool.mutmut]
+# Release-gate mutation testing of the pure core only (plan task P2-18):
+# geometry, perturbations, operators, correctors and metrics. The nuScenes
+# adapter, the CLI, the training glue and the artifact writers are held to the
+# same 100% branch gate but are not scored here, because their behaviour is
+# defined by the devkit and by file formats rather than by arithmetic this
+# repository owns.
+source_paths = ["src"]
+only_mutate = [
+    "src/bevcalib/geometry/*",
+    "src/bevcalib/perturbations/*",
+    "src/bevcalib/operators/*",
+    "src/bevcalib/correctors/*",
+    "src/bevcalib/metrics/*",
+]
+also_copy = ["configs", "schemas", "docs"]
+# One test file is excluded because it READS first-party source rather than
+# running it: the envelope conformance check scans `src/` for any mention of
+# P1's package, and mutmut rewrites `src/` to create mutants, so inside the
+# sandbox that test describes the sandbox rather than the project. It exercises
+# no mutable code path, so excluding it costs no killing power.
+pytest_add_cli_args = [
+    "-p", "no:cacheprovider", "-x", "-q",
+    "--ignore=tests/contract/test_p1_envelope_conformance.py",
+]
+pytest_add_cli_args_test_selection = ["tests/unit", "tests/integration", "tests/contract"]
