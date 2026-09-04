@@ -354,3 +354,28 @@ def test_a_stem_without_a_bias_is_adapted_without_inventing_one() -> None:
 
     assert model.stem.in_channels == 5
     assert model.stem.bias is None
+
+
+def test_a_validity_mask_of_zeros_and_ones_marks_the_same_pixels_a_bool_mask_marks() -> None:
+    """The mask arrives as 0/1 from the rasteriser, and must select the same pixels.
+
+    The mask becomes a two-dimensional index into the depth channel, and an
+    integer index selects ROWS by position rather than pixels by truth. The two
+    valid pixels are deliberately in DIFFERENT rows: with one pixel the two
+    readings coincide by accident, and the test would pass while asserting
+    nothing. With two, the positional reading writes rows 0 and 1 and never
+    reaches row 2, so the second depth is dropped entirely and the model trains
+    on a depth channel missing the returns it was given.
+    """
+
+    from bevcalib.correctors.learned import build_five_channel_input
+
+    rgb, depth, valid = scene()
+    depth[2, 4] = 20.0
+    valid[2, 4] = True
+
+    as_integers = build_five_channel_input(rgb, depth, valid.astype(np.int64))
+    as_booleans = build_five_channel_input(rgb, depth, valid)
+
+    np.testing.assert_array_equal(as_integers, as_booleans)
+    assert np.argwhere(as_booleans[3] != 0.0).tolist() == [[1, 2], [2, 4]]
