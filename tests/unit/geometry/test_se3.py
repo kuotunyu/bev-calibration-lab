@@ -253,3 +253,28 @@ def test_a_translation_that_is_not_three_components_is_rejected(
 
     with pytest.raises(ValueError, match="three components"):
         SE3(rotation_wxyz=IDENTITY_QUATERNION, translation_xyz_m=translation)  # type: ignore[arg-type]
+
+
+def test_single_precision_points_are_promoted_before_transforming() -> None:
+    """A float32 input is promoted, not computed in single precision.
+
+    Callers get their arrays from torch and from the nuScenes devkit, and both
+    hand out float32 routinely. The promotion at the top of each entry point is
+    what makes the answer independent of that: without it the whole computation
+    runs in single precision and drifts by a few parts in 1e8 — far too small to
+    fail any tolerance in this suite, and far too large for a value that is
+    stored in an artifact and compared by hash.
+
+    Comparing the two calls against each other rather than against a recorded
+    number is what makes this a test of the promotion rather than of a
+    particular input.
+    """
+
+    from bevcalib.geometry.se3 import SE3, transform_points
+
+    pose = SE3(rotation_wxyz=(0.5, 0.5, 0.5, 0.5), translation_xyz_m=(1.25, -0.5, 3.75))
+    points = np.array([[1.0, 2.0, 3.0], [-4.0, 5.5, 0.25]], dtype=np.float32)
+
+    np.testing.assert_array_equal(
+        transform_points(pose, points), transform_points(pose, points.astype(np.float64))
+    )

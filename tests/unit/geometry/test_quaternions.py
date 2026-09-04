@@ -479,3 +479,52 @@ def test_the_largest_diagonal_branch_reads_the_diagonal_and_nothing_else(
 
     assert float(matrix[0, 0] + matrix[1, 1] + matrix[2, 2]) < 0.0
     assert module.matrix_to_quaternion(matrix) == expected
+
+
+def test_the_answer_does_not_depend_on_the_dtype_the_caller_handed_in() -> None:
+    """A float32 quaternion is promoted, not computed in single precision.
+
+    Callers get arrays from torch and from the nuScenes devkit, and both hand
+    out float32 routinely. The promotion at the top of each entry point is what
+    makes the answer independent of that: without it the norm, the division and
+    the sign test all run in single precision and the result drifts by about
+    2e-08 — far too small to fail any tolerance in this suite, and far too
+    large for a value that is stored in an artifact and compared by hash.
+
+    Asserting equality between the two calls rather than against a recorded
+    number is what makes this test about the promotion rather than about a
+    particular quaternion.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    single = np.array([0.3, 0.4, 0.5, 0.7], dtype=np.float32)
+
+    assert module.normalize_quaternion_wxyz(single) == module.normalize_quaternion_wxyz(
+        single.astype(np.float64)
+    )
+
+
+def test_a_single_precision_rotation_matrix_is_not_orthonormal_enough() -> None:
+    """float32 cannot hold a rotation to 1e-9, and the loader says so rather than coping.
+
+    Rounding a rotation matrix to single precision moves its singular values by
+    a few parts in 1e9, which is outside the tolerance this project declares.
+    That is a real limit callers meet: a matrix that arrives from torch or from
+    a devkit as float32 must be recomposed from a quaternion rather than cast,
+    because casting has already destroyed the property being validated.
+
+    Refusing it is the right behaviour and is pinned here so that loosening the
+    tolerance to accommodate float32 becomes a visible decision instead of a
+    quiet one.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    rotation = module.quaternion_to_matrix((0.3, 0.4, 0.5, 0.7))
+
+    assert module.matrix_to_quaternion(rotation) == pytest.approx(
+        module.normalize_quaternion_wxyz((0.3, 0.4, 0.5, 0.7)), abs=1e-12
+    )
+    with pytest.raises(ValueError, match=r"^matrix is not orthonormal within 1e-09"):
+        module.matrix_to_quaternion(rotation.astype(np.float32))

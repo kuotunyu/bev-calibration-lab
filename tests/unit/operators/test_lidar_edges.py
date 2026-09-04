@@ -388,3 +388,29 @@ def test_a_single_point_is_scored_rather_than_trimmed_away() -> None:
     score = trimmed_distance_transform_score(np.array([[3.0, 0.0]]), image_edges)
 
     assert score == pytest.approx(-3.0)
+
+
+def test_single_precision_projected_points_are_promoted_before_scoring() -> None:
+    """A float32 input is promoted, not computed in single precision.
+
+    Callers get their arrays from torch and from the nuScenes devkit, and both
+    hand out float32 routinely. The promotion at the top of each entry point is
+    what makes the answer independent of that: without it the whole computation
+    runs in single precision and drifts by a few parts in 1e8 — far too small to
+    fail any tolerance in this suite, and far too large for a value that is
+    stored in an artifact and compared by hash.
+
+    Comparing the two calls against each other rather than against a recorded
+    number is what makes this a test of the promotion rather than of a
+    particular input.
+    """
+
+    from bevcalib.operators.lidar_edges import trimmed_distance_transform_score
+
+    image_edges = np.zeros((8, 8), dtype=bool)
+    image_edges[0, 0] = True
+    uv = np.array([[1.25, 2.5], [6.75, 3.25], [4.5, 7.5]], dtype=np.float32)
+
+    assert trimmed_distance_transform_score(uv, image_edges) == (
+        trimmed_distance_transform_score(uv.astype(np.float64), image_edges)
+    )

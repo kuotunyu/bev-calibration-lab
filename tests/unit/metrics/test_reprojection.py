@@ -215,3 +215,28 @@ def test_errors_that_are_not_a_flat_list_are_refused(shape: tuple[int, ...]) -> 
 
     with pytest.raises(ValueError, match="flat"):
         pixel_error_percentiles(np.zeros(shape))
+
+
+def test_single_precision_pixel_errors_are_promoted_before_percentiles() -> None:
+    """A float32 input is promoted, not computed in single precision.
+
+    Callers get their arrays from torch and from the nuScenes devkit, and both
+    hand out float32 routinely. The promotion at the top of each entry point is
+    what makes the answer independent of that: without it the whole computation
+    runs in single precision and drifts by a few parts in 1e8 — far too small to
+    fail any tolerance in this suite, and far too large for a value that is
+    stored in an artifact and compared by hash.
+
+    Comparing the two calls against each other rather than against a recorded
+    number is what makes this a test of the promotion rather than of a
+    particular input.
+    """
+
+    from bevcalib.metrics.reprojection import pixel_error_percentiles
+
+    errors = np.array([0.3, 1.7, 2.9, 0.15, 4.25, 3.05], dtype=np.float32)
+    mask = np.array([True, True, True, False, True, True])
+
+    assert pixel_error_percentiles(errors, mask) == pixel_error_percentiles(
+        errors.astype(np.float64), mask
+    )

@@ -342,3 +342,55 @@ def test_one_non_finite_point_invalidates_only_itself() -> None:
 
     assert result.valid.tolist() == [True, False, True]
     assert result.in_front.tolist() == [True, False, True]
+
+
+def test_single_precision_points_are_promoted_before_projection() -> None:
+    """A float32 input is promoted, not computed in single precision.
+
+    Callers get their arrays from torch and from the nuScenes devkit, and both
+    hand out float32 routinely. The promotion at the top of each entry point is
+    what makes the answer independent of that: without it the whole computation
+    runs in single precision and drifts by a few parts in 1e8 — far too small to
+    fail any tolerance in this suite, and far too large for a value that is
+    stored in an artifact and compared by hash.
+
+    Comparing the two calls against each other rather than against a recorded
+    number is what makes this a test of the promotion rather than of a
+    particular input.
+    """
+
+    from bevcalib.geometry.projection import project_camera
+
+    points = np.array([[1.0, 0.5, 10.0], [-2.0, 3.0, 7.0]], dtype=np.float32)
+
+    single = project_camera(points, INTRINSIC, IMAGE_SIZE)
+    promoted = project_camera(points.astype(np.float64), INTRINSIC, IMAGE_SIZE)
+
+    np.testing.assert_array_equal(single.uv, promoted.uv)
+    np.testing.assert_array_equal(single.optical_depth, promoted.optical_depth)
+    assert single.uv.dtype == np.float64
+
+
+def test_a_single_precision_intrinsic_is_promoted_before_inversion() -> None:
+    """A float32 input is promoted, not computed in single precision.
+
+    Callers get their arrays from torch and from the nuScenes devkit, and both
+    hand out float32 routinely. The promotion at the top of each entry point is
+    what makes the answer independent of that: without it the whole computation
+    runs in single precision and drifts by a few parts in 1e8 — far too small to
+    fail any tolerance in this suite, and far too large for a value that is
+    stored in an artifact and compared by hash.
+
+    Comparing the two calls against each other rather than against a recorded
+    number is what makes this a test of the promotion rather than of a
+    particular input.
+    """
+
+    from bevcalib.geometry.projection import project_camera
+
+    points = np.array([[1.0, 0.5, 10.0]])
+
+    single = project_camera(points, INTRINSIC.astype(np.float32), IMAGE_SIZE)
+    promoted = project_camera(points, INTRINSIC.astype(np.float32).astype(np.float64), IMAGE_SIZE)
+
+    np.testing.assert_array_equal(single.uv, promoted.uv)
