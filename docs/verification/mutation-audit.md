@@ -63,20 +63,25 @@ It exercises no mutable code path, so the exclusion costs no killing power.
 
 ## The score
 
-### At `43e803c`, run `2026-09-04T06:47Z`
+### At `3be71a9`, run `2026-09-04T07:23Z`
 
 | | Count | Share |
 | --- | ---: | ---: |
 | Mutants generated | 1,703 | |
-| **Killed by a test** | **1,590** | **93.36%** |
-| Timed out | 22 | |
+| **Killed by a test** | **1,581** | **92.84%** |
+| Timed out | 31 | |
 | Survived | 91 | 5.34% |
 
-**The gate is cleared on kills alone, by 57 mutants.** 90% of 1,703 is 1,533
-and the suite kills 1,590. Counting the timeouts as detections gives 94.66%;
-that figure is reported for completeness and is not what the gate rests on. All
-but two of the timeouts are in the learned corrector, where a mutated model
-makes a torch test run long rather than fail.
+**The gate is cleared on kills alone, by 48 mutants.** 90% of 1,703 is 1,533
+and the suite kills 1,581. Counting the timeouts as detections gives 94.66%;
+that figure is reported for completeness and is not what the gate rests on.
+
+This is the LOWER of two measurements taken an hour apart, and the lower one is
+the one reported. The run at `43e803c` gave 1,590 kills and 22 timeouts, 93.36%.
+The survivor count was identical in both, at 91: the nine mutants that moved
+went from `killed` to `timeout`, never to `survived`. All the movement is in
+`correctors.learned`, which holds 29 of the 31 timeouts and is the only module
+in `only_mutate` whose tests import torch and build a model.
 
 The first honest measurement of this core was 1,476 kills, 86.67%, and the
 previous release candidate `215d606` stood at 1,567, 92.01%. Every additional
@@ -209,6 +214,32 @@ They are grouped here because the groups are more useful than the count.
 - **A message never asserted.** A bare `pytest.raises(ValueError)` cannot tell
   `raise ValueError(f"...")` from `raise ValueError(None)`, and `range_bin` had
   one. An exception with no message is exactly what a caller cannot act on.
+
+## Why a timeout is reported as a timeout and not as a kill
+
+mutmut allows each mutant `(the baseline time of the tests covering it +
+timeout_constant) * timeout_multiplier`, which by default is `(t + 1) * 15`. A
+mutant that exceeds it is recorded as `timeout`: not killed, not survived, and
+still in the denominator. The gate counts kills only, so a timeout costs exactly
+what a survivor costs.
+
+It would be convenient to assume the 31 here are near the boundary and would
+resolve into kills given room. They do not. Raising `timeout_constant` to 15.0 —
+a roughly fifteen-fold budget, about four minutes per mutant instead of about
+sixteen seconds — and re-running reclassified **none** of them: 31 before, 31
+after, with the killed and survived counts unmoved. mutmut only re-executes
+timed-out mutants when the timeout configuration changes, so that experiment
+could not have altered any other verdict, and a larger budget can only ever turn
+a timeout into a kill or a survivor. These mutants genuinely do not finish: a
+mutated stem or initialiser makes a torch test run without terminating.
+
+That is worth stating plainly rather than smoothing over. The learned corrector
+brings 142 mutants and a framework whose failure mode is a hang rather than an
+assertion, and it makes the killed-only figure for this core reproducible only
+to about nine mutants. The response is to report the worse measurement and the
+reason, not to drop the module: this project's first baseline was discarded for
+excluding `correctors/learned.py` by accident, and excluding it now to steady a
+number would be the same mistake made deliberately.
 
 ## Survivors still outstanding
 
