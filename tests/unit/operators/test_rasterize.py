@@ -251,3 +251,26 @@ def test_a_drawable_point_outside_any_edge_is_refused(u: float, v: float) -> Non
 
     with pytest.raises(ValueError, match=r"^a drawable point falls outside the image bounds$"):
         rasterize_min_depth(np.array([[u, v]]), np.array([5.0]), np.array([True]), IMAGE_SIZE)
+
+
+def test_a_validity_flag_of_zeros_and_ones_draws_the_same_points_a_bool_mask_draws() -> None:
+    """The flags arrive as 0/1 from the projection stage, and must mean the same thing.
+
+    Combined with the finiteness tests the flags become the index into the point
+    arrays, and an integer index is positional rather than a mask: `[0, 1]` would
+    read points 0 and 1 instead of point 1 alone, drawing the very return the
+    projection marked invalid.
+    """
+
+    from bevcalib.operators.rasterize import rasterize_min_depth
+
+    uv = np.array([[1.0, 1.0], [5.0, 2.0]])
+    depth = np.array([3.0, 9.0])
+    keep = [False, True]
+
+    as_integers = rasterize_min_depth(uv, depth, np.array(keep, dtype=np.int64), IMAGE_SIZE)
+    as_booleans = rasterize_min_depth(uv, depth, np.array(keep), IMAGE_SIZE)
+
+    np.testing.assert_array_equal(as_integers[0], as_booleans[0])
+    np.testing.assert_array_equal(as_integers[1], as_booleans[1])
+    assert as_booleans[1].sum() == 1

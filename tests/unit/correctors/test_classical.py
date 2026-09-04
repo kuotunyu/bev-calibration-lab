@@ -377,3 +377,69 @@ def test_a_starting_point_exactly_on_its_bound_is_accepted(coordinate: int) -> N
 
     recovered = np.array([*result.rotation_rpy_deg, *result.translation_xyz_m])
     np.testing.assert_allclose(recovered, start, atol=0.0)
+
+
+BOUND_TOLERANCE = 1e-12
+
+
+def test_a_starting_guess_exactly_at_the_bound_plus_its_tolerance_is_accepted() -> None:
+    """The tolerance exists to admit the bound, so the comparison has to be strict.
+
+    A caller who computed a 2.0 degree guess arithmetically may hand over a value
+    a few ulp above it. That is the case the tolerance is for; refusing at exactly
+    bound plus tolerance would make the tolerance a decoration and reject a guess
+    the protocol says is legal, naming the caller's input as the fault.
+    """
+
+    from bevcalib.correctors.classical import coarse_to_fine_correct
+
+    edge = BOUND_DEG + BOUND_TOLERANCE
+    estimate = coarse_to_fine_correct(
+        paraboloid((edge, 0.0, 0.0, 0.0, 0.0, 0.0)),
+        initial=np.array([edge, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    )
+
+    assert estimate.rotation_rpy_deg[0] == pytest.approx(edge, abs=1e-13)
+
+
+def test_a_step_landing_exactly_on_the_bound_plus_tolerance_is_still_searched() -> None:
+    """The same strictness has to hold inside the search, not only at its entry.
+
+    The starting guess is one coarse step below the edge and the objective peaks
+    there, so the very first move offers a candidate at exactly bound plus
+    tolerance. Refusing it would leave the search stranded a whole step away from
+    a maximum it can see, and the estimate would be wrong by more than the
+    recovery threshold the protocol reports at.
+    """
+
+    from bevcalib.correctors.classical import coarse_to_fine_correct
+
+    edge = BOUND_DEG + BOUND_TOLERANCE
+    start = edge - 1.0
+    assert start + 1.0 == edge  # the step lands on the edge exactly, not near it
+
+    estimate = coarse_to_fine_correct(
+        paraboloid((edge, 0.0, 0.0, 0.0, 0.0, 0.0)),
+        initial=np.array([start, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    )
+
+    assert estimate.rotation_rpy_deg[0] == pytest.approx(edge, abs=1e-13)
+
+
+def test_an_offset_that_leaves_the_bounds_does_not_cancel_the_opposite_offset() -> None:
+    """Each coordinate is offered both directions, and one being illegal is not both.
+
+    Starting on a bound is ordinary: it is where the previous pass stopped. The
+    outward offset is out of range there and the inward one is the only move
+    available, so abandoning the coordinate when the first is refused freezes the
+    search on the bound for every remaining pass.
+    """
+
+    from bevcalib.correctors.classical import coarse_to_fine_correct
+
+    estimate = coarse_to_fine_correct(
+        paraboloid((0.0, 0.0, 0.0, 0.0, 0.0, 0.0)),
+        initial=np.array([-BOUND_DEG, 0.0, 0.0, 0.0, 0.0, 0.0]),
+    )
+
+    assert estimate.rotation_rpy_deg[0] == pytest.approx(0.0, abs=1e-9)

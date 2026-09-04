@@ -416,3 +416,108 @@ def test_single_precision_projected_points_are_promoted_before_scoring() -> None
     assert trimmed_distance_transform_score(uv, image_edges) == (
         trimmed_distance_transform_score(uv.astype(np.float64), image_edges)
     )
+
+
+def test_a_ring_too_small_to_compare_does_not_stop_the_rings_after_it() -> None:
+    """A single return in ring 0 is not an edge, and it is not a reason to abandon ring 1.
+
+    Rings are visited in ascending order, so a ring with fewer than two members is
+    the first thing the loop meets in almost every real sweep: the lowest beam
+    grazes the ground and returns once or not at all. Abandoning the sweep there
+    would silently drop every edge in the frame while still returning a
+    well-formed, empty result.
+    """
+
+    from bevcalib.operators.lidar_edges import lidar_depth_edges
+
+    edges = lidar_depth_edges(
+        sweep(
+            ring_row(6.25, 0.0, 0),
+            ring_row(6.25, 0.0, 1),
+            ring_row(6.75, 1.0, 1),
+        )
+    )
+
+    assert edges.source_indices.tolist() == [1]
+    assert edges.ring_ids.tolist() == [1]
+
+
+def test_a_return_closer_than_a_metre_is_still_a_return() -> None:
+    """The usable test excludes the origin, not the near field.
+
+    A LiDAR mounted on a roof sees the vehicle's own bonnet, a kerb beside the
+    wheel and a pedestrian standing at the door, all inside a metre. Those are
+    the returns whose silhouettes matter most for a calibration, and a bound
+    that excluded them would leave the score to distant geometry alone.
+    """
+
+    from bevcalib.operators.lidar_edges import lidar_depth_edges
+
+    edges = lidar_depth_edges(sweep(ring_row(0.3, 0.0, 0), ring_row(0.9, 1.0, 0)))
+
+    assert edges.source_indices.tolist() == [0]
+
+
+def test_a_float32_sweep_is_computed_in_double_precision() -> None:
+    """A sweep arrives from the devkit as float32, and the result is stored and hashed.
+
+    The promotion cannot recover what single precision already threw away, so the
+    contract is narrower and testable: whatever arrives is computed in float64
+    from there on, and the answer is the one those same values give when promoted
+    by hand. Without it the geometry runs in single precision and the returned
+    points carry that dtype into the artifact, where the exact-threshold pair
+    below falls on the other side of the 0.5 m bound and the edge disappears.
+    """
+
+    from bevcalib.operators.lidar_edges import lidar_depth_edges
+
+    rows = sweep(ring_row(6.25, 0.0, 0), ring_row(6.75, 1.0, 0), ring_row(20.0, 2.0, 0))
+    single = rows.astype(np.float32)
+
+    promoted = lidar_depth_edges(single)
+    by_hand = lidar_depth_edges(single.astype(np.float64))
+
+    assert promoted.points_lidar_n3.dtype == np.float64
+    assert promoted.source_indices.tolist() == by_hand.source_indices.tolist()
+    assert promoted.points_lidar_n3.tolist() == by_hand.points_lidar_n3.tolist()
+
+
+def test_the_edge_mask_is_read_as_a_mask_and_not_as_numbers() -> None:
+    """An edge map arrives as 0/1 integers from most detectors, and must mean the same.
+
+    Inverting an integer array is a bitwise complement, so every cell becomes
+    non-zero and the distance transform reports zero distance everywhere. The
+    score would then be a perfect 0.0 for any alignment at all, which is the
+    worst possible failure: it does not raise, it agrees with everything.
+    """
+
+    from bevcalib.operators.lidar_edges import trimmed_distance_transform_score
+
+    mask = np.zeros((8, 8), dtype=bool)
+    mask[0, :] = True
+    uv = np.array([[3.5, 5.5], [4.5, 6.5]], dtype=np.float64)
+
+    as_integers = trimmed_distance_transform_score(uv, mask.astype(np.int64))
+    as_booleans = trimmed_distance_transform_score(uv, mask)
+
+    assert as_integers == as_booleans
+    assert as_booleans < 0.0
+
+
+def test_the_trim_keeps_the_count_the_quantile_asks_for_and_not_one_more() -> None:
+    """`max(1, ...)` is a floor for the empty case, not a minimum of two points.
+
+    With two points and a quantile of 0.4 the trim keeps exactly one: the closer
+    of the two. Keeping two instead would average in the point the trim exists
+    to discard, which is the occlusion the score must not be penalised for.
+    """
+
+    from bevcalib.operators.lidar_edges import trimmed_distance_transform_score
+
+    mask = np.zeros((8, 8), dtype=bool)
+    mask[0, :] = True
+    uv = np.array([[3.5, 1.5], [4.5, 6.5]], dtype=np.float64)
+
+    score = trimmed_distance_transform_score(uv, mask, trim_quantile=0.4)
+
+    assert score == -1.0

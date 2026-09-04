@@ -77,7 +77,7 @@ def test_a_range_that_is_not_a_distance_is_refused(range_m: float) -> None:
 
     from bevcalib.metrics.reprojection import range_bin
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=r"^a range must be a non-negative finite distance, got "):
         range_bin(range_m)
 
 
@@ -177,15 +177,22 @@ def test_the_validity_summary_counts_both_sides_and_names_every_reason() -> None
 
 
 def test_the_reasons_are_ordered_by_how_often_they_happened() -> None:
-    """The reason that cost the most samples is the one worth reading first."""
+    """The reason that cost the most samples is the one worth reading first.
+
+    The two reasons are named so that alphabetical order CONTRADICTS frequency
+    order. Sorting the counter without a key orders by the text, and with
+    "common" and "rare" that happens to give the same answer, so the ordering
+    would look tested while nothing was holding it.
+    """
 
     from bevcalib.metrics.reprojection import summarize_validity
 
     summary = summarize_validity(
-        [result(valid=False, reason="rare")] + [result(valid=False, reason="common")] * 3
+        [result(valid=False, reason="a rare fault")]
+        + [result(valid=False, reason="the usual fault")] * 3
     )
 
-    assert summary.reasons[0] == ("common", 3)
+    assert summary.reasons == (("the usual fault", 3), ("a rare fault", 1))
 
 
 def test_a_summary_of_nothing_is_still_a_summary() -> None:
@@ -242,3 +249,44 @@ def test_single_precision_pixel_errors_are_promoted_before_percentiles() -> None
     assert pixel_error_percentiles(errors, mask) == pixel_error_percentiles(
         errors.astype(np.float64), mask
     )
+
+
+def test_a_validity_mask_of_zeros_and_ones_selects_the_same_errors_a_bool_mask_does() -> None:
+    """A mask arrives as 0/1 from most upstream code, and must mean the same thing.
+
+    Indexing with an integer array is positional, not a mask: `[0, 1, 1, 0]` would
+    read errors 0, 1, 1 and 0, returning four values from a four-element array
+    while silently reporting the first error twice and dropping the last two.
+    Nothing about the result would look wrong.
+    """
+
+    from bevcalib.metrics.reprojection import pixel_error_percentiles
+
+    errors = np.array([9.0, 1.0, 2.0, 8.0])
+    keep = [False, True, True, False]
+
+    assert pixel_error_percentiles(errors, np.array(keep, dtype=np.int64)) == (
+        pixel_error_percentiles(errors, np.array(keep))
+    )
+    assert pixel_error_percentiles(errors, np.array(keep)) == (1.5, 1.9)
+
+
+def test_reasons_that_happened_equally_often_are_ordered_by_name() -> None:
+    """Two reasons at the same count need a tie-break that does not depend on arrival.
+
+    Breaking the tie on the count again is no tie-break at all: the sort is
+    stable, so the order becomes whichever result the loop happened to meet
+    first, and the same run summarised from a reordered list would report a
+    different order for identical data.
+    """
+
+    from bevcalib.metrics.reprojection import summarize_validity
+
+    summary = summarize_validity(
+        [
+            result(valid=False, reason="z came first"),
+            result(valid=False, reason="a came second"),
+        ]
+    )
+
+    assert summary.reasons == (("a came second", 1), ("z came first", 1))

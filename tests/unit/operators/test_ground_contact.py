@@ -454,3 +454,44 @@ def test_a_plane_through_the_camera_itself_has_no_reconstruction() -> None:
     from bevcalib.operators.ground_contact import reconstruct_ground_contact
 
     assert reconstruct_ground_contact((320.0, 1040.0), CAMERA_FROM_GLOBAL, INTRINSIC, 1.5) is None
+
+
+def test_an_unusable_observation_still_says_which_box_it_was_and_where_it_really_is() -> None:
+    """An excluded box is data, not a hole: the study reports what it excluded and why.
+
+    The oracle position and the token come from the ground truth and are known
+    whatever the calibration does, so dropping them here would leave the summary
+    unable to say which boxes went missing or whether they were the near ones or
+    the far ones. `valid` is also asserted to be exactly `False` rather than
+    merely falsy, because it is written into an artifact and read back as a flag.
+    """
+
+    observation = observe(box_center_global=np.array([10.0, 40.0, 0.75]))
+
+    assert observation.valid is False
+    assert observation.box_token == "box-0"
+    assert observation.oracle_ground_xy_m == pytest.approx((10.0, 40.0), abs=1e-9)
+
+
+def test_a_ray_that_never_lands_still_reports_where_the_box_was_seen() -> None:
+    """The oracle observation happened; only turning it back into a position failed.
+
+    The pixel is the one the true calibration produced, so it is a measurement in
+    its own right and the only evidence of where the detection was. Blanking it
+    would make this failure indistinguishable from a box that was never seen at
+    all, which is the other way an observation becomes unusable.
+    """
+
+    from bevcalib.geometry.se3 import compose
+
+    tipped = compose(
+        CAMERA_FROM_GLOBAL,
+        SE3(rotation_wxyz=quaternion_about("y", 45.0), translation_xyz_m=(0.0, 0.0, 0.0)),
+    )
+
+    observation = observe(assumed_camera_from_global=tipped)
+    seen = observe()
+
+    assert observation.valid is False
+    assert observation.true_uv == pytest.approx(seen.true_uv, abs=1e-9)
+    assert not any(math.isnan(value) for value in observation.true_uv)
