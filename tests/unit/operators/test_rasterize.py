@@ -220,3 +220,34 @@ def test_a_pixel_coordinate_that_is_not_finite_is_not_drawn() -> None:
     )
 
     assert not observed.any()
+
+
+@pytest.mark.parametrize(
+    ("u", "v"),
+    [(-0.5, 2.0), (8.0, 2.0), (2.0, -0.5), (2.0, 4.0), (8.5, 4.5)],
+    ids=[
+        "past the left edge",
+        "exactly at the width",
+        "above the top edge",
+        "exactly at the height",
+        "past the far corner in both axes",
+    ],
+)
+def test_a_drawable_point_outside_any_edge_is_refused(u: float, v: float) -> None:
+    """Four independent bounds, and each one alone must refuse the point.
+
+    The clauses are joined by `or`, so a point over any single edge is out.
+    Turning one into an `and` stops that edge being checked at all, because the
+    two halves can never both hold; making a comparison non-inclusive lets the
+    pixel exactly at the width or the height through. Either way the index
+    reaches numpy, where a negative wraps round to the opposite edge and draws
+    the point there.
+
+    This is the same rule the edge scorer applies, tested the same way, because
+    the two must not disagree about what the canvas is.
+    """
+
+    from bevcalib.operators.rasterize import rasterize_min_depth
+
+    with pytest.raises(ValueError, match=r"^a drawable point falls outside the image bounds$"):
+        rasterize_min_depth(np.array([[u, v]]), np.array([5.0]), np.array([True]), IMAGE_SIZE)

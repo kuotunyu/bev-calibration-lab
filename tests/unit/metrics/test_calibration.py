@@ -219,3 +219,42 @@ def test_a_timing_fault_cannot_be_scored_as_a_pose_error(role: str) -> None:
         ),
     ):
         calibration_errors(*arguments)
+
+
+def test_the_error_is_the_estimate_minus_the_truth_in_every_component() -> None:
+    """A signed error says which way the corrector was wrong, and the sign is the point.
+
+    A residual of +5 cm and one of -5 cm are different findings: one says the
+    corrector over-corrects and the other that it under-corrects, and the study
+    reports per-axis errors precisely so that bias can be seen. Adding instead
+    of subtracting leaves every magnitude plausible and every sign meaningless,
+    and the summed magnitude would still look like a small number.
+
+    Each component is asymmetric here, so no accidental cancellation can hide a
+    swapped operand: estimate minus truth is `(0.5, -0.25, 0.75)` in rotation
+    and `(0.03, -0.01, 0.05)` in translation, and none of those equals the sum.
+    """
+
+    from bevcalib.metrics.calibration import calibration_errors
+
+    estimate = CalibrationFaultModel(
+        rotation_rpy_deg=(1.5, 0.25, 1.25),
+        translation_xyz_m=(0.08, 0.01, 0.09),
+        requested_time_offset_ms=0,
+    )
+    truth = CalibrationFaultModel(
+        rotation_rpy_deg=(1.0, 0.5, 0.5),
+        translation_xyz_m=(0.05, 0.02, 0.04),
+        requested_time_offset_ms=0,
+    )
+
+    errors = calibration_errors(estimate, truth)
+
+    assert errors["roll_error_deg"] == pytest.approx(0.5)
+    assert errors["pitch_error_deg"] == pytest.approx(-0.25)
+    assert errors["yaw_error_deg"] == pytest.approx(0.75)
+    assert errors["x_error_m"] == pytest.approx(0.03)
+    assert errors["y_error_m"] == pytest.approx(-0.01)
+    assert errors["z_error_m"] == pytest.approx(0.05)
+    assert errors["translation_error_m"] == pytest.approx(math.sqrt(0.03**2 + 0.01**2 + 0.05**2))
+    assert errors["translation_error_cm"] == pytest.approx(100.0 * errors["translation_error_m"])

@@ -186,3 +186,36 @@ def test_the_draws_spread_over_the_range_rather_than_repeating_one_value() -> No
     assert len(rolls) > 190
     assert min(rolls) < -1.0
     assert max(rolls) > 1.0
+
+
+def test_the_training_draw_is_the_digest_recipe_it_documents() -> None:
+    """The draw is a published recipe, so what it yields is a contract.
+
+    Nothing records this fault: the trainer stores the key and re-derives the
+    fault from it, which is the whole reason a SHA-256 digest was chosen over a
+    generator stream. So the mapping from key to fault has to be pinned
+    directly, or a change to the digest slicing, the draw count or the order the
+    six components are unpacked would silently retrain every sample on a
+    different fault while every determinism test kept passing.
+
+    The six values are deliberately all distinct here, which is what makes the
+    unpacking order testable: repeating a component in the output tuple is a
+    single-token change that no aggregate over the fault would reveal.
+    """
+
+    from bevcalib.perturbations.schedule import sample_training_fault
+
+    fault = sample_training_fault("sample-token", 3, 20260902)
+
+    assert fault.rotation_rpy_deg == (
+        0.4993251651756756,
+        1.6170483407604155,
+        -1.4414386449943852,
+    )
+    assert fault.translation_xyz_m == (
+        0.01991140633353763,
+        0.1825193718035052,
+        0.07022637852240035,
+    )
+    assert fault.requested_time_offset_ms == 0
+    assert len({*fault.rotation_rpy_deg, *fault.translation_xyz_m}) == 6
