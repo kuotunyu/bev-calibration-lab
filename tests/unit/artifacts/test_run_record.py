@@ -87,7 +87,8 @@ def test_a_running_record_has_not_finished() -> None:
     assert running.finished_at_utc is None
 
     with pytest.raises(
-        ValidationError, match=r"Value error, running run must not have finished_at_utc"
+        ValidationError,
+        match=r"^1 validation error for RunRecordV1\n  Value error, running run must not have finished_at_utc",
     ):
         RunRecordV1.model_validate(VALID | {"status": "running"})
 
@@ -99,7 +100,8 @@ def test_a_terminal_record_must_say_when_it_ended(status: str) -> None:
     from bevcalib.artifacts.run_record import RunRecordV1
 
     with pytest.raises(
-        ValidationError, match=r"Value error, terminal run requires finished_at_utc"
+        ValidationError,
+        match=r"^1 validation error for RunRecordV1\n  Value error, terminal run requires finished_at_utc",
     ):
         RunRecordV1.model_validate(VALID | {"status": status, "finished_at_utc": None})
 
@@ -110,7 +112,8 @@ def test_a_run_cannot_finish_before_it_started() -> None:
     from bevcalib.artifacts.run_record import RunRecordV1
 
     with pytest.raises(
-        ValidationError, match=r"Value error, finished_at_utc must not precede started_at_utc"
+        ValidationError,
+        match=r"^1 validation error for RunRecordV1\n  Value error, finished_at_utc must not precede started_at_utc",
     ):
         RunRecordV1.model_validate(VALID | {"finished_at_utc": "2026-09-01T00:00:00Z"})
 
