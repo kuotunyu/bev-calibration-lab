@@ -257,3 +257,212 @@ def test_a_matrix_containing_a_non_finite_entry_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="finite"):
         matrix_to_quaternion(matrix)
+
+
+def test_a_quaternion_whose_norm_is_exactly_the_minimum_is_still_a_rotation() -> None:
+    """The smallness guard is strict, so the threshold itself is a usable input.
+
+    `_MINIMUM_NORM` is the norm BELOW which a direction is numerical noise. A
+    quaternion sitting exactly on it still has a well-defined direction, and
+    `(1e-12, 0, 0, 0)` normalises to the identity. Written `<=` the guard would
+    refuse it, and the refusal would read as degenerate data rather than as an
+    off-by-one comparison.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    assert module.normalize_quaternion_wxyz((1e-12, 0.0, 0.0, 0.0)) == (1.0, 0.0, 0.0, 0.0)
+
+
+def test_a_matrix_that_drifts_inside_numpy_default_tolerances_is_still_refused() -> None:
+    """The orthonormality bound is the declared one, not whatever `np.allclose` defaults to.
+
+    `np.allclose` defaults to `rtol=1e-5, atol=1e-8`, both of which are orders
+    of magnitude looser than the 1e-9 this project declares. Dropping either
+    argument therefore admits a matrix that is not a rotation to within the
+    stated tolerance, and every transform derived from it inherits the error
+    silently.
+
+    A uniform scaling cannot show this, because it moves the determinant
+    further than it moves the singular values and the right-handedness check
+    fires first. Post-multiplying by `diag(1+d, 1, 1/(1+d))` instead leaves the
+    determinant at exactly one while shifting two singular values by `d`, so
+    the orthonormality check is the only one that can refuse it.
+    """
+
+    from bevcalib.geometry import quaternions as module
+    rotation = module.quaternion_to_matrix((0.5, 0.5, 0.5, 0.5))
+    drift = 5e-9
+    skewed = rotation @ np.diag([1.0 + drift, 1.0, 1.0 / (1.0 + drift)])
+
+    assert float(np.linalg.det(skewed)) == pytest.approx(1.0, rel=0.0, abs=1e-12)
+    assert drift > module.ORTHONORMALITY_TOLERANCE
+    assert drift < 1e-8, "must sit inside numpy's default atol for the test to mean anything"
+
+    with pytest.raises(ValueError, match=r"^matrix is not orthonormal within 1e-09"):
+        module.matrix_to_quaternion(skewed)
+
+
+@pytest.mark.parametrize(
+    ("quaternion", "expected"),
+    [
+        ((math.sqrt(0.5), 0.0, 0.0, math.sqrt(0.5)), (0.7071067811865475, 0.0, 0.0, 0.7071067811865478)),
+        ((0.0, 1.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0)),
+        ((0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 1.0, 0.0)),
+        ((0.0, 0.0, 0.0, 1.0), (0.0, 0.0, 0.0, 1.0)),
+    ],
+    ids=["branch W: positive trace", "branch X: half turn about x", "branch Y: half turn about y", "branch Z: half turn about z"],
+)
+def test_each_conversion_branch_produces_its_exact_documented_value(
+    quaternion: tuple[float, float, float, float],
+    expected: tuple[float, float, float, float],
+) -> None:
+    """One matrix per branch, with the result pinned to the bit.
+
+    Shepperd's four branches are algebraically equal wherever more than one is
+    valid, so a mis-selected branch usually returns the right answer with worse
+    conditioning — which is exactly why every approximate test passes under a
+    mutated branch condition. They are NOT equal to the last bit, and this
+    project stores quaternions in artifacts that are compared by hash, so the
+    last bit is part of the contract rather than an implementation detail.
+
+    Each row also documents which branch it reaches: a positive trace takes W,
+    and the three half turns each make one diagonal entry the strict maximum,
+    which is the only way to reach X, Y and Z respectively.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    result = module.matrix_to_quaternion(module.quaternion_to_matrix(quaternion))
+
+    assert result == expected
+
+
+def test_a_trace_of_exactly_zero_does_not_take_the_positive_trace_branch() -> None:
+    """The trace test is strict, and zero is the boundary it decides.
+
+    A 120 degree turn about (1, 1, 1) has an exactly zero trace and an all-zero
+    diagonal, so it falls past both the trace branch and the largest-diagonal
+    branches to the last one. Written `>=` the first branch would claim it and
+    return `(0.5, 0.5, 0.5, 0.5)` exactly; the branch that actually runs returns
+    a value one bit away from that in two components.
+
+    Both are the same rotation to fourteen digits. They are different artifacts.
+    """
+
+    from bevcalib.geometry import quaternions as module
+    axis = np.array([1.0, 1.0, 1.0]) / math.sqrt(3.0)
+    matrix = module.quaternion_to_matrix(
+        (math.cos(math.radians(60.0)), *(axis * math.sin(math.radians(60.0))))
+    )
+
+    assert float(matrix[0, 0] + matrix[1, 1] + matrix[2, 2]) == 0.0
+    assert module.matrix_to_quaternion(matrix) == (0.5000000000000001, 0.5, 0.5, 0.5000000000000001)
+
+
+def test_a_tie_between_the_second_and_third_diagonal_entries_takes_the_last_branch() -> None:
+    """The second comparison is strict too, and a half turn about (0, 1, 1) ties it.
+
+    That rotation makes the second and third diagonal entries exactly equal, so
+    `values[1, 1] > values[2, 2]` is false and the final branch runs. Written
+    `>=` the third branch would claim it instead. The two answers differ by one
+    bit in each of the last two components, and swap which of them carries it.
+    """
+
+    from bevcalib.geometry import quaternions as module
+    axis = np.array([0.0, 1.0, 1.0]) / math.sqrt(2.0)
+    matrix = module.quaternion_to_matrix((0.0, *axis))
+
+    assert matrix[1, 1] == matrix[2, 2]
+    assert module.matrix_to_quaternion(matrix) == (0.0, 0.0, 0.7071067811865476, 0.7071067811865475)
+
+
+def test_the_finiteness_messages_name_what_they_reject() -> None:
+    """Two different arrays, two different messages, and an operator reads them.
+
+    A quaternion and a rotation matrix arrive from different places in the
+    calibration chain, so an error that says only "not finite" leaves the
+    caller to work out which input was at fault. Both messages are asserted in
+    full, which is also what makes them detectable when reworded.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    with pytest.raises(ValueError, match=r"^quaternion components must be finite$"):
+        module.normalize_quaternion_wxyz((math.nan, 0.0, 0.0, 1.0))
+    with pytest.raises(ValueError, match=r"^rotation matrix entries must be finite$"):
+        module.matrix_to_quaternion(np.full((3, 3), math.inf, dtype=np.float64))
+
+
+def test_a_norm_too_small_to_be_a_rotation_reports_the_norm_it_saw() -> None:
+    """The number is the diagnosis: it says whether the input was zero or merely tiny.
+
+    A caller handed a quaternion assembled from a failed fit needs to know
+    whether it collapsed to nothing or is just badly scaled, and only the value
+    distinguishes those.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    with pytest.raises(ValueError, match=r"^quaternion norm 0\.0 is too small to define a rotation$"):
+        module.normalize_quaternion_wxyz((0.0, 0.0, 0.0, 0.0))
+
+
+@pytest.mark.parametrize(
+    ("axis", "expected"),
+    [
+        ((0.5, 0.8, -math.sqrt(0.11)), (0.0, 0.5, 0.8, -0.33166247903553997)),
+        (
+            (math.sqrt(0.49), math.sqrt(0.02), math.sqrt(0.49)),
+            (0.0, 0.7000000000000001, 0.14142135623730953, 0.7000000000000001),
+        ),
+        (
+            (math.sqrt(0.49), math.sqrt(0.49), math.sqrt(0.02)),
+            (0.0, 0.7000000000000001, 0.7000000000000001, 0.14142135623730953),
+        ),
+    ],
+    ids=[
+        "second axis largest, third negative",
+        "first and third axes tie",
+        "first and second axes tie",
+    ],
+)
+def test_the_largest_diagonal_branch_reads_the_diagonal_and_nothing_else(
+    axis: tuple[float, float, float],
+    expected: tuple[float, float, float, float],
+) -> None:
+    """The second branch compares `m00` against `m11` and `m22`, and both must be strict.
+
+    That condition has six moving parts — two comparisons, four indices and the
+    conjunction — and a half turn is the cheapest rotation that can pin all of
+    them, because for a half turn about a unit axis the quaternion is exactly
+    `(0, axis)` and the diagonal is `2 n_i^2 - 1`. Choosing the axis chooses the
+    diagonal ordering, and choosing the sign of a component chooses the sign of
+    an off-diagonal term.
+
+    The three axes here were picked so that between them every single-token
+    change to that condition flips it:
+
+    * the first makes an off-diagonal entry smaller than `m00`, which is what
+      an index reading `m21` or `m12` instead of `m11` would compare against,
+      and makes `m00 > m22` true so a conjunction weakened to a disjunction
+      takes the branch;
+    * the second ties `m00` and `m22`, which is the only way a `>=` in the
+      second comparison shows, and puts an off-diagonal above `m22` for the
+      indices that read the wrong row;
+    * the third ties `m00` and `m11`, which is the only way a `>=` in the first
+      comparison shows.
+
+    A half turn about a unit axis returns that axis exactly, so the expected
+    values are the axis itself rather than a recorded output. Taking the wrong
+    branch still returns the same rotation, but not the same bits.
+    """
+
+    from bevcalib.geometry import quaternions as module
+
+    unit = np.asarray(axis, dtype=np.float64)
+    unit = unit / np.linalg.norm(unit)
+    matrix = module.quaternion_to_matrix((0.0, *unit))
+
+    assert float(matrix[0, 0] + matrix[1, 1] + matrix[2, 2]) < 0.0
+    assert module.matrix_to_quaternion(matrix) == expected
