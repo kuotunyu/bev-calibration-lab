@@ -147,7 +147,7 @@ def test_asking_with_no_sweeps_available_fails_closed() -> None:
 
     from bevcalib.nuscenes_adapter.sweeps import choose_nearest_sweep
 
-    with pytest.raises(ValueError, match="no sweeps"):
+    with pytest.raises(ValueError, match=r"^cannot choose a sweep: no sweeps were offered$"):
         choose_nearest_sweep((), REFERENCE_US, requested_offset_ms=0)
 
 

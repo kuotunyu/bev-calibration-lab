@@ -196,7 +196,10 @@ def test_a_checkpoint_that_does_not_match_its_reported_digest_fails_closed(
             path.write_bytes(b"the real bytes")
             return "c" * 64
 
-    with pytest.raises(ValueError, match="checkpoint"):
+    with pytest.raises(
+        ValueError,
+        match=r"^the selected checkpoint on disk does not match the digest the backend reported: ",
+    ):
         train(workspace, LyingBackend())
 
 
@@ -207,7 +210,7 @@ def test_a_failed_run_still_leaves_a_record_saying_so(workspace: dict[str, Path]
         def run_epoch(self, model: Any, optimizer: Any, manifest: Path, epoch: int) -> float:
             raise RuntimeError("the framework fell over")
 
-    with pytest.raises(RuntimeError, match="fell over"):
+    with pytest.raises(RuntimeError, match=r"^the framework fell over$"):
         train(workspace, BrokenBackend())
 
     record = json.loads((workspace["output"] / "run_record.json").read_text(encoding="utf-8"))
@@ -296,7 +299,7 @@ def test_the_two_cohorts_may_not_share_a_log(workspace: dict[str, Path], tmp_pat
     overlapping = tmp_path / "overlap.json"
     overlapping.write_text(json.dumps(document), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="log"):
+    with pytest.raises(ValueError, match=r"^the development and calibration cohorts share a log: "):
         train(workspace, FakeBackend(), calibration_manifest=overlapping)
 
 
@@ -309,7 +312,9 @@ def test_the_two_cohorts_may_not_share_a_scene(workspace: dict[str, Path], tmp_p
     overlapping = tmp_path / "overlap.json"
     overlapping.write_text(json.dumps(document), encoding="utf-8")
 
-    with pytest.raises(ValueError, match="scene"):
+    with pytest.raises(
+        ValueError, match=r"^the development and calibration cohorts share a scene: "
+    ):
         train(workspace, FakeBackend(), calibration_manifest=overlapping)
 
 
@@ -320,14 +325,18 @@ def test_the_calibration_cohort_must_be_the_twenty_scenes_the_protocol_names(
 
     short = write_cohort(tmp_path / "short.json", "calibration", "cal", 19)
 
-    with pytest.raises(ValueError, match="20"):
+    with pytest.raises(
+        ValueError, match=r"^the calibration cohort must hold exactly 20 scenes, got "
+    ):
         train(workspace, FakeBackend(), calibration_manifest=short)
 
 
 def test_an_unapproved_seed_is_refused(workspace: dict[str, Path]) -> None:
     """The three seeds are pinned in the config; a fourth would not be comparable."""
 
-    with pytest.raises(ValueError, match="seed"):
+    with pytest.raises(
+        ValueError, match=r"^seed .* is not one of the approved seeds \[17, 42, 73\]$"
+    ):
         train(workspace, FakeBackend(), seed=1)
 
 
@@ -382,7 +391,9 @@ def test_a_calibration_loss_that_is_not_a_number_stops_the_run(
 
     backend = FakeBackend(calibration_losses=(0.9, float("nan"), 0.5, 0.6))
 
-    with pytest.raises(ValueError, match="cannot select"):
+    with pytest.raises(
+        ValueError, match=r"^the calibration loss at epoch .* is nan, which cannot select anything$"
+    ):
         train(workspace, backend)
 
     record = json.loads((workspace["output"] / "run_record.json").read_text(encoding="utf-8"))

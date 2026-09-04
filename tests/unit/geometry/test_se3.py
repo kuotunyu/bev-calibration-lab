@@ -170,7 +170,7 @@ def test_points_that_are_not_n_by_3_are_rejected(shape: tuple[int, ...]) -> None
 
     transform = SE3(rotation_wxyz=IDENTITY_QUATERNION, translation_xyz_m=(0.0, 0.0, 0.0))
 
-    with pytest.raises(ValueError, match=r"\[N, 3\]|shape"):
+    with pytest.raises(ValueError, match=r"^points must have shape \[N, 3\], got "):
         transform_points(transform, np.zeros(shape))
 
 
@@ -251,7 +251,7 @@ def test_a_translation_that_is_not_three_components_is_rejected(
 
     from bevcalib.geometry.se3 import SE3
 
-    with pytest.raises(ValueError, match="three components"):
+    with pytest.raises(ValueError, match=r"^translation must have three components, got "):
         SE3(rotation_wxyz=IDENTITY_QUATERNION, translation_xyz_m=translation)  # type: ignore[arg-type]
 
 

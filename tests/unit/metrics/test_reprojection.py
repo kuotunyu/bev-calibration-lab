@@ -147,7 +147,9 @@ def test_a_validity_mask_that_does_not_match_the_errors_is_refused() -> None:
 
     from bevcalib.metrics.reprojection import pixel_error_percentiles
 
-    with pytest.raises(ValueError, match="same"):
+    with pytest.raises(
+        ValueError, match=r"^the validity mask .* must have the same shape as the errors "
+    ):
         pixel_error_percentiles(np.array([1.0, 2.0]), np.array([True]))
 
 
@@ -213,7 +215,7 @@ def test_errors_that_are_not_a_flat_list_are_refused(shape: tuple[int, ...]) -> 
 
     from bevcalib.metrics.reprojection import pixel_error_percentiles
 
-    with pytest.raises(ValueError, match="flat"):
+    with pytest.raises(ValueError, match=r"^pixel errors must be a flat array, got shape "):
         pixel_error_percentiles(np.zeros(shape))
 
 

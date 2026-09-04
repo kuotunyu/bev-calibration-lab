@@ -135,5 +135,5 @@ def test_asking_with_no_camera_frames_fails_closed() -> None:
 
     from bevcalib.perturbations.timing import select_camera_for_timing_fault
 
-    with pytest.raises(ValueError, match="no sweeps"):
+    with pytest.raises(ValueError, match=r"^cannot choose a sweep: no sweeps were offered$"):
         select_camera_for_timing_fault((), REFERENCE_US, fault(time_ms=0))

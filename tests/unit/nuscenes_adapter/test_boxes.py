@@ -126,7 +126,7 @@ def test_a_centre_that_is_not_three_numbers_is_rejected(shape: tuple[int, ...]) 
 
     from bevcalib.nuscenes_adapter.boxes import transform_global_box_to_camera
 
-    with pytest.raises(ValueError, match="three"):
+    with pytest.raises(ValueError, match=r"^a box centre must be three numbers, got shape "):
         transform_global_box_to_camera(np.zeros(shape), TILTED, camera_packet())
 
 
@@ -150,5 +150,8 @@ def test_a_packet_that_is_not_a_camera_is_refused() -> None:
         file_relative_path=camera.file_relative_path,
     )
 
-    with pytest.raises(ValueError, match="camera_sensor"):
+    with pytest.raises(
+        ValueError,
+        match=r"^boxes are projected into a camera, but this packet's sensor frame is .*, not 'camera_sensor'$",
+    ):
         transform_global_box_to_camera(np.zeros(3), TILTED, wrong)

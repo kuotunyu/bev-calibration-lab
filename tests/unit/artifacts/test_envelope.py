@@ -140,7 +140,10 @@ def test_verifying_fails_closed_on_a_wrong_artifact_type(tmp_path: Path) -> None
     path = tmp_path / "artifact.json"
     path.write_bytes(FIXTURE.read_bytes())
 
-    with pytest.raises(ValueError, match="artifact type"):
+    with pytest.raises(
+        ValueError,
+        match=r"^unexpected artifact type: expected 'bev-calibration-result-set/v1', got ",
+    ):
         verify_envelope(path, "bev-calibration-result-set/v1")
 
 
@@ -156,5 +159,5 @@ def test_verifying_fails_closed_when_the_payload_no_longer_hashes_to_its_digest(
     path = tmp_path / "artifact.json"
     path.write_bytes(canonical_json_bytes(document))
 
-    with pytest.raises(ValueError, match="payload SHA-256"):
+    with pytest.raises(ValueError, match=r"^payload SHA-256 mismatch$"):
         verify_envelope(path, "portfolio-contract-fixture/v1")

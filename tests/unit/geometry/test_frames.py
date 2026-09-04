@@ -101,7 +101,10 @@ def test_the_composed_transform_moves_points_the_same_way_as_the_two_steps() -> 
 def test_a_frame_name_outside_the_declared_set_is_rejected(frame: str) -> None:
     """A typed alias documents the set; only a runtime check enforces it."""
 
-    with pytest.raises(ValueError, match="frame"):
+    with pytest.raises(
+        ValueError,
+        match=r"^unknown target frame .*; expected one of \['lidar_sensor', 'lidar_ego', 'global', 'camera_ego', 'camera_sensor'\]$",
+    ):
         framed(frame, "global")
 
 

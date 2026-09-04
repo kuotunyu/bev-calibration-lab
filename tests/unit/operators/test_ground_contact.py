@@ -86,7 +86,9 @@ def test_a_box_with_no_extent_is_rejected(size: tuple[float, float, float]) -> N
 
     from bevcalib.operators.ground_contact import bottom_center_global
 
-    with pytest.raises(ValueError, match="positive"):
+    with pytest.raises(
+        ValueError, match=r"^a box must have positive width, length and height, got "
+    ):
         bottom_center_global(np.array([10.0, 2.0, 0.75]), size, IDENTITY_QUATERNION)
 
 
@@ -96,7 +98,7 @@ def test_a_box_centre_that_is_not_three_numbers_is_rejected(shape: tuple[int, ..
 
     from bevcalib.operators.ground_contact import bottom_center_global
 
-    with pytest.raises(ValueError, match="three"):
+    with pytest.raises(ValueError, match=r"^a box centre must be three numbers, got shape "):
         bottom_center_global(np.zeros(shape), (1.8, 4.2, 1.5), IDENTITY_QUATERNION)
 
 
@@ -168,7 +170,7 @@ def test_a_pixel_that_is_not_a_pixel_is_rejected(uv: tuple[float, float]) -> Non
 
     from bevcalib.operators.ground_contact import reconstruct_ground_contact
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match=r"^the pixel and the ground height must be finite, got "):
         reconstruct_ground_contact(uv, CAMERA_FROM_GLOBAL, INTRINSIC, GROUND_Z)
 
 
@@ -177,7 +179,7 @@ def test_a_ground_height_that_is_not_a_number_is_rejected() -> None:
 
     from bevcalib.operators.ground_contact import reconstruct_ground_contact
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match=r"^the pixel and the ground height must be finite, got "):
         reconstruct_ground_contact((160.0, 360.0), CAMERA_FROM_GLOBAL, INTRINSIC, float("nan"))
 
 
@@ -186,7 +188,7 @@ def test_an_intrinsic_that_is_not_a_pinhole_camera_is_rejected() -> None:
 
     from bevcalib.operators.ground_contact import reconstruct_ground_contact
 
-    with pytest.raises(ValueError, match="intrinsic"):
+    with pytest.raises(ValueError, match=r"^intrinsic must have shape 3x3, got "):
         reconstruct_ground_contact((160.0, 360.0), CAMERA_FROM_GLOBAL, np.eye(4), GROUND_Z)
 
 
@@ -323,7 +325,9 @@ def test_the_ground_plane_must_come_from_a_pose_in_global() -> None:
         value=SE3(rotation_wxyz=IDENTITY_QUATERNION, translation_xyz_m=(1.7, 0.0, 1.5)),
     )
 
-    with pytest.raises(ValueError, match="global"):
+    with pytest.raises(
+        ValueError, match=r"^the ground plane comes from an ego pose in global, not from a "
+    ):
         ground_plane_z_from_ego(sensor)
 
 

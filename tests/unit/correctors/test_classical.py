@@ -190,7 +190,7 @@ def test_an_objective_that_is_not_a_number_fails_closed(value: float) -> None:
 
     from bevcalib.correctors.classical import coarse_to_fine_correct
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match=r"^the objective must return a finite value, got "):
         coarse_to_fine_correct(lambda _: value)
 
 
@@ -206,7 +206,7 @@ def test_a_starting_guess_outside_the_bounds_is_refused(initial: np.ndarray) -> 
 
     from bevcalib.correctors.classical import coarse_to_fine_correct
 
-    with pytest.raises(ValueError, match="bounds"):
+    with pytest.raises(ValueError, match=r"^a starting guess must be inside the bounds of "):
         coarse_to_fine_correct(paraboloid((0.0,) * 6), initial)
 
 
@@ -221,7 +221,10 @@ def test_a_starting_guess_that_is_not_six_finite_numbers_is_refused(
 
     from bevcalib.correctors.classical import coarse_to_fine_correct
 
-    with pytest.raises(ValueError, match=r"six|finite"):
+    with pytest.raises(
+        ValueError,
+        match=r"^a starting guess must be six finite numbers in the order \('roll', 'pitch', 'yaw', 'x', 'y', 'z'\), got shape ",
+    ):
         coarse_to_fine_correct(paraboloid((0.0,) * 6), initial)
 
 
@@ -289,7 +292,7 @@ def test_a_search_with_no_evaluations_at_all_is_refused() -> None:
 
     from bevcalib.correctors.classical import coarse_to_fine_correct
 
-    with pytest.raises(ValueError, match="at least one evaluation"):
+    with pytest.raises(ValueError, match=r"^the search needs at least one evaluation, got "):
         coarse_to_fine_correct(paraboloid((0.0,) * 6), max_evaluations=0)
 
 

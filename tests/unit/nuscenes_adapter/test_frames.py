@@ -219,7 +219,10 @@ def test_giving_the_two_packets_in_the_wrong_order_is_refused() -> None:
 
     lidar, camera = packets()
 
-    with pytest.raises(ValueError, match=r"lidar_sensor|camera_sensor"):
+    with pytest.raises(
+        ValueError,
+        match=r"^the first packet must be a LiDAR reading, but its sensor frame is .*, not 'lidar_sensor'$",
+    ):
         lidar_to_camera_chain(camera, lidar)
 
 
@@ -265,7 +268,9 @@ def test_a_point_file_that_is_not_a_whole_number_of_points_is_rejected(tmp_path:
     path = tmp_path / "truncated.pcd.bin"
     path.write_bytes(struct.pack("<7f", *range(7)))
 
-    with pytest.raises(ValueError, match="five"):
+    with pytest.raises(
+        ValueError, match=r"^a LiDAR sweep must be a whole number of five-column points, got "
+    ):
         read_lidar_points(path)
 
 
@@ -299,5 +304,8 @@ def test_passing_the_lidar_packet_for_both_arguments_is_refused() -> None:
 
     lidar, _ = packets()
 
-    with pytest.raises(ValueError, match="camera reading"):
+    with pytest.raises(
+        ValueError,
+        match=r"^the second packet must be a camera reading, but its sensor frame is .*, not 'camera_sensor'$",
+    ):
         lidar_to_camera_chain(lidar, lidar)

@@ -219,7 +219,7 @@ def test_a_sweep_that_is_not_five_columns_is_rejected(shape: tuple[int, ...]) ->
 
     from bevcalib.operators.lidar_edges import lidar_depth_edges
 
-    with pytest.raises(ValueError, match=r"\[N, 5\]|shape"):
+    with pytest.raises(ValueError, match=r"^a sweep must have shape \[N, 5\], got "):
         lidar_depth_edges(np.zeros(shape))
 
 
@@ -275,7 +275,7 @@ def test_a_trim_quantile_outside_its_range_is_rejected(quantile: float) -> None:
     image_edges = np.zeros((1, 4), dtype=bool)
     image_edges[0, 0] = True
 
-    with pytest.raises(ValueError, match="trim quantile"):
+    with pytest.raises(ValueError, match=r"^trim quantile must be within \(0, 1\], got "):
         trimmed_distance_transform_score(np.array([[0.0, 0.0]]), image_edges, quantile)
 
 
@@ -320,7 +320,9 @@ def test_an_edge_mask_that_is_not_an_image_is_rejected(shape: tuple[int, ...]) -
 
     mask = np.ones(shape, dtype=bool)
 
-    with pytest.raises(ValueError, match="two-dimensional"):
+    with pytest.raises(
+        ValueError, match=r"^image edges must be a two-dimensional mask, got shape "
+    ):
         trimmed_distance_transform_score(np.array([[0.0, 0.0]]), mask)
 
 
@@ -333,7 +335,7 @@ def test_projected_points_that_are_not_n_by_2_are_rejected(shape: tuple[int, ...
     image_edges = np.zeros((4, 4), dtype=bool)
     image_edges[0, 0] = True
 
-    with pytest.raises(ValueError, match=r"\[N, 2\]|shape"):
+    with pytest.raises(ValueError, match=r"^projected points must have shape \[N, 2\], got "):
         trimmed_distance_transform_score(np.zeros(shape), image_edges)
 
 

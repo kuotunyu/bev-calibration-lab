@@ -169,7 +169,9 @@ def test_a_matrix_that_is_not_a_rotation_is_rejected(matrix: list[list[float]]) 
 
     from bevcalib.geometry.quaternions import matrix_to_quaternion
 
-    with pytest.raises(ValueError, match="orthonormal"):
+    with pytest.raises(
+        ValueError, match=r"^matrix is not orthonormal within 1e-09: singular values "
+    ):
         matrix_to_quaternion(np.array(matrix))
 
 
@@ -180,7 +182,9 @@ def test_a_reflection_is_rejected_even_though_it_is_orthonormal() -> None:
 
     reflection = np.diag([1.0, 1.0, -1.0])
 
-    with pytest.raises(ValueError, match=r"right-handed|determinant"):
+    with pytest.raises(
+        ValueError, match=r"^rotation must be right-handed, but the determinant is "
+    ):
         matrix_to_quaternion(reflection)
 
 
@@ -190,7 +194,7 @@ def test_a_matrix_of_the_wrong_shape_is_rejected(shape: tuple[int, ...]) -> None
 
     from bevcalib.geometry.quaternions import matrix_to_quaternion
 
-    with pytest.raises(ValueError, match=r"3x3|shape"):
+    with pytest.raises(ValueError, match=r"^rotation matrix must have shape 3x3, got "):
         matrix_to_quaternion(np.zeros(shape))
 
 
@@ -243,7 +247,7 @@ def test_a_quaternion_of_the_wrong_shape_is_rejected(shape: tuple[int, ...]) -> 
 
     from bevcalib.geometry.quaternions import normalize_quaternion_wxyz
 
-    with pytest.raises(ValueError, match="four components"):
+    with pytest.raises(ValueError, match=r"^quaternion must have four components, got shape "):
         normalize_quaternion_wxyz(np.ones(shape))  # type: ignore[arg-type]
 
 
@@ -255,7 +259,7 @@ def test_a_matrix_containing_a_non_finite_entry_is_rejected() -> None:
     matrix = np.eye(3)
     matrix[1, 1] = float("nan")
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match=r"^rotation matrix entries must be finite$"):
         matrix_to_quaternion(matrix)
 
 

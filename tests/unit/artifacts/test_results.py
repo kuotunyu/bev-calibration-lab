@@ -93,7 +93,9 @@ def test_a_ninetieth_percentile_below_the_median_is_rejected() -> None:
 
     from bevcalib.artifacts.results import CalibrationResultV1
 
-    with pytest.raises(ValidationError, match="p90"):
+    with pytest.raises(
+        ValidationError, match=r"Value error, pixel_error_p90 must not be below pixel_error_median"
+    ):
         CalibrationResultV1.model_validate(VALID | {"pixel_error_median": 9.0})
 
 
@@ -107,7 +109,9 @@ def test_an_invalid_result_must_say_why() -> None:
     )
     assert invalid.invalid_reason is not None
 
-    with pytest.raises(ValidationError, match="invalid_reason"):
+    with pytest.raises(
+        ValidationError, match=r"Value error, an invalid result requires a non-empty invalid_reason"
+    ):
         CalibrationResultV1.model_validate(VALID | {"valid": False})
 
 
@@ -116,7 +120,9 @@ def test_a_valid_result_must_not_carry_a_reason_for_being_invalid() -> None:
 
     from bevcalib.artifacts.results import CalibrationResultV1
 
-    with pytest.raises(ValidationError, match="invalid_reason"):
+    with pytest.raises(
+        ValidationError, match=r"Value error, a valid result must not carry an invalid_reason"
+    ):
         CalibrationResultV1.model_validate(VALID | {"invalid_reason": "partially occluded"})
 
 

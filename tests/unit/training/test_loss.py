@@ -133,7 +133,10 @@ def test_predictions_that_are_not_six_degrees_of_freedom_are_rejected(
 
     from bevcalib.training.loss import normalized_huber_loss
 
-    with pytest.raises(ValueError, match=r"\[N, 6\]|shape"):
+    with pytest.raises(
+        ValueError,
+        match=r"^predictions must have shape \[N, 6\] in the order roll, pitch, yaw, x, y, z, got ",
+    ):
         normalized_huber_loss(
             torch.zeros(shape, dtype=torch.float64), torch.zeros(shape, dtype=torch.float64)
         )
@@ -144,7 +147,7 @@ def test_a_prediction_and_a_target_of_different_sizes_are_rejected() -> None:
 
     from bevcalib.training.loss import normalized_huber_loss
 
-    with pytest.raises(ValueError, match="same shape"):
+    with pytest.raises(ValueError, match=r"^prediction .* and target .* must have the same shape$"):
         normalized_huber_loss(
             torch.zeros((2, 6), dtype=torch.float64), torch.zeros((3, 6), dtype=torch.float64)
         )
@@ -163,7 +166,7 @@ def test_scales_and_delta_must_be_positive(
 
     prediction, target = tensors([0.0] * 6)
 
-    with pytest.raises(ValueError, match="positive"):
+    with pytest.raises(ValueError, match=r"^the scales and delta must be positive, got "):
         normalized_huber_loss(
             prediction,
             target,

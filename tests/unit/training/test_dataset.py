@@ -122,7 +122,9 @@ def test_a_calibration_scene_is_refused_and_told_what_it_is_for() -> None:
 
     from bevcalib.training.dataset import build_training_example
 
-    with pytest.raises(ValueError, match="checkpoint selection"):
+    with pytest.raises(
+        ValueError, match=r"^scene .* is a calibration scene, reserved for checkpoint selection$"
+    ):
         example(scene_token="scene-cal-1")
 
     assert build_training_example is not None
@@ -131,14 +133,16 @@ def test_a_calibration_scene_is_refused_and_told_what_it_is_for() -> None:
 def test_an_evaluation_scene_is_refused_in_the_strongest_terms() -> None:
     """This is the one that would invalidate the whole study rather than degrade it."""
 
-    with pytest.raises(ValueError, match="never"):
+    with pytest.raises(
+        ValueError, match=r"^scene .* is an evaluation scene and must never be trained on$"
+    ):
         example(scene_token="scene-eval-1")
 
 
 def test_a_scene_in_no_cohort_at_all_is_refused() -> None:
     """An unknown scene means the cohort and the loader disagree, which is worth stopping for."""
 
-    with pytest.raises(ValueError, match="not in any cohort"):
+    with pytest.raises(ValueError, match=r"^scene .* is not in any cohort$"):
         example(scene_token="scene-who-knows")
 
 
@@ -157,7 +161,9 @@ def test_a_fault_carrying_a_timing_offset_cannot_become_a_training_target() -> N
     from bevcalib.artifacts.results import CalibrationFaultModel
     from bevcalib.training.dataset import target_for_fault
 
-    with pytest.raises(ValueError, match="timing"):
+    with pytest.raises(
+        ValueError, match=r"^a timing fault has no 6DoF inverse: requested_time_offset_ms is "
+    ):
         target_for_fault(
             CalibrationFaultModel(
                 rotation_rpy_deg=(1.0, 0.0, 0.0),

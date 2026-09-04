@@ -215,7 +215,7 @@ def test_points_that_are_not_n_by_3_are_rejected(shape: tuple[int, ...]) -> None
 
     from bevcalib.geometry.projection import project_camera
 
-    with pytest.raises(ValueError, match=r"\[N, 3\]|shape"):
+    with pytest.raises(ValueError, match=r"^points must have shape \[N, 3\], got "):
         project_camera(np.zeros(shape), INTRINSIC, IMAGE_SIZE)
 
 
@@ -225,7 +225,7 @@ def test_an_image_size_that_cannot_contain_a_pixel_is_rejected(size: tuple[int, 
 
     from bevcalib.geometry.projection import project_camera
 
-    with pytest.raises(ValueError, match="image size"):
+    with pytest.raises(ValueError, match=r"^image size must be positive, got "):
         project_camera(np.array([[0.0, 0.0, 10.0]]), INTRINSIC, size)
 
 

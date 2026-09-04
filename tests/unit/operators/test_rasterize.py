@@ -197,7 +197,7 @@ def test_an_image_size_that_cannot_contain_a_pixel_is_rejected(size: tuple[int, 
 
     from bevcalib.operators.rasterize import rasterize_min_depth
 
-    with pytest.raises(ValueError, match="image size"):
+    with pytest.raises(ValueError, match=r"^image size must be positive, got "):
         rasterize_min_depth(np.zeros((0, 2)), np.zeros(0), np.zeros(0, dtype=bool), size)
 
 
