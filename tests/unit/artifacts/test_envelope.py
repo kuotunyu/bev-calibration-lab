@@ -91,7 +91,7 @@ def test_an_envelope_that_misstates_its_provenance_is_rejected(field: str, value
 
     document = canonical_document() | {field: value}
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=rf"\n{field}\n"):
         PortfolioArtifactEnvelopeV1.model_validate(document)
 
 

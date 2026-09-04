@@ -63,7 +63,7 @@ def test_a_record_that_cannot_identify_its_run_is_rejected(field: str, value: st
 
     from bevcalib.artifacts.run_record import RunRecordV1
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=rf"\n{field}\n"):
         RunRecordV1.model_validate(VALID | {field: value})
 
 

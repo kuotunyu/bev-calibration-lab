@@ -64,7 +64,7 @@ def test_a_non_finite_measurement_is_rejected(field: str, value: float) -> None:
 
     from bevcalib.artifacts.results import CalibrationResultV1
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=rf"\n{field}\n"):
         CalibrationResultV1.model_validate(VALID | {field: value})
 
 
@@ -84,7 +84,7 @@ def test_a_negative_magnitude_is_rejected(field: str) -> None:
 
     from bevcalib.artifacts.results import CalibrationResultV1
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=rf"\n{field}\n"):
         CalibrationResultV1.model_validate(VALID | {field: -0.1})
 
 
@@ -151,7 +151,7 @@ def test_a_result_that_cannot_identify_its_sample_is_rejected(field: str, value:
 
     from bevcalib.artifacts.results import CalibrationResultV1
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=rf"\n{field}\n"):
         CalibrationResultV1.model_validate(VALID | {field: value})
 
 
@@ -170,7 +170,7 @@ def test_a_non_finite_fault_component_is_rejected(field: str) -> None:
 
     from bevcalib.artifacts.results import CalibrationFaultModel
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match=rf"\n{field}\.\d+\n"):
         CalibrationFaultModel.model_validate(FAULT | {field: [float("nan"), 0.0, 0.0]})
 
 
