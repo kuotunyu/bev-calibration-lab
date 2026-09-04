@@ -138,7 +138,7 @@ def test_a_non_finite_error_is_refused_rather_than_averaged() -> None:
 
     from bevcalib.metrics.reprojection import pixel_error_percentiles
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match=r"^pixel errors must be finite to be summarised$"):
         pixel_error_percentiles(np.array([1.0, float("nan")]))
 
 

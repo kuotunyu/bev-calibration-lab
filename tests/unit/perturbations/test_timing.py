@@ -120,7 +120,13 @@ def test_a_fault_carrying_a_timing_offset_cannot_be_a_learned_target() -> None:
 
     from bevcalib.perturbations.timing import learned_six_dof_target
 
-    with pytest.raises(ValueError, match="timing"):
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"^a timing fault cannot be a learned 6DoF target: "
+            r"requested_time_offset_ms is \d+, not 0$"
+        ),
+    ):
         learned_six_dof_target(fault(time_ms=50, rotation=(1.0, 0.0, 0.0)))
 
 

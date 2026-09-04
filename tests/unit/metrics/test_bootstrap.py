@@ -156,7 +156,7 @@ def test_asking_for_an_interval_over_no_scenes_fails_closed() -> None:
 
     from bevcalib.metrics.bootstrap import paired_scene_bootstrap
 
-    with pytest.raises(ValueError, match="no scenes"):
+    with pytest.raises(ValueError, match=r"^cannot bootstrap over no scenes$"):
         paired_scene_bootstrap({})
 
 
@@ -166,7 +166,9 @@ def test_a_scene_with_an_unmeasurable_value_fails_closed(value: float) -> None:
 
     from bevcalib.metrics.bootstrap import paired_scene_bootstrap
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(
+        ValueError, match=r"^every scene must contribute a finite before and after value$"
+    ):
         paired_scene_bootstrap(paired(a=(1.0, 0.0), b=(value, 0.0)), resamples=10)
 
 

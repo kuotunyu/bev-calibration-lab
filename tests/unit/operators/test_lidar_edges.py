@@ -198,7 +198,7 @@ def test_a_projected_point_that_is_not_finite_is_refused() -> None:
     image_edges = np.zeros((4, 4), dtype=bool)
     image_edges[0, 0] = True
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(ValueError, match=r"^projected points must be finite to be scored$"):
         trimmed_distance_transform_score(np.array([[float("nan"), 0.0]]), image_edges)
 
 
@@ -287,7 +287,7 @@ def test_scoring_nothing_against_something_fails_closed() -> None:
     image_edges = np.zeros((1, 4), dtype=bool)
     image_edges[0, 0] = True
 
-    with pytest.raises(ValueError, match="no projected points"):
+    with pytest.raises(ValueError, match=r"^there are no projected points to score$"):
         trimmed_distance_transform_score(np.zeros((0, 2)), image_edges)
 
 
@@ -296,7 +296,7 @@ def test_scoring_against_an_image_with_no_edges_fails_closed() -> None:
 
     from bevcalib.operators.lidar_edges import trimmed_distance_transform_score
 
-    with pytest.raises(ValueError, match="no edges"):
+    with pytest.raises(ValueError, match=r"^the image has no edges to measure against$"):
         trimmed_distance_transform_score(np.array([[0.0, 0.0]]), np.zeros((4, 4), dtype=bool))
 
 
@@ -308,7 +308,7 @@ def test_a_point_outside_the_image_is_refused_rather_than_wrapped() -> None:
     image_edges = np.zeros((4, 4), dtype=bool)
     image_edges[0, 0] = True
 
-    with pytest.raises(ValueError, match="outside"):
+    with pytest.raises(ValueError, match=r"^a projected point falls outside the image bounds$"):
         trimmed_distance_transform_score(np.array([[-1.0, 0.0]]), image_edges)
 
 

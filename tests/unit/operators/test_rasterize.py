@@ -146,17 +146,43 @@ def test_the_outputs_have_the_declared_types() -> None:
 
 
 @pytest.mark.parametrize(
-    ("uv_shape", "depth_size", "valid_size"),
-    [((2, 2), 3, 2), ((2, 2), 2, 3), ((2, 3), 2, 2), ((2,), 2, 2)],
+    ("uv_shape", "depth_size", "valid_size", "message"),
+    [
+        (
+            (2, 2),
+            3,
+            2,
+            r"^uv, depth and valid must describe the same points, got "
+            r"\(2, 2\), \(3,\) and \(2,\)$",
+        ),
+        (
+            (2, 2),
+            2,
+            3,
+            r"^uv, depth and valid must describe the same points, got "
+            r"\(2, 2\), \(2,\) and \(3,\)$",
+        ),
+        ((2, 3), 2, 2, r"^uv must have shape \[N, 2\], got \(2, 3\)$"),
+        ((2,), 2, 2, r"^uv must have shape \[N, 2\], got \(2,\)$"),
+    ],
 )
 def test_inputs_that_do_not_describe_the_same_points_are_rejected(
-    uv_shape: tuple[int, ...], depth_size: int, valid_size: int
+    uv_shape: tuple[int, ...],
+    depth_size: int,
+    valid_size: int,
+    message: str,
 ) -> None:
-    """Misaligned arrays would pair one point's pixel with another point's depth."""
+    """Misaligned arrays would pair one point's pixel with another point's depth.
+
+    Each row names its message, and the message carries all three shapes. That
+    is the whole diagnosis: a caller who has just changed one stage of the
+    projection chain needs to see which array disagrees with which, not merely
+    that something did.
+    """
 
     from bevcalib.operators.rasterize import rasterize_min_depth
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         rasterize_min_depth(
             np.zeros(uv_shape),
             np.ones(depth_size),
@@ -180,7 +206,7 @@ def test_a_valid_point_outside_the_canvas_is_refused_rather_than_wrapped() -> No
 
     from bevcalib.operators.rasterize import rasterize_min_depth
 
-    with pytest.raises(ValueError, match="outside"):
+    with pytest.raises(ValueError, match=r"^a drawable point falls outside the image bounds$"):
         rasterize_min_depth(np.array([[-1.0, 2.0]]), np.array([5.0]), np.array([True]), IMAGE_SIZE)
 
 

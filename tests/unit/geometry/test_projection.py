@@ -170,25 +170,42 @@ def test_no_points_is_a_legitimate_input() -> None:
     assert result.valid.shape == (0,)
 
 
+SHAPE_MESSAGE = r"^intrinsic must have shape 3x3"
+PINHOLE_MESSAGE = (
+    r"^intrinsic must be an upper-triangular pinhole matrix with bottom row \[0, 0, 1\]$"
+)
+FOCAL_MESSAGE = r"^intrinsic focal lengths must be positive$"
+FINITE_MESSAGE = r"^intrinsic entries must be finite$"
+
+
 @pytest.mark.parametrize(
-    "intrinsic",
+    ("intrinsic", "message"),
     [
-        np.eye(4),
-        np.zeros((3, 3)),
-        np.array([[800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 2.0]]),
-        np.array([[800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [1.0, 0.0, 1.0]]),
-        np.array([[800.0, 0.0, 320.0], [5.0, 800.0, 240.0], [0.0, 0.0, 1.0]]),
-        np.array([[-800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]]),
-        np.array([[800.0, 0.0, 320.0], [0.0, 0.0, 240.0], [0.0, 0.0, 1.0]]),
-        np.array([[np.nan, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]]),
+        (np.eye(4), SHAPE_MESSAGE),
+        (np.zeros((3, 3)), PINHOLE_MESSAGE),
+        (np.array([[800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 2.0]]), PINHOLE_MESSAGE),
+        (np.array([[800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [1.0, 0.0, 1.0]]), PINHOLE_MESSAGE),
+        (np.array([[800.0, 0.0, 320.0], [5.0, 800.0, 240.0], [0.0, 0.0, 1.0]]), PINHOLE_MESSAGE),
+        (np.array([[-800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]]), FOCAL_MESSAGE),
+        (np.array([[800.0, 0.0, 320.0], [0.0, 0.0, 240.0], [0.0, 0.0, 1.0]]), FOCAL_MESSAGE),
+        (np.array([[np.nan, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]]), FINITE_MESSAGE),
     ],
 )
-def test_an_intrinsic_that_is_not_a_pinhole_camera_is_rejected(intrinsic: np.ndarray) -> None:
-    """A wrong bottom row silently rescales depth, which is the worst kind of wrong."""
+def test_an_intrinsic_that_is_not_a_pinhole_camera_is_rejected(
+    intrinsic: np.ndarray,
+    message: str,
+) -> None:
+    """A wrong bottom row silently rescales depth, which is the worst kind of wrong.
+
+    Each row names the message it expects. `match="intrinsic"` matched all four
+    of this function's rejections, so it could not tell a non-finite entry from
+    a negative focal length from a broken bottom row — and it kept passing when
+    any of those messages was reworded.
+    """
 
     from bevcalib.geometry.projection import project_camera
 
-    with pytest.raises(ValueError, match="intrinsic"):
+    with pytest.raises(ValueError, match=message):
         project_camera(np.array([[0.0, 0.0, 10.0]]), intrinsic, IMAGE_SIZE)
 
 

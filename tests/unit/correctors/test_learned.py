@@ -154,7 +154,9 @@ def test_a_colour_channel_that_is_not_finite_is_rejected() -> None:
     rgb, depth, valid = scene()
     rgb[0, 0, 0] = np.float32("nan")
 
-    with pytest.raises(ValueError, match="finite"):
+    with pytest.raises(
+        ValueError, match=r"^colour channels must be finite; there is no mask to hide one behind$"
+    ):
         build_five_channel_input(rgb, depth, valid)
 
 
@@ -201,7 +203,10 @@ def test_a_stem_that_is_not_a_three_channel_convolution_is_rejected(
 
     from bevcalib.correctors.learned import five_channel_stem_weight
 
-    with pytest.raises(ValueError, match="three-channel"):
+    with pytest.raises(
+        ValueError,
+        match=r"^the stem must be a three-channel convolution of shape \[out, 3, k, k\]",
+    ):
         five_channel_stem_weight(np.zeros(shape))
 
 
@@ -292,7 +297,10 @@ def test_a_model_with_no_three_channel_stem_is_refused() -> None:
 
     model = initialize_convnextv2_five_channel(convnext_like())
 
-    with pytest.raises(ValueError, match="three-channel"):
+    with pytest.raises(
+        ValueError,
+        match=r"^the model has no three-channel convolution to adapt as a stem$",
+    ):
         initialize_convnextv2_five_channel(model)
 
 

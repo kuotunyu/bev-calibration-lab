@@ -186,8 +186,21 @@ def test_an_error_that_is_not_a_distance_cannot_be_judged(
         recovered(rotation_deg, translation_m)
 
 
-def test_a_timing_fault_cannot_be_scored_as_a_pose_error() -> None:
-    """There is no pose difference between two faults that differ only in time."""
+@pytest.mark.parametrize(
+    "role",
+    ["estimate", "truth"],
+    ids=["the estimate carries the offset", "the truth carries the offset"],
+)
+def test_a_timing_fault_cannot_be_scored_as_a_pose_error(role: str) -> None:
+    """There is no pose difference between two faults that differ only in time.
+
+    Both arguments are checked, and the message names WHICH of them carried the
+    offset. A caller comparing a recovered pose against a reference needs that:
+    an offset on the estimate means the corrector was handed a timing fault it
+    cannot express, while an offset on the truth means the experiment matrix
+    paired the wrong reference. The message is asserted in full because the
+    role name is the whole diagnosis.
+    """
 
     from bevcalib.metrics.calibration import calibration_errors
 
@@ -196,6 +209,13 @@ def test_a_timing_fault_cannot_be_scored_as_a_pose_error() -> None:
         translation_xyz_m=(0.0, 0.0, 0.0),
         requested_time_offset_ms=50,
     )
+    arguments = (timed, fault()) if role == "estimate" else (fault(), timed)
 
-    with pytest.raises(ValueError, match="timing"):
-        calibration_errors(timed, fault())
+    with pytest.raises(
+        ValueError,
+        match=(
+            rf"^the {role} carries a timing offset of 50 ms, and there is no pose "
+            r"difference between two faults that differ only in time$"
+        ),
+    ):
+        calibration_errors(*arguments)

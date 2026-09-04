@@ -218,7 +218,13 @@ def test_a_rotation_at_a_quarter_turn_of_pitch_cannot_be_decomposed() -> None:
 
     from bevcalib.perturbations.apply import fault_to_se3, se3_to_fault
 
-    with pytest.raises(ValueError, match="quarter turn"):
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"^cannot decompose a rotation with a pitch of a quarter turn: "
+            r"roll and yaw are not separable there$"
+        ),
+    ):
         se3_to_fault(fault_to_se3(fault(rotation=(0.0, 90.0, 0.0))))
 
 
@@ -240,5 +246,8 @@ def test_a_timing_fault_has_no_six_degree_inverse() -> None:
 
     from bevcalib.perturbations.apply import inverse_fault
 
-    with pytest.raises(ValueError, match="timing"):
+    with pytest.raises(
+        ValueError,
+        match=r"^a timing fault has no 6DoF inverse: requested_time_offset_ms is \d+, not 0$",
+    ):
         inverse_fault(fault(time_ms=50))
