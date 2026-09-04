@@ -63,25 +63,36 @@ It exercises no mutable code path, so the exclusion costs no killing power.
 
 ## The score
 
-### At `3be71a9`, run `2026-09-04T07:23Z`
+### At `13f3f1f`, run `2026-09-04T08:1xZ`
 
 | | Count | Share |
 | --- | ---: | ---: |
 | Mutants generated | 1,703 | |
-| **Killed by a test** | **1,581** | **92.84%** |
-| Timed out | 31 | |
-| Survived | 91 | 5.34% |
+| **Killed by a test** | **1,596** | **93.72%** |
+| Timed out | 20 | |
+| Survived | **87** | 5.11% |
 
-**The gate is cleared on kills alone, by 48 mutants.** 90% of 1,703 is 1,533
-and the suite kills 1,581. Counting the timeouts as detections gives 94.66%;
-that figure is reported for completeness and is not what the gate rests on.
+**The gate is cleared on kills alone, by 63 mutants**, and by at least 48 at
+every measurement taken. 90% of 1,703 is 1,533.
 
-This is the LOWER of two measurements taken an hour apart, and the lower one is
-the one reported. The run at `43e803c` gave 1,590 kills and 22 timeouts, 93.36%.
-The survivor count was identical in both, at 91: the nine mutants that moved
-went from `killed` to `timeout`, never to `survived`. All the movement is in
-`correctors.learned`, which holds 29 of the 31 timeouts and is the only module
-in `only_mutate` whose tests import torch and build a model.
+**Read the survivor count, not the kill count.** Three baselines were taken
+across three commits as this work proceeded:
+
+| Commit | Killed | Timed out | Survived |
+| --- | ---: | ---: | ---: |
+| `43e803c` | 1,590 | 22 | 91 |
+| `3be71a9` | 1,581 | 31 | 91 |
+| `13f3f1f` | 1,596 | 20 | 87 |
+
+The survivor count falls monotonically and only when a test was written to kill
+something, which is the signal. The kill count swings by fifteen across the
+three, and every mutant that moved went between `killed` and `timeout` — never
+to or from `survived`. All of that movement is in `correctors.learned`, the one
+module in `only_mutate` whose tests import torch and build a model, and it held
+29 of the 31 timeouts at the worst run. The gate is stated on kills because that
+is what a gate can rest on, and it is cleared at every value observed; but a
+kill count from this core is reproducible only to about fifteen mutants, and
+quoting it to four significant figures would claim a precision it does not have.
 
 The first honest measurement of this core was 1,476 kills, 86.67%, and the
 previous release candidate `215d606` stood at 1,567, 92.01%. Every additional
@@ -223,11 +234,11 @@ mutant that exceeds it is recorded as `timeout`: not killed, not survived, and
 still in the denominator. The gate counts kills only, so a timeout costs exactly
 what a survivor costs.
 
-It would be convenient to assume the 31 here are near the boundary and would
-resolve into kills given room. They do not. Raising `timeout_constant` to 15.0 —
-a roughly fifteen-fold budget, about four minutes per mutant instead of about
-sixteen seconds — and re-running reclassified **none** of them: 31 before, 31
-after, with the killed and survived counts unmoved. mutmut only re-executes
+It would be convenient to assume these are near the boundary and would resolve
+into kills given room. They do not. Raising `timeout_constant` to 15.0 — a
+roughly fifteen-fold budget, about four minutes per mutant instead of about
+sixteen seconds — and re-running reclassified **none** of the 31 measured at
+`3be71a9`: 31 before, 31 after, with the killed and survived counts unmoved. mutmut only re-executes
 timed-out mutants when the timeout configuration changes, so that experiment
 could not have altered any other verdict, and a larger budget can only ever turn
 a timeout into a kill or a survivor. These mutants genuinely do not finish: a
@@ -243,7 +254,7 @@ number would be the same mistake made deliberately.
 
 ## Survivors still outstanding
 
-91 survive, and they are recorded rather than hidden. Only three match an
+87 survive, and they are recorded rather than hidden. Only three match an
 equivalence family that has been argued and checked; the rest are unexplained
 and would each need either a killing test or an argument that survives the
 falsification check described below.

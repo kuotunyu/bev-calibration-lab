@@ -90,7 +90,9 @@ def test_a_registry_that_widens_the_shared_vocabulary_is_rejected(
 
     from bevcalib.analysis.claims import load_registry
 
-    with pytest.raises(ValidationError):
+    expected = r"^1 validation error for ClaimsRegistryV1\n  Value error, "
+    expected += rf"{next(iter(override))} must match the approved vocabulary"
+    with pytest.raises(ValidationError, match=expected):
         load_registry(write_registry(tmp_path, [], **override))
 
 
@@ -228,7 +230,7 @@ def test_a_claim_identifier_must_be_a_stable_slug(
     if valid:
         assert load_registry(path).claims[0].claim_id == claim_id
     else:
-        with pytest.raises(ValidationError):
+        with pytest.raises(ValidationError, match=r"\nclaims\.0\.claim_id\n"):
             load_registry(path)
 
 
