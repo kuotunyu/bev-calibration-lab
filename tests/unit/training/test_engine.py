@@ -267,22 +267,23 @@ def test_two_runs_of_the_same_thing_produce_the_same_record_apart_from_its_clock
 
 
 @pytest.mark.parametrize(
-    ("role_key", "role", "message"),
+    ("role_key", "role"),
     [
-        ("development", "calibration", "development"),
-        ("development", "evaluation", "development"),
-        ("calibration", "development", "calibration"),
-        ("calibration", "evaluation", "calibration"),
+        ("development", "calibration"),
+        ("development", "evaluation"),
+        ("calibration", "development"),
+        ("calibration", "evaluation"),
     ],
 )
 def test_a_manifest_playing_the_wrong_part_is_refused(
-    workspace: dict[str, Path], tmp_path: Path, role_key: str, role: str, message: str
+    workspace: dict[str, Path], tmp_path: Path, role_key: str, role: str
 ) -> None:
     """Handing the evaluation cohort to a trainer is the mistake that voids the study."""
 
     wrong = write_cohort(tmp_path / "wrong.json", role, "wrong", 20)
 
-    with pytest.raises(ValueError, match=message):
+    expected = rf"^the {role_key} manifest declares role '{role}'; "
+    with pytest.raises(ValueError, match=expected):
         train(workspace, FakeBackend(), **{f"{role_key}_manifest": wrong})
 
 
