@@ -521,3 +521,28 @@ def test_the_trim_keeps_the_count_the_quantile_asks_for_and_not_one_more() -> No
     score = trimmed_distance_transform_score(uv, mask, trim_quantile=0.4)
 
     assert score == -1.0
+
+
+def test_returns_at_the_same_azimuth_keep_their_original_order() -> None:
+    """The tie-break is the original index, which is what makes the answer stable.
+
+    Two returns really can share an azimuth to the last bit, and the docstring
+    promises they are then ordered by the index they arrived at. Anything else
+    makes the edge set depend on a sort's internal partitioning: NumPy's default
+    introsort agrees with a stable sort up to sixteen equal keys and diverges
+    from seventeen, so a study with dense rings would produce one answer and its
+    own unit tests, run on shorter rings, would never see it.
+
+    Seventeen returns share an azimuth here, all a millimetre apart except the
+    last, which sits twenty metres behind them. The only qualifying pair is that
+    last one against its predecessor, and the near return of that pair is index
+    fifteen. Under an unstable sort the far return lands somewhere else in the
+    order and a different, wrong index is reported as the silhouette.
+    """
+
+    from bevcalib.operators.lidar_edges import lidar_depth_edges
+
+    ranges = [10.0 + 0.001 * index for index in range(16)] + [30.0]
+    edges = lidar_depth_edges(sweep(*(ring_row(value, 0.0, 0) for value in ranges)))
+
+    assert edges.source_indices.tolist() == [15]

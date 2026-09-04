@@ -136,21 +136,38 @@ def test_provenance_is_read_from_the_environment_and_never_guessed(
 
 
 @pytest.mark.parametrize(
-    "raw",
+    ("raw", "expected"),
     [
-        None,
-        "not json",
-        '"a string"',
-        '{"commit": "short"}',
+        (
+            None,
+            r"^BEVCALIB_RUN_PROVENANCE must supply the commit, lock hash and hardware of this run$",
+        ),
+        ("not json", r"^BEVCALIB_RUN_PROVENANCE must contain a JSON object$"),
+        ('"a string"', r"^BEVCALIB_RUN_PROVENANCE must contain a JSON object$"),
+        (
+            '{"commit": "short"}',
+            r"^3 validation errors for RunProvenance\ncommit\n  String should match pattern ",
+        ),
         # Well-formed and complete except for the hardware, which is the field a
         # process is most tempted to fill in for itself.
-        json.dumps({"commit": "a" * 40, "lock_sha256": "b" * 64}),
+        (
+            json.dumps({"commit": "a" * 40, "lock_sha256": "b" * 64}),
+            r"^1 validation error for RunProvenance\nhardware\n  Field required",
+        ),
     ],
 )
 def test_missing_or_malformed_provenance_fails_closed(
-    monkeypatch: pytest.MonkeyPatch, raw: str | None
+    monkeypatch: pytest.MonkeyPatch, raw: str | None, expected: str
 ) -> None:
-    """Inventing a plausible hardware string is the exact failure this prevents."""
+    """Inventing a plausible hardware string is the exact failure this prevents.
+
+    Each row names its own refusal because these are three separate ones: the
+    variable being absent, its contents not being a JSON object, and a
+    well-formed object that the schema turns down. The last two rows would
+    both have passed an assertion that only checked the absent-variable
+    message, and the fourth row in particular is a document that IS complete
+    enough to look right.
+    """
 
     from bevcalib.artifacts.run_record import PROVENANCE_ENV_VAR, load_run_provenance
 
@@ -159,5 +176,5 @@ def test_missing_or_malformed_provenance_fails_closed(
     else:
         monkeypatch.setenv(PROVENANCE_ENV_VAR, raw)
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=expected):
         load_run_provenance()

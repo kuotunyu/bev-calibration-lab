@@ -137,22 +137,29 @@ def test_a_non_unit_quaternion_is_normalised_rather_than_scaling_the_rotation() 
 
 
 @pytest.mark.parametrize(
-    "quaternion",
+    ("quaternion", "expected"),
     [
-        (0.0, 0.0, 0.0, 0.0),
-        (float("nan"), 0.0, 0.0, 1.0),
-        (float("inf"), 0.0, 0.0, 0.0),
-        (1e-20, 0.0, 0.0, 0.0),
+        ((0.0, 0.0, 0.0, 0.0), r"^quaternion norm .* is too small to define a rotation$"),
+        ((float("nan"), 0.0, 0.0, 1.0), r"^quaternion components must be finite$"),
+        ((float("inf"), 0.0, 0.0, 0.0), r"^quaternion components must be finite$"),
+        ((1e-20, 0.0, 0.0, 0.0), r"^quaternion norm .* is too small to define a rotation$"),
     ],
 )
 def test_a_quaternion_that_does_not_describe_a_rotation_is_rejected(
     quaternion: tuple[float, float, float, float],
+    expected: str,
 ) -> None:
-    """Zero and non-finite norms have no direction to normalise towards."""
+    """Zero and non-finite norms have no direction to normalise towards.
+
+    They are refused by two different checks and each row says which. A NaN
+    component is caught before any norm is taken, because a norm computed from
+    it would be NaN and would compare false against every bound rather than
+    failing the smallness test the other rows exercise.
+    """
 
     from bevcalib.geometry.quaternions import normalize_quaternion_wxyz
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=expected):
         normalize_quaternion_wxyz(quaternion)
 
 

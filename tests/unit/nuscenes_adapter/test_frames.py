@@ -234,7 +234,7 @@ def test_a_record_missing_a_field_fails_closed() -> None:
     tables = records()
     del tables["calibrated_sensor"]["cs-lidar"]["rotation"]
 
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match=r"^'rotation'$"):
         read_sensor_packet(
             lookup_for(tables), "lidar-data", ego_frame="lidar_ego", sensor_frame="lidar_sensor"
         )

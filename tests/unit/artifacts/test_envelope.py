@@ -59,7 +59,9 @@ def test_canonical_bytes_are_sorted_compact_utf8_without_nan() -> None:
     from bevcalib.artifacts.envelope import canonical_json_bytes
 
     assert canonical_json_bytes({"b": 1, "a": "ü"}) == b'{"a":"\xc3\xbc","b":1}'
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError, match=r"^Out of range float values are not JSON compliant: nan$"
+    ):
         canonical_json_bytes({"x": float("nan")})
 
 

@@ -185,21 +185,40 @@ def test_a_transform_normalises_its_quaternion_on_construction() -> None:
 
 
 @pytest.mark.parametrize(
-    ("rotation", "translation"),
+    ("rotation", "translation", "expected"),
     [
-        ((0.0, 0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
-        ((1.0, 0.0, 0.0, 0.0), (float("nan"), 0.0, 0.0)),
-        ((1.0, 0.0, 0.0, 0.0), (float("inf"), 0.0, 0.0)),
+        (
+            (0.0, 0.0, 0.0, 0.0),
+            (0.0, 0.0, 0.0),
+            r"^quaternion norm .* is too small to define a rotation$",
+        ),
+        (
+            (1.0, 0.0, 0.0, 0.0),
+            (float("nan"), 0.0, 0.0),
+            r"^translation components must be finite, got ",
+        ),
+        (
+            (1.0, 0.0, 0.0, 0.0),
+            (float("inf"), 0.0, 0.0),
+            r"^translation components must be finite, got ",
+        ),
     ],
 )
 def test_a_transform_that_is_not_rigid_is_rejected_at_construction(
-    rotation: tuple[float, float, float, float], translation: tuple[float, float, float]
+    rotation: tuple[float, float, float, float],
+    translation: tuple[float, float, float],
+    expected: str,
 ) -> None:
-    """Failing at construction means no later function has to re-check it."""
+    """Failing at construction means no later function has to re-check it.
+
+    The rotation and the translation are refused by separate checks, and a
+    caller who handed over a NaN translation needs to be sent to the
+    translation rather than told its rotation was degenerate.
+    """
 
     from bevcalib.geometry.se3 import SE3
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=expected):
         SE3(rotation_wxyz=rotation, translation_xyz_m=translation)
 
 

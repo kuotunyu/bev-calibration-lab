@@ -173,15 +173,29 @@ def test_a_scene_with_an_unmeasurable_value_fails_closed(value: float) -> None:
         paired_scene_bootstrap(paired(a=(1.0, 0.0), b=(value, 0.0)), resamples=10)
 
 
-@pytest.mark.parametrize(("resamples", "confidence"), [(0, 0.95), (-1, 0.95), (10, 0.0), (10, 1.0)])
+@pytest.mark.parametrize(
+    ("resamples", "confidence", "expected"),
+    [
+        (0, 0.95, r"^a bootstrap needs at least one resample, got "),
+        (-1, 0.95, r"^a bootstrap needs at least one resample, got "),
+        (10, 0.0, r"^the confidence must lie within \(0, 1\), got "),
+        (10, 1.0, r"^the confidence must lie within \(0, 1\), got "),
+    ],
+)
 def test_a_bootstrap_that_cannot_produce_an_interval_is_refused(
-    resamples: int, confidence: float
+    resamples: int, confidence: float, expected: str
 ) -> None:
-    """Zero resamples has no distribution, and a confidence of one has no quantiles."""
+    """Zero resamples has no distribution, and a confidence of one has no quantiles.
+
+    Those are two separate refusals and each row names its own, because the
+    two are reported to different callers: a resample count is a knob the
+    operator set, and a confidence of exactly one is a claim the statistics
+    cannot support at any resample count.
+    """
 
     from bevcalib.metrics.bootstrap import paired_scene_bootstrap
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=expected):
         paired_scene_bootstrap(paired(a=(1.0, 0.0)), resamples=resamples, confidence=confidence)
 
 

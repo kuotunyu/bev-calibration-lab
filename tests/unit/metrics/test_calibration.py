@@ -172,17 +172,28 @@ def test_the_recovery_thresholds_are_the_ones_the_protocol_names() -> None:
 
 
 @pytest.mark.parametrize(
-    ("rotation_deg", "translation_m"),
-    [(float("nan"), 0.0), (0.0, float("nan")), (float("inf"), 0.0), (-1.0, 0.0), (0.0, -1.0)],
+    ("rotation_deg", "translation_m", "expected"),
+    [
+        (float("nan"), 0.0, r"^errors must be finite to be judged, got "),
+        (0.0, float("nan"), r"^errors must be finite to be judged, got "),
+        (float("inf"), 0.0, r"^errors must be finite to be judged, got "),
+        (-1.0, 0.0, r"^errors are magnitudes and cannot be negative, got "),
+        (0.0, -1.0, r"^errors are magnitudes and cannot be negative, got "),
+    ],
 )
 def test_an_error_that_is_not_a_distance_cannot_be_judged(
-    rotation_deg: float, translation_m: float
+    rotation_deg: float, translation_m: float, expected: str
 ) -> None:
-    """Answering False for a NaN would count a broken measurement as a failed recovery."""
+    """Answering False for a NaN would count a broken measurement as a failed recovery.
+
+    A negative error and a non-finite one are refused for different reasons and
+    say so, because they are different mistakes: one is a measurement that never
+    completed, the other a magnitude that came back with a sign.
+    """
 
     from bevcalib.metrics.calibration import recovered
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=expected):
         recovered(rotation_deg, translation_m)
 
 

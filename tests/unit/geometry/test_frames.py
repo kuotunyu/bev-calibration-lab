@@ -46,7 +46,10 @@ def test_composing_across_a_frame_gap_is_refused_and_names_both_frames() -> None
 
     from bevcalib.geometry.frames import compose_framed
 
-    with pytest.raises(ValueError) as raised:
+    with pytest.raises(
+        ValueError,
+        match=r"^cannot compose '.*'<-'.*' with '.*'<-'.*': the left transform starts from '.*' but the right one lands in '.*'$",
+    ) as raised:
         compose_framed(framed("global", "lidar_ego"), framed("camera_ego", "camera_sensor"))
 
     message = str(raised.value)

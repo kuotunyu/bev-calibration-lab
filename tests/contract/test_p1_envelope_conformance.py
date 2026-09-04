@@ -61,7 +61,10 @@ def test_every_portfolio_repository_is_an_accepted_producer() -> None:
         envelope = PortfolioArtifactEnvelopeV1.model_validate(candidate)
         assert envelope.producer_repository == repository
 
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ValueError,
+        match=r"^1 validation error for PortfolioArtifactEnvelopeV1\nproducer_repository\n  Input should be 'driving-risk-metrics', 'bev-calibration-lab' or 'perception-error-to-aeb'",
+    ):
         PortfolioArtifactEnvelopeV1.model_validate(
             document | {"producer_repository": "some-unrelated-project"}
         )
