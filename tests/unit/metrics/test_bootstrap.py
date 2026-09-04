@@ -8,6 +8,7 @@ supports.
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 DEFAULT_SEED = 20260831
@@ -193,3 +194,103 @@ def test_an_interval_cannot_be_edited_after_the_fact() -> None:
 
     with pytest.raises(dataclasses.FrozenInstanceError):
         paired_scene_bootstrap(paired(a=(1.0, 0.0)), resamples=10).low = 0.0  # type: ignore[misc]
+
+
+SCENES = {"a": (1.0, 0.0), "b": (2.0, 0.5), "c": (3.0, 1.0), "d": (4.0, 3.0)}
+
+
+def test_the_resampled_index_stream_is_the_rule_the_interval_records() -> None:
+    """The draw is a documented recipe, so the indices it produces are a contract.
+
+    `BootstrapInterval` records only the seed and the resample count, so a
+    reader reproduces the interval by re-deriving the draw: `sha256("seed|n")`
+    read as big-endian uint32 words, concatenated until the block is full,
+    reduced modulo the scene count. This pins what that recipe yields.
+
+    Every part of the loop is load-bearing and none of it is visible in the
+    interval itself. Starting the fill or the counter at one, stepping the
+    counter by two or backwards, or assigning the fill count instead of adding
+    to it, all leave a well-formed array of indices in range — a different
+    array, drawn from a different stream, producing a different published
+    interval that still looks entirely reasonable.
+    """
+
+    from bevcalib.metrics.bootstrap import _resample_indices
+
+    indices = _resample_indices(7, 3, 4)
+
+    assert indices.tolist() == [[2, 3, 0, 3], [2, 3, 1, 1], [3, 0, 1, 1]]
+    assert indices.dtype == np.int64
+
+
+def test_a_single_resample_is_a_usable_bootstrap() -> None:
+    """One resample is degenerate but well formed, and the guard says at least one.
+
+    Written `<= 1` or `< 2` the validator would refuse the smallest bootstrap
+    anybody can ask for, and the refusal would read as a malformed request
+    rather than as an off-by-one bound. The interval it returns collapses to a
+    point, which is the caller's problem and not the validator's.
+    """
+
+    from bevcalib.metrics.bootstrap import paired_scene_bootstrap
+
+    interval = paired_scene_bootstrap(SCENES, resamples=1, seed=7)
+
+    assert interval.resamples == 1
+    assert interval.low == interval.high
+    assert interval.estimate == pytest.approx(1.375)
+
+
+def test_the_interval_cuts_an_equal_tail_from_each_end() -> None:
+    """A 50% interval is the quartiles, and the two tails must be the same size.
+
+    The bound comes from `(1 - confidence) / 2` at each end. Multiplying instead
+    of halving sends the lower cut past the upper one; dividing by three leaves
+    a wider interval than the confidence claims. Neither shows in the recorded
+    `confidence` field, which is copied through untouched, so the number a
+    reader trusts would not match the interval they are given.
+
+    The expectation is recomputed here from the same draws with numpy's own
+    quantile, so it tests the tail arithmetic rather than restating it.
+    """
+
+    from bevcalib.metrics.bootstrap import _resample_indices, paired_scene_bootstrap
+
+    interval = paired_scene_bootstrap(SCENES, resamples=200, seed=7, confidence=0.5)
+
+    differences = np.array([before - after for before, after in SCENES.values()])
+    means = differences[_resample_indices(7, 200, differences.size)].mean(axis=1)
+    expected_low, expected_high = np.quantile(means, [0.25, 0.75])
+
+    assert interval.low == pytest.approx(float(expected_low))
+    assert interval.high == pytest.approx(float(expected_high))
+    assert interval.low < interval.high
+
+
+@pytest.mark.parametrize(
+    ("resamples", "confidence", "message"),
+    [
+        (0, 0.95, r"^a bootstrap needs at least one resample, got 0$"),
+        (-3, 0.95, r"^a bootstrap needs at least one resample, got -3$"),
+        (10, 0.0, r"^the confidence must lie within \(0, 1\), got 0\.0$"),
+        (10, 1.0, r"^the confidence must lie within \(0, 1\), got 1\.0$"),
+        (10, 1.5, r"^the confidence must lie within \(0, 1\), got 1\.5$"),
+    ],
+)
+def test_a_malformed_request_names_the_value_it_refused(
+    resamples: int,
+    confidence: float,
+    message: str,
+) -> None:
+    """The offending number is the diagnosis, and both bounds are exclusive.
+
+    A caller sweeping a confidence level or a resample count needs to see which
+    value was rejected, not merely that something was. Both messages interpolate
+    it, and asserting them in full is also what makes them detectable when the
+    wording changes.
+    """
+
+    from bevcalib.metrics.bootstrap import paired_scene_bootstrap
+
+    with pytest.raises(ValueError, match=message):
+        paired_scene_bootstrap(SCENES, resamples=resamples, seed=7, confidence=confidence)

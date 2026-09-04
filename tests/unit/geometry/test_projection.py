@@ -249,3 +249,96 @@ def test_moving_a_point_along_its_own_ray_does_not_move_its_pixel(
 
     np.testing.assert_allclose(result.uv[0], result.uv[1], rtol=1e-9, atol=1e-9)
     assert result.optical_depth[1] == pytest.approx(z * scale)
+
+
+@pytest.mark.parametrize(
+    "size",
+    [(1, 1), (1, 4), (8, 1)],
+    ids=["a single pixel", "a one-pixel-wide column", "a one-pixel-high row"],
+)
+def test_an_image_one_pixel_across_is_a_valid_canvas(size: tuple[int, int]) -> None:
+    """The bound is positivity, so one is the smallest canvas and must be accepted.
+
+    Written `<= 1` in either dimension the validator would refuse a single row
+    or column. That is not hypothetical: a debug crop and a one-row test
+    fixture both hit it, and the refusal would read as a malformed image size
+    rather than as an off-by-one bound. The rasteriser shares this validator,
+    so the two cannot disagree about the canvas.
+    """
+
+    from bevcalib.geometry.projection import validate_image_size
+
+    assert validate_image_size(size) == size
+
+
+@pytest.mark.parametrize(
+    ("fx", "fy"),
+    [(1.0, 800.0), (800.0, 1.0), (1.0, 1.0)],
+    ids=["a one-pixel focal length in x", "in y", "in both"],
+)
+def test_a_focal_length_of_one_pixel_is_accepted(fx: float, fy: float) -> None:
+    """The bound is positivity, and one pixel is positive.
+
+    A focal length that small describes an extremely wide lens rather than a
+    broken camera, and nothing downstream divides by anything that vanishes
+    because of it. Written `<= 1.0` the validator would refuse it, and the
+    refusal would name the focal length as the fault when the bound is what is
+    wrong.
+    """
+
+    from bevcalib.geometry.projection import project_camera
+
+    intrinsic = np.array([[fx, 0.0, 320.0], [0.0, fy, 240.0], [0.0, 0.0, 1.0]])
+
+    result = project_camera(np.array([[0.0, 0.0, 10.0]]), intrinsic, IMAGE_SIZE)
+
+    assert bool(result.in_front[0])
+
+
+@pytest.mark.parametrize(
+    ("fx", "fy"),
+    [(0.0, 800.0), (800.0, 0.0)],
+    ids=["a zero focal length in x", "in y"],
+)
+def test_a_focal_length_of_exactly_zero_is_refused_in_either_axis(
+    fx: float,
+    fy: float,
+) -> None:
+    """Zero is the value the bound exists to exclude, and both axes are checked.
+
+    A zero focal length collapses that axis of the image onto the principal
+    point, so every projected column or row would be identical and the
+    reprojection error would read as suspiciously good. Written `< 0.0` in
+    either clause the zero slips through.
+    """
+
+    from bevcalib.geometry.projection import project_camera
+
+    intrinsic = np.array([[fx, 0.0, 320.0], [0.0, fy, 240.0], [0.0, 0.0, 1.0]])
+
+    with pytest.raises(ValueError, match=r"^intrinsic focal lengths must be positive$"):
+        project_camera(np.array([[0.0, 0.0, 10.0]]), intrinsic, IMAGE_SIZE)
+
+
+def test_one_non_finite_point_invalidates_only_itself() -> None:
+    """Finiteness is decided per point, and a batch is not all-or-nothing.
+
+    A LiDAR sweep carries tens of thousands of returns and a handful of them
+    are junk. Reducing the finiteness check across the whole array instead of
+    along each row turns one bad return into an empty projection, and the
+    caller sees a sweep with no valid points rather than a sweep with one bad
+    one. Every downstream metric would then report nothing to measure.
+    """
+
+    from bevcalib.geometry.projection import project_camera
+
+    points = np.array(
+        [[0.0, 0.0, 10.0], [np.nan, 0.0, 10.0], [1.0, 1.0, 12.0]],
+        dtype=np.float64,
+    )
+    intrinsic = np.array([[800.0, 0.0, 320.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]])
+
+    result = project_camera(points, intrinsic, IMAGE_SIZE)
+
+    assert result.valid.tolist() == [True, False, True]
+    assert result.in_front.tolist() == [True, False, True]
