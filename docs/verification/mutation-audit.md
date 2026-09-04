@@ -187,6 +187,30 @@ the wrongly selected branch degenerate. They are recorded as outstanding rather
 than claimed as equivalent, because "no such matrix was found" is not a proof
 that none exists.
 
+## What anchoring an error message did not buy
+
+A `pytest.raises(..., match="finite")` cannot notice a reworded message, and
+mutmut pads a plain string literal to `"XXfiniteXX"`, which that pattern still
+matches. The argument is correct, and it predicts kills that do not exist here.
+
+Every loose `match=` in this suite was anchored on the whole message at
+`0ca959d`, and the score did not move: 114 survivors and 22 timeouts before and
+after, on a clone taken from that commit. Two facts explain it. mutmut 3.7 does
+not mutate f-strings, and almost every message in this core is an f-string that
+names the offending value - `geometry/quaternions.py` raises seven and only two
+are plain literals. The whole mutated core yields 14 padded-message mutants,
+and every one of them was already killed before the anchoring began.
+
+The anchoring was kept anyway, for something the score cannot see. In
+`training/engine.py`, `match="calibration"` also matches three other refusals
+that module raises - a calibration cohort of the wrong size, a NaN calibration
+loss, and a development cohort sharing a scene with the calibration cohort - so
+the test that meant to check a manifest playing the wrong part would have
+passed had any of those fired instead. An assertion that cannot tell four
+contracts apart is asserting less than the test claims, and no mutation score
+reports that. Each row of that test now names the slot and the declared role
+its own refusal reports.
+
 ## How an equivalence claim is kept honest
 
 An equivalent mutant cannot be killed. So a family that claims a mutant which
