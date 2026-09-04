@@ -63,22 +63,22 @@ It exercises no mutable code path, so the exclusion costs no killing power.
 
 ## The score
 
-### At `d29dc26`, run `2026-09-04T04:2xZ`
+### At `215d606`, run `2026-09-04T04:3xZ`
 
 | | Count | Share |
 | --- | ---: | ---: |
 | Mutants generated | 1,703 | |
-| **Killed by a test** | **1,563** | **91.78%** |
-| Timed out | 26 | |
+| **Killed by a test** | **1,567** | **92.01%** |
+| Timed out | 22 | |
 | Survived | 114 | 6.69% |
 
-**The gate is cleared on kills alone, by 30 mutants.** 90% of 1,703 is 1,533
-and the suite kills 1,563. Counting the timeouts as detections gives 93.31%;
+**The gate is cleared on kills alone, by 34 mutants.** 90% of 1,703 is 1,533
+and the suite kills 1,567. Counting the timeouts as detections gives 93.31%;
 that figure is reported for completeness and is not what the gate rests on. All
 but two of the timeouts are in the learned corrector, where a mutated model
 makes a torch test run long rather than fail.
 
-The first honest measurement of this core was 1,476 kills, 86.67%. The 87
+The first honest measurement of this core was 1,476 kills, 86.67%. The 91
 additional kills came from tests written for their own sake, each verified
 against the specific mutant before and after.
 
@@ -158,6 +158,17 @@ Mutation testing pointed at real gaps rather than only at noise.
   one-pixel focal length, a single resample, a single evaluation and a starting
   point exactly on its bound are all legitimate inputs that an off-by-one bound
   would refuse while naming the input as the fault.
+
+- **A pitch of exactly a quarter turn.** Roll and yaw stop being separable
+  there, and a naive decomposition returns zeros for both while looking
+  entirely reasonable. The guard refuses it; the test covers both sides of the
+  bound, because 89.9 degrees is a legitimate fault however extreme and an
+  off-by-one there would refuse it.
+- **Which shape check refused an input.** Two separate checks run in the
+  five-channel builder — the colour tensor's own rank and channel count, then
+  the depth and validity maps against the image it describes — and a bare
+  `pytest.raises(ValueError)` could not tell them apart. A caller who cropped
+  the depth map needs to be sent to the depth map, not to the channel count.
 
 ## Survivors still outstanding
 
