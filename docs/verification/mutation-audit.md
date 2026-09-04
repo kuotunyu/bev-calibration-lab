@@ -63,24 +63,26 @@ It exercises no mutable code path, so the exclusion costs no killing power.
 
 ## The score
 
-### At `215d606`, run `2026-09-04T04:3xZ`
+### At `43e803c`, run `2026-09-04T06:47Z`
 
 | | Count | Share |
 | --- | ---: | ---: |
 | Mutants generated | 1,703 | |
-| **Killed by a test** | **1,567** | **92.01%** |
+| **Killed by a test** | **1,590** | **93.36%** |
 | Timed out | 22 | |
-| Survived | 114 | 6.69% |
+| Survived | 91 | 5.34% |
 
-**The gate is cleared on kills alone, by 34 mutants.** 90% of 1,703 is 1,533
-and the suite kills 1,567. Counting the timeouts as detections gives 93.31%;
+**The gate is cleared on kills alone, by 57 mutants.** 90% of 1,703 is 1,533
+and the suite kills 1,590. Counting the timeouts as detections gives 94.66%;
 that figure is reported for completeness and is not what the gate rests on. All
 but two of the timeouts are in the learned corrector, where a mutated model
 makes a torch test run long rather than fail.
 
-The first honest measurement of this core was 1,476 kills, 86.67%. The 91
-additional kills came from tests written for their own sake, each verified
-against the specific mutant before and after.
+The first honest measurement of this core was 1,476 kills, 86.67%, and the
+previous release candidate `215d606` stood at 1,567, 92.01%. Every additional
+kill came from a test written for its own sake and verified against the specific
+mutant before and after: `survived` on the working tree first, `killed` after.
+No mutant was counted on an argument.
 
 ## What the survivors taught
 
@@ -170,12 +172,62 @@ Mutation testing pointed at real gaps rather than only at noise.
   `pytest.raises(ValueError)` could not tell them apart. A caller who cropped
   the depth map needs to be sent to the depth map, not to the channel count.
 
+## What the last twenty-three kills were about
+
+They are grouped here because the groups are more useful than the count.
+
+- **A `dtype=bool` argument nulled, three times over.** `rasterize_min_depth`,
+  `pixel_error_percentiles` and `trimmed_distance_transform_score` all take a
+  mask, and all three combine it with other tests before using it as an index.
+  Without the cast the mask stays integer, and indexing with an integer array is
+  POSITIONAL: `[0, 1, 1, 0]` reads four elements by index instead of selecting
+  two, silently reporting the first error twice and dropping the last two. The
+  upstream projection stage hands out 0/1, so this is the ordinary case rather
+  than an exotic one. Each of the three now asserts that an integer mask gives
+  what a boolean mask gives.
+- **`continue` becoming `break` in the ring loop.** The lowest LiDAR beam grazes
+  the ground and often returns once, so a ring with fewer than two members is the
+  first thing `lidar_depth_edges` meets in almost every real sweep. Abandoning
+  the sweep there drops every edge in the frame and still returns a well-formed,
+  empty result.
+- **Two strict bounds with a tolerance.** `> bound + tolerance` becoming `>=`
+  makes the tolerance a decoration and refuses a starting guess the protocol
+  says is legal. The discriminating value is exactly `bound + tolerance`, so the
+  tests construct it arithmetically - one at the corrector's entry and one on a
+  step that lands on it mid-search.
+- **Fields copied into a failure record.** An unusable ground-contact
+  observation still knows which box it was and where the box really is; both
+  come from ground truth and are independent of the calibration. Blanking them
+  would leave the summary unable to say whether the excluded boxes were the near
+  ones or the far ones. `valid` is asserted to be exactly `False` rather than
+  merely falsy, because `None` is falsy too and is written into an artifact.
+- **A sort key.** `summarize_validity` orders reasons by frequency and breaks
+  ties by name. The existing test used "common" and "rare", where alphabetical
+  order agrees with frequency order, so dropping the key changed nothing and the
+  ordering looked tested while nothing held it. The reasons are now named so the
+  two orders contradict, and a second test covers the tie-break.
+- **A message never asserted.** A bare `pytest.raises(ValueError)` cannot tell
+  `raise ValueError(f"...")` from `raise ValueError(None)`, and `range_bin` had
+  one. An exception with no message is exactly what a caller cannot act on.
+
 ## Survivors still outstanding
 
-114 survive, and they are recorded rather than hidden. Only three match an
+91 survive, and they are recorded rather than hidden. Only three match an
 equivalence family that has been argued and checked; the rest are unexplained
 and would each need either a killing test or an argument that survives the
 falsification check described below.
+
+A large share of what is left is the same shape: `np.asarray(x,
+dtype=np.float64)` with the dtype nulled, at a call site where every downstream
+use promotes anyway. `project_camera` is the clearest case - its points feed a
+matmul against a float64 intrinsic and an explicit `np.array(..., dtype=np.
+float64)` on the next line, so the argument cannot change any output. Those are
+candidates for an equivalence argument rather than for a test, and they are
+counted as outstanding until one is written and checked. Three more were
+verified against numpy 2.4.6 rather than assumed: `reshape(-2, 3)` behaves as
+`reshape(-1, 3)` because any negative entry is the placeholder,
+`np.argsort(kind="STABLE")` is accepted and normalised, and `np.full(shape,
+np.nan, dtype=None)` is float64 because `np.nan` is a Python float.
 
 The largest single group is nine mutations of one line: the branch condition
 `values[0, 0] > values[1, 1] and values[0, 0] > values[2, 2]` in
