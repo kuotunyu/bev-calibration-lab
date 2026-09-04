@@ -291,6 +291,7 @@ def test_a_matrix_that_drifts_inside_numpy_default_tolerances_is_still_refused()
     """
 
     from bevcalib.geometry import quaternions as module
+
     rotation = module.quaternion_to_matrix((0.5, 0.5, 0.5, 0.5))
     drift = 5e-9
     skewed = rotation @ np.diag([1.0 + drift, 1.0, 1.0 / (1.0 + drift)])
@@ -306,12 +307,20 @@ def test_a_matrix_that_drifts_inside_numpy_default_tolerances_is_still_refused()
 @pytest.mark.parametrize(
     ("quaternion", "expected"),
     [
-        ((math.sqrt(0.5), 0.0, 0.0, math.sqrt(0.5)), (0.7071067811865475, 0.0, 0.0, 0.7071067811865478)),
+        (
+            (math.sqrt(0.5), 0.0, 0.0, math.sqrt(0.5)),
+            (0.7071067811865475, 0.0, 0.0, 0.7071067811865478),
+        ),
         ((0.0, 1.0, 0.0, 0.0), (0.0, 1.0, 0.0, 0.0)),
         ((0.0, 0.0, 1.0, 0.0), (0.0, 0.0, 1.0, 0.0)),
         ((0.0, 0.0, 0.0, 1.0), (0.0, 0.0, 0.0, 1.0)),
     ],
-    ids=["branch W: positive trace", "branch X: half turn about x", "branch Y: half turn about y", "branch Z: half turn about z"],
+    ids=[
+        "branch W: positive trace",
+        "branch X: half turn about x",
+        "branch Y: half turn about y",
+        "branch Z: half turn about z",
+    ],
 )
 def test_each_conversion_branch_produces_its_exact_documented_value(
     quaternion: tuple[float, float, float, float],
@@ -351,6 +360,7 @@ def test_a_trace_of_exactly_zero_does_not_take_the_positive_trace_branch() -> No
     """
 
     from bevcalib.geometry import quaternions as module
+
     axis = np.array([1.0, 1.0, 1.0]) / math.sqrt(3.0)
     matrix = module.quaternion_to_matrix(
         (math.cos(math.radians(60.0)), *(axis * math.sin(math.radians(60.0))))
@@ -370,6 +380,7 @@ def test_a_tie_between_the_second_and_third_diagonal_entries_takes_the_last_bran
     """
 
     from bevcalib.geometry import quaternions as module
+
     axis = np.array([0.0, 1.0, 1.0]) / math.sqrt(2.0)
     matrix = module.quaternion_to_matrix((0.0, *axis))
 
@@ -404,7 +415,9 @@ def test_a_norm_too_small_to_be_a_rotation_reports_the_norm_it_saw() -> None:
 
     from bevcalib.geometry import quaternions as module
 
-    with pytest.raises(ValueError, match=r"^quaternion norm 0\.0 is too small to define a rotation$"):
+    with pytest.raises(
+        ValueError, match=r"^quaternion norm 0\.0 is too small to define a rotation$"
+    ):
         module.normalize_quaternion_wxyz((0.0, 0.0, 0.0, 0.0))
 
 
