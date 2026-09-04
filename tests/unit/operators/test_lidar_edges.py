@@ -335,3 +335,56 @@ def test_projected_points_that_are_not_n_by_2_are_rejected(shape: tuple[int, ...
 
     with pytest.raises(ValueError, match=r"\[N, 2\]|shape"):
         trimmed_distance_transform_score(np.zeros(shape), image_edges)
+
+
+@pytest.mark.parametrize(
+    ("u", "v"),
+    [(-0.5, 2.0), (4.0, 2.0), (2.0, -0.5), (2.0, 4.0), (4.5, 4.5)],
+    ids=[
+        "past the left edge",
+        "exactly at the width",
+        "above the top edge",
+        "exactly at the height",
+        "past the far corner in both axes",
+    ],
+)
+def test_a_point_outside_any_edge_of_the_image_is_refused(u: float, v: float) -> None:
+    """Four independent bounds, and each one alone must refuse the point.
+
+    Every clause is joined by `or`, so a point over any single edge is out. Turn
+    one of those into an `and` and that edge stops being checked, because the
+    two halves of the pair can never both hold; make one comparison
+    non-inclusive and the pixel exactly at the width or the height slips
+    through. Either way the index reaches numpy, where a negative wraps to the
+    opposite edge and an over-large one raises something that reads as a bug
+    rather than as bad input.
+
+    The image here is 4x4, so column and row 4 are the first outside it.
+    """
+
+    from bevcalib.operators.lidar_edges import trimmed_distance_transform_score
+
+    image_edges = np.zeros((4, 4), dtype=bool)
+    image_edges[0, 0] = True
+
+    with pytest.raises(ValueError, match=r"^a projected point falls outside the image bounds$"):
+        trimmed_distance_transform_score(np.array([[u, v]]), image_edges)
+
+
+def test_a_single_point_is_scored_rather_than_trimmed_away() -> None:
+    """The trim keeps at least one point, so the smallest cohort still has a score.
+
+    `ceil(1 * 0.8)` is one, but a floor of two would ask for more points than
+    exist and average over a padded tail. A single projected point is the
+    degenerate case an optimiser hits when a fault pushes almost everything out
+    of frame, and it must return that point's own distance.
+    """
+
+    from bevcalib.operators.lidar_edges import trimmed_distance_transform_score
+
+    image_edges = np.zeros((4, 4), dtype=bool)
+    image_edges[0, 0] = True
+
+    score = trimmed_distance_transform_score(np.array([[3.0, 0.0]]), image_edges)
+
+    assert score == pytest.approx(-3.0)

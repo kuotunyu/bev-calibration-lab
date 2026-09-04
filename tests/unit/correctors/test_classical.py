@@ -291,3 +291,86 @@ def test_a_search_with_no_evaluations_at_all_is_refused() -> None:
 
     with pytest.raises(ValueError, match="at least one evaluation"):
         coarse_to_fine_correct(paraboloid((0.0,) * 6), max_evaluations=0)
+
+
+def test_a_budget_of_one_evaluation_is_a_valid_search() -> None:
+    """One evaluation is the smallest honest search: score the start and stop.
+
+    The bound is at-least-one, so one must pass it. Written `<= 1` or `< 2` the
+    validator would refuse the cheapest possible call, which is exactly what a
+    caller probing the objective once would ask for, and the refusal would read
+    as a malformed request rather than as an off-by-one bound.
+
+    The single evaluation is spent on the incumbent, so the search cannot move
+    and cannot claim convergence: it has no second value to compare against.
+    """
+
+    from bevcalib.correctors.classical import coarse_to_fine_correct
+
+    calls: list[int] = []
+
+    def objective(point: np.ndarray) -> float:
+        calls.append(1)
+        return -float(np.abs(point).sum())
+
+    result = coarse_to_fine_correct(objective, np.zeros(6), max_evaluations=1)
+
+    assert len(calls) == 1
+    assert not result.converged
+    assert result.rotation_rpy_deg == (0.0, 0.0, 0.0)
+    assert result.translation_xyz_m == (0.0, 0.0, 0.0)
+
+
+def test_the_budget_counts_every_objective_call_including_the_first() -> None:
+    """The incumbent's own score is an evaluation, and the count starts at zero.
+
+    Starting the counter at one would spend a call the objective never made, so
+    a caller who budgeted 600 would get 599 and the recorded evaluation count
+    would disagree with the number of times their own function ran. That
+    discrepancy is invisible in the result and would quietly change what a
+    fixed-budget comparison between two correctors means.
+    """
+
+    from bevcalib.correctors.classical import coarse_to_fine_correct
+
+    calls: list[int] = []
+
+    def objective(point: np.ndarray) -> float:
+        calls.append(1)
+        return -float(np.abs(point).sum())
+
+    result = coarse_to_fine_correct(objective, np.zeros(6), max_evaluations=5)
+
+    assert len(calls) == 5
+    assert result.evaluations == 5
+
+
+@pytest.mark.parametrize(
+    "coordinate",
+    [0, 3],
+    ids=["a rotation at its bound", "a translation at its bound"],
+)
+def test_a_starting_point_exactly_on_its_bound_is_accepted(coordinate: int) -> None:
+    """The bound is inclusive to within a tolerance, so the bound itself is inside.
+
+    A search is often started from the previous frame's answer, and that answer
+    can sit exactly on a bound. Written `>=` the validator would refuse it and
+    the caller would be told their starting point is out of range when it is
+    precisely in range; widening the comparison the other way, by subtracting
+    the tolerance instead of adding it, refuses everything within a hair of the
+    bound for the same reason.
+    """
+
+    from bevcalib.correctors.classical import (
+        ROTATION_BOUND_DEG,
+        TRANSLATION_BOUND_M,
+        coarse_to_fine_correct,
+    )
+
+    start = np.zeros(6)
+    start[coordinate] = ROTATION_BOUND_DEG if coordinate < 3 else TRANSLATION_BOUND_M
+
+    result = coarse_to_fine_correct(lambda point: 0.0, start, max_evaluations=50)
+
+    recovered = np.array([*result.rotation_rpy_deg, *result.translation_xyz_m])
+    np.testing.assert_allclose(recovered, start, atol=0.0)

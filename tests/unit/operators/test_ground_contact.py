@@ -325,3 +325,128 @@ def test_the_ground_plane_must_come_from_a_pose_in_global() -> None:
 
     with pytest.raises(ValueError, match="global"):
         ground_plane_z_from_ego(sensor)
+
+
+# A camera 1.5 m up and 5 m along +x, so its origin has more than one non-zero
+# component and a sign error in the range cannot cancel itself out.
+OFFSET_CAMERA_FROM_GLOBAL = SE3(
+    rotation_wxyz=matrix_to_quaternion(_CAMERA_ROTATION),
+    translation_xyz_m=(0.0, 1.5, -5.0),
+)
+
+
+def observation_at(box_center: tuple[float, float, float], camera: SE3, **overrides: object):
+    """One upright pedestrian-sized box, observed with the same calibration twice."""
+
+    from bevcalib.operators.ground_contact import observe_ground_contact
+
+    arguments: dict[str, object] = {
+        "box_token": "token",
+        "box_center_global": np.array(box_center),
+        "size_wlh": (0.6, 0.6, 1.7),
+        "orientation_wxyz": IDENTITY_QUATERNION,
+        "true_camera_from_global": camera,
+        "assumed_camera_from_global": camera,
+        "intrinsic": INTRINSIC,
+        "image_size_wh": IMAGE_SIZE,
+        "ground_z_global": GROUND_Z,
+    }
+    arguments.update(overrides)
+    return observe_ground_contact(**arguments)  # type: ignore[arg-type]
+
+
+def test_a_pedestrian_sized_box_is_a_valid_box() -> None:
+    """The bound on a box dimension is positivity, not a minimum of one metre.
+
+    A pedestrian is about 0.6 m across and nuScenes is full of them, as well as
+    of traffic cones and bicycles narrower still. Written `> 1.0` the guard
+    would refuse most of the vulnerable road users the study exists to measure,
+    and the refusal would name the box as malformed.
+    """
+
+    from bevcalib.operators.ground_contact import bottom_center_global
+
+    contact = bottom_center_global(np.array([1.0, 2.0, 0.85]), (0.6, 0.6, 1.7), IDENTITY_QUATERNION)
+
+    np.testing.assert_allclose(contact, [1.0, 2.0, 0.0], atol=1e-12)
+
+
+def test_the_range_is_measured_from_the_camera_to_the_contact_point() -> None:
+    """A sign error here reads as a distant object and is filtered out as one.
+
+    The range gates which observations are usable at all, so getting it wrong
+    silently changes the cohort rather than any single number. The camera used
+    here is displaced along two axes: with the usual fixture, whose origin
+    differs from the contact only in z, adding and subtracting give the same
+    length and the error is invisible.
+
+    The expected value is recomputed here from the two positions rather than
+    recorded, so the test states the definition rather than an output.
+    """
+
+    from bevcalib.geometry.se3 import inverse
+
+    observation = observation_at((12.0, 2.0, 0.85), OFFSET_CAMERA_FROM_GLOBAL)
+
+    origin = np.asarray(inverse(OFFSET_CAMERA_FROM_GLOBAL).translation_xyz_m)
+    contact = np.array([12.0, 2.0, GROUND_Z])
+    assert observation.valid
+    assert observation.range_m == pytest.approx(float(np.linalg.norm(contact - origin)))
+    assert observation.range_m < float(np.linalg.norm(contact + origin))
+
+
+def test_a_contact_at_exactly_the_range_limit_is_kept(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The range bound is exclusive above, so the limit itself is still usable.
+
+    Written `>=` the observation exactly at the limit would be discarded, which
+    moves the cohort boundary by one observation in every scene and does it
+    silently, because a discarded observation is a legitimate outcome rather
+    than an error.
+
+    The limit is moved onto the measured range rather than the geometry being
+    contrived to land on 80 m: no exact-arithmetic configuration puts a ground
+    point exactly 80 m from a raised camera AND inside the image, and a range
+    that is 80.000000000001 would be discarded by the correct code too.
+    """
+
+    from bevcalib.operators import ground_contact
+
+    baseline = observation_at((12.0, 2.0, 0.85), OFFSET_CAMERA_FROM_GLOBAL)
+    assert baseline.valid
+
+    monkeypatch.setattr(ground_contact, "MAX_RANGE_M", baseline.range_m)
+    at_the_limit = observation_at((12.0, 2.0, 0.85), OFFSET_CAMERA_FROM_GLOBAL)
+
+    assert at_the_limit.range_m == baseline.range_m
+    assert at_the_limit.valid
+
+
+def test_a_ray_that_reaches_the_ground_at_unit_distance_still_reconstructs() -> None:
+    """The distance bound refuses zero and behind, and one metre is neither.
+
+    The pixel one focal length below the principal point looks down at exactly
+    45 degrees, so with the camera 1.5 m up and the plane at 0.5 m the ray meets
+    the ground at a distance of exactly one. Written `<= 1.0` the reconstruction
+    would return `None` there and the caller would read it as a pixel above the
+    horizon.
+    """
+
+    from bevcalib.operators.ground_contact import reconstruct_ground_contact
+
+    contact = reconstruct_ground_contact((320.0, 1040.0), CAMERA_FROM_GLOBAL, INTRINSIC, 0.5)
+
+    assert contact == pytest.approx((1.0, 0.0), abs=1e-12)
+
+
+def test_a_plane_through_the_camera_itself_has_no_reconstruction() -> None:
+    """A distance of exactly zero is not a contact point; it is the camera.
+
+    Setting the ground plane at the camera's own height makes every ray meet it
+    at zero distance. Written `< 0.0` the guard would let that through and
+    return the camera's own position as a ground contact, which is a perfectly
+    plausible pair of coordinates and wrong for every pixel at once.
+    """
+
+    from bevcalib.operators.ground_contact import reconstruct_ground_contact
+
+    assert reconstruct_ground_contact((320.0, 1040.0), CAMERA_FROM_GLOBAL, INTRINSIC, 1.5) is None
