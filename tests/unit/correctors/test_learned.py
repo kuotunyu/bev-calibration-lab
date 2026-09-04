@@ -123,22 +123,56 @@ def test_a_depth_that_is_not_a_positive_distance_is_treated_as_unobserved(
 
 
 @pytest.mark.parametrize(
-    ("rgb_shape", "depth_shape", "valid_shape"),
+    ("rgb_shape", "depth_shape", "valid_shape", "message"),
     [
-        ((4, HEIGHT, WIDTH), (HEIGHT, WIDTH), (HEIGHT, WIDTH)),
-        ((3, HEIGHT, WIDTH), (HEIGHT, WIDTH + 1), (HEIGHT, WIDTH)),
-        ((3, HEIGHT, WIDTH), (HEIGHT, WIDTH), (HEIGHT + 1, WIDTH)),
-        ((3, HEIGHT), (HEIGHT, WIDTH), (HEIGHT, WIDTH)),
+        (
+            (4, HEIGHT, WIDTH),
+            (HEIGHT, WIDTH),
+            (HEIGHT, WIDTH),
+            rf"^colour must have shape \[3, H, W\], got \(4, {HEIGHT}, {WIDTH}\)$",
+        ),
+        (
+            (3, HEIGHT),
+            (HEIGHT, WIDTH),
+            (HEIGHT, WIDTH),
+            rf"^colour must have shape \[3, H, W\], got \(3, {HEIGHT}\)$",
+        ),
+        (
+            (3, HEIGHT, WIDTH),
+            (HEIGHT, WIDTH + 1),
+            (HEIGHT, WIDTH),
+            rf"^depth \({HEIGHT}, {WIDTH + 1}\) and validity \({HEIGHT}, {WIDTH}\) must both "
+            rf"match the image \({HEIGHT}, {WIDTH}\)",
+        ),
+        (
+            (3, HEIGHT, WIDTH),
+            (HEIGHT, WIDTH),
+            (HEIGHT + 1, WIDTH),
+            rf"^depth \({HEIGHT}, {WIDTH}\) and validity \({HEIGHT + 1}, {WIDTH}\) must both "
+            rf"match the image \({HEIGHT}, {WIDTH}\)",
+        ),
     ],
 )
 def test_inputs_that_do_not_describe_one_image_are_rejected(
-    rgb_shape: tuple[int, ...], depth_shape: tuple[int, ...], valid_shape: tuple[int, ...]
+    rgb_shape: tuple[int, ...],
+    depth_shape: tuple[int, ...],
+    valid_shape: tuple[int, ...],
+    message: str,
 ) -> None:
-    """Mismatched shapes would broadcast into a tensor nobody intended."""
+    """Mismatched shapes would broadcast into a tensor nobody intended.
+
+    Each row names its message, and each message carries the shapes it saw. Two
+    separate checks run here — the colour tensor's own rank and channel count,
+    then the depth and validity maps against the image the colour tensor
+    describes — and a bare `pytest.raises(ValueError)` cannot tell which of them
+    fired. That matters when the two disagree: a caller who cropped the depth
+    map but not the image needs to be sent to the depth map, and a caller who
+    passed an RGBA image needs to be sent to the channel count.
+    """
 
     from bevcalib.correctors.learned import build_five_channel_input
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match=message):
         build_five_channel_input(
             np.zeros(rgb_shape, dtype=np.float32),
             np.zeros(depth_shape, dtype=np.float32),

@@ -251,3 +251,49 @@ def test_a_timing_fault_has_no_six_degree_inverse() -> None:
         match=r"^a timing fault has no 6DoF inverse: requested_time_offset_ms is \d+, not 0$",
     ):
         inverse_fault(fault(time_ms=50))
+
+
+@pytest.mark.parametrize(
+    ("pitch_deg", "separable"),
+    [(89.9, True), (90.0, False), (-90.0, False)],
+    ids=["just short of a quarter turn", "exactly a quarter turn", "exactly minus a quarter turn"],
+)
+def test_a_pitch_at_a_quarter_turn_is_refused_and_just_short_of_it_is_not(
+    pitch_deg: float,
+    separable: bool,
+) -> None:
+    """Roll and yaw stop being separable at exactly a quarter turn, and only there.
+
+    At that pitch the rotation matrix entry the decomposition divides through
+    goes to one, roll and yaw become the same degree of freedom, and a naive
+    decomposition returns zeros for both while looking entirely reasonable. The
+    guard refuses it instead.
+
+    Both sides of the bound are tested. Written the other way round, or with the
+    tolerance moved, the guard would either refuse ordinary large pitches — 89.9
+    degrees is a legitimate fault, however extreme — or let the degenerate one
+    through. No fault in this study comes near either, which is precisely why
+    the boundary needs a test rather than a caller to discover it.
+    """
+
+    from bevcalib.perturbations.apply import fault_to_se3, se3_to_fault
+
+    pose = fault_to_se3(
+        CalibrationFaultModel(
+            rotation_rpy_deg=(0.0, pitch_deg, 0.0),
+            translation_xyz_m=(0.0, 0.0, 0.0),
+            requested_time_offset_ms=0,
+        )
+    )
+
+    if separable:
+        assert se3_to_fault(pose).rotation_rpy_deg[1] == pytest.approx(pitch_deg, abs=1e-6)
+        return
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"^cannot decompose a rotation with a pitch of a quarter turn: "
+            r"roll and yaw are not separable there$"
+        ),
+    ):
+        se3_to_fault(pose)
