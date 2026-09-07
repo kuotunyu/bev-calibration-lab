@@ -1,0 +1,1 @@
+"""Machine-checkable verification evidence."""

@@ -54,8 +54,11 @@ def devkit():  # type: ignore[no-untyped-def]
 
 @pytest.mark.parametrize("sample_token", SAMPLE_TOKENS)
 def test_transformed_lidar_points_match_the_devkit(devkit, sample_token: str) -> None:  # type: ignore[no-untyped-def]
-    """The whole chain, compared against the reference implementation point for point."""
+    """The whole chain and native projection agree point for point."""
 
+    from nuscenes.utils.geometry_utils import view_points
+
+    from bevcalib.geometry.projection import project_camera
     from bevcalib.geometry.se3 import transform_points
     from bevcalib.nuscenes_adapter.frames import lidar_to_camera_chain
     from bevcalib.nuscenes_adapter.samples import read_lidar_points, read_sensor_packet
@@ -72,11 +75,61 @@ def test_transformed_lidar_points_match_the_devkit(devkit, sample_token: str) ->
     )
 
     points = read_lidar_points(nuscenes_root() / lidar.file_relative_path)[:, :3]
+    assert points.shape[0] > 0
     ours = transform_points(lidar_to_camera_chain(lidar, camera).value, points)
-
     theirs = devkit_chain_points(devkit, lidar, camera, points)
+    np.testing.assert_allclose(ours, theirs, atol=TOLERANCE, rtol=0)
 
-    np.testing.assert_allclose(ours, theirs, atol=TOLERANCE)
+    camera_data = devkit.get("sample_data", camera.sample_data_token)
+    calibrated = devkit.get("calibrated_sensor", camera_data["calibrated_sensor_token"])
+    intrinsic = np.asarray(calibrated["camera_intrinsic"], dtype=np.float64)
+    image_size = (int(camera_data["width"]), int(camera_data["height"]))
+    projected = project_camera(ours, intrinsic, image_size)
+    finite = np.all(np.isfinite(theirs), axis=1)
+    projectable = finite & (theirs[:, 2] != 0.0)
+    assert bool(np.any(projectable))
+    reference_uv = np.full_like(projected.uv, np.nan)
+    reference_uv[projectable] = view_points(theirs[projectable].T, intrinsic, normalize=True)[:2].T
+    reference_depth = theirs[:, 2]
+    reference_in_front = finite & (reference_depth > 0.0)
+    width, height = image_size
+    reference_in_image = (
+        (reference_uv[:, 0] >= 0.0)
+        & (reference_uv[:, 0] < width)
+        & (reference_uv[:, 1] >= 0.0)
+        & (reference_uv[:, 1] < height)
+    )
+    reference_valid = reference_in_front & reference_in_image
+
+    np.testing.assert_array_equal(projected.in_front, reference_in_front)
+    np.testing.assert_array_equal(projected.in_image, reference_in_image)
+    np.testing.assert_array_equal(projected.valid, reference_valid)
+    assert bool(np.any(reference_valid))
+    np.testing.assert_allclose(
+        projected.uv[reference_valid], reference_uv[reference_valid], atol=TOLERANCE, rtol=0
+    )
+    np.testing.assert_allclose(
+        projected.optical_depth,
+        reference_depth,
+        atol=TOLERANCE,
+        rtol=0,
+    )
+
+    point_max_abs_error = float(np.max(np.abs(ours - theirs)))
+    uv_max_abs_error = float(
+        np.max(np.abs(projected.uv[reference_valid] - reference_uv[reference_valid]))
+    )
+    depth_max_abs_error = float(np.max(np.abs(projected.optical_depth - reference_depth)))
+    max_abs_error = max(point_max_abs_error, uv_max_abs_error, depth_max_abs_error)
+    print(
+        "H_PARITY "
+        f"case=lidar_projection sample_index={SAMPLE_TOKENS.index(sample_token)} "
+        f"comparison_count={points.shape[0]} valid_uv_count={int(np.sum(reference_valid))} "
+        f"point_max_abs_error={point_max_abs_error:.17g} "
+        f"uv_max_abs_error={uv_max_abs_error:.17g} "
+        f"depth_max_abs_error={depth_max_abs_error:.17g} "
+        f"max_abs_error={max_abs_error:.17g}"
+    )
 
 
 def devkit_chain_points(devkit, lidar, camera, points: np.ndarray) -> np.ndarray:  # type: ignore[no-untyped-def]
@@ -121,7 +174,9 @@ def test_box_centres_match_the_devkit(devkit, sample_token: str) -> None:  # typ
         lookup, sample["data"]["CAM_FRONT"], ego_frame="camera_ego", sensor_frame="camera_sensor"
     )
     _, reference_boxes, _ = devkit.get_sample_data(sample["data"]["CAM_FRONT"])
+    assert reference_boxes
 
+    errors = []
     for reference in reference_boxes:
         global_box = devkit.get_box(reference.token)
         ours, _ = transform_global_box_to_camera(
@@ -129,4 +184,11 @@ def test_box_centres_match_the_devkit(devkit, sample_token: str) -> None:  # typ
             tuple(float(value) for value in global_box.orientation.elements),
             camera,
         )
-        np.testing.assert_allclose(ours, np.asarray(reference.center), atol=TOLERANCE)
+        expected = np.asarray(reference.center)
+        np.testing.assert_allclose(ours, expected, atol=TOLERANCE, rtol=0)
+        errors.append(float(np.max(np.abs(ours - expected))))
+    print(
+        "H_PARITY "
+        f"case=box_centers sample_index={SAMPLE_TOKENS.index(sample_token)} "
+        f"comparison_count={len(reference_boxes)} max_abs_error={max(errors):.17g}"
+    )
