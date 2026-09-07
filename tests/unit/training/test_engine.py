@@ -101,6 +101,10 @@ def write_cohort(path: Path, role: str, prefix: str, scene_count: int) -> Path:
 class FakeBackend:
     """A stand-in framework whose per-epoch losses are decided by the test."""
 
+    def prepare(self, config: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+        """The concrete adapter validates its local inputs here before output creation."""
+        return {}
+
     def __init__(
         self,
         training_losses: tuple[float, ...] = (4.0, 3.0, 2.0, 1.0),

@@ -186,6 +186,10 @@ def test_the_engine_drives_a_real_backend_through_a_whole_run(tmp_path: Path) ->
     class TorchBackend:
         """A real backend: a real model, a real optimiser, a real checkpoint file."""
 
+        def prepare(self, config: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
+            """This legacy tensor fixture has no file-backed observation source."""
+            return {}
+
         def __init__(self) -> None:
             self.inputs, self.targets = synthetic_batch()
 

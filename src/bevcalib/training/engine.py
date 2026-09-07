@@ -16,7 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from bevcalib.artifacts.envelope import canonical_json_bytes
 from bevcalib.artifacts.run_record import RunRecordV1, load_run_provenance
-from bevcalib.cohort.manifest import CohortManifestV2, load_formal_manifest
+from bevcalib.cohort.manifest import CohortManifestV2, load_formal_manifest, load_manifest
 from bevcalib.cohort.protocol import resolve_protocol
 from bevcalib.cohort.records import validate_records
 
@@ -28,6 +28,10 @@ RUN_RECORD_FILENAME = "run_record.json"
 
 class TrainingBackend(Protocol):
     """The framework boundary. No tensor or optimiser code lives in this engine."""
+
+    def prepare(
+        self, config: Mapping[str, object], context: Mapping[str, object]
+    ) -> Mapping[str, object]: ...
 
     def seed_all(self, seed: int) -> None: ...
 
@@ -155,6 +159,7 @@ def train_learned_corrector(
     seed: int,
     *,
     backend: TrainingBackend,
+    synthetic_fixture: bool = False,
 ) -> CalibrationTrainingResult:
     """Train the corrector and keep the epoch the calibration cohort liked best.
 
@@ -179,13 +184,28 @@ def train_learned_corrector(
     protocol = resolve_protocol(protocol_path)
     protocol_hash = protocol.protocol_hash
     dataset_version = protocol.dataset_version
-    development = load_formal_manifest(
+
+    def load_training_manifest(path: Path, **expected: Any) -> CohortManifestV2:
+        if not synthetic_fixture:
+            return load_formal_manifest(path, **expected)
+        result = load_manifest(path)
+        if not isinstance(result, CohortManifestV2) or (
+            result.role != expected["expected_role"]
+            or result.protocol_hash != protocol_hash
+            or result.dataset_version != dataset_version
+            or not result.scenes
+            or any(scene.official_split != "train" for scene in result.scenes)
+        ):
+            raise ValueError("synthetic training requires verified nonempty V2 training roles")
+        return result
+
+    development = load_training_manifest(
         development_manifest,
         expected_role="development",
         protocol_hash=protocol_hash,
         dataset_version=dataset_version,
     )
-    calibration = load_formal_manifest(
+    calibration = load_training_manifest(
         calibration_manifest,
         expected_role="calibration",
         protocol_hash=protocol_hash,
@@ -196,11 +216,9 @@ def train_learned_corrector(
     record_path = directory / RUN_RECORD_FILENAME
     if record_path.exists():
         raise FileExistsError(f"a run record already exists here: {record_path}")
-    directory.mkdir(parents=True, exist_ok=True)
-
     provenance = load_run_provenance()
     identity: dict[str, Any] = {
-        "run_id": f"{loaded.architecture}-seed-{seed}",
+        "run_id": f"{'synthetic-' if synthetic_fixture else ''}{loaded.architecture}-seed-{seed}",
         "config_sha256": _sha256_file(config_path),
         "protocol_sha256": protocol_hash,
         "cohort_manifest_sha256": hashlib.sha256(
@@ -212,6 +230,19 @@ def train_learned_corrector(
             )
         ).hexdigest(),
     }
+    context: dict[str, Any] = {
+        **identity,
+        "seed": seed,
+        "producer": provenance.model_dump(),
+        "synthetic_fixture": synthetic_fixture,
+        "development": development.model_dump(mode="json"),
+        "calibration": calibration.model_dump(mode="json"),
+        "config_raw": config_path.read_bytes().decode("utf-8"),
+    }
+    context["backend"] = dict(backend.prepare(loaded.model_dump(), context))
+    directory.mkdir(parents=True, exist_ok=True)
+    training_provenance_path = directory / "training_provenance.json"
+    training_provenance_path.write_bytes(canonical_json_bytes(context) + b"\n")
     started_at = _utc_now()
 
     def write_record(status: str, artifacts: dict[str, str]) -> None:
@@ -252,7 +283,7 @@ def train_learned_corrector(
                 reported_digest = backend.save_checkpoint(
                     model,
                     checkpoint_path,
-                    {"run_id": identity["run_id"], "epoch": epoch, "calibration_loss": best_loss},
+                    {**context, "epoch": epoch, "calibration_loss": best_loss},
                 )
 
         actual_digest = _sha256_file(checkpoint_path)
@@ -265,7 +296,13 @@ def train_learned_corrector(
         write_record("failed", {})
         raise
 
-    write_record("succeeded", {"selected_checkpoint": actual_digest})
+    write_record(
+        "succeeded",
+        {
+            "selected_checkpoint": actual_digest,
+            "training_provenance": _sha256_file(training_provenance_path),
+        },
+    )
     return CalibrationTrainingResult(
         selected_epoch=selected_epoch,
         checkpoint_path=checkpoint_path,
