@@ -364,3 +364,35 @@ def test_preflight_includes_missing_payload_inventory(installation_root: Path) -
     assert resolve_installation(installation_root, "v1.0-mini").preflight()["missing_payloads"] == [
         "selected"
     ]
+
+
+def test_observation_uses_per_sample_annotation_snapshot_without_full_scan(
+    installation_root: Path,
+) -> None:
+    from dataclasses import replace
+
+    from bevcalib.nuscenes_adapter.installation import resolve_installation
+    from bevcalib.preprocessing import load_observation
+
+    class ScanForbidden(dict):
+        def values(self):
+            raise AssertionError("observation scanned the complete annotation table")
+
+    entries = [
+        {"token": "first", "sample_token": "sample"},
+        {"token": "unrelated", "sample_token": "elsewhere"},
+        {"token": "last", "sample_token": "sample"},
+    ]
+    rewrite(installation_root, "sample_annotation", lambda rows: rows.extend(entries))
+    snapshot = resolve_installation(installation_root, "v1.0-mini")
+    scene = snapshot.scene_records()[0]
+    guarded = replace(
+        snapshot,
+        tables=snapshot.tables
+        | {"sample_annotation": ScanForbidden(snapshot.tables["sample_annotation"])},
+    )
+    assert [box["token"] for box in load_observation(guarded, scene, 0).boxes] == ["first", "last"]
+    rewrite(installation_root, "sample_annotation", lambda rows: rows.clear())
+    assert [box["token"] for box in load_observation(guarded, scene, 0).boxes] == ["first", "last"]
+    fresh = resolve_installation(installation_root, "v1.0-mini")
+    assert load_observation(fresh, scene, 0).boxes == ()

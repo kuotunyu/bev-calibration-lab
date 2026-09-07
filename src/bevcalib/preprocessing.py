@@ -71,11 +71,7 @@ def load_observation(
         rgb,
         read_lidar_points(installation.payload_path(lidar.sample_data_token)),
         np.asarray(calibrated["camera_intrinsic"], dtype=np.float64),
-        tuple(
-            box
-            for box in installation.tables["sample_annotation"].values()
-            if box["sample_token"] == camera.sample_token
-        ),
+        installation.annotations_by_sample.get(camera.sample_token, ()),
     )
 
 

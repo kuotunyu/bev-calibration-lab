@@ -30,6 +30,10 @@ for formal evaluation. See [training-contract.md](training-contract.md).
 Preflight accepts mini for installation/debug checks and trainval for formal readiness.
 It snapshots actual metadata-table hashes and payload availability, requires every
 paired CAM_FRONT/LIDAR_TOP keyframe, and records optional missing payloads separately.
+Annotations are indexed once by sample token when resolving the installation, preserving
+native order and empty samples. Observation loading reads only that sample's tuple;
+changes on disk appear after a fresh resolution. This avoids a full annotation-table
+scan per training/evaluation observation, without claiming a measured full-data speedup.
 Per-offset selection evidence includes actual timestamps, approximation errors and
 failure reasons. Runtime validation failures exit 1 with the affected root/table/pose
 diagnostic; argument parsing failures exit 2. Missing required pairs fail before output. Freeze only accepts
@@ -46,7 +50,11 @@ Identity measures all declared extrinsic and timing conditions; classical and le
 measure only extrinsic conditions, including each axis's zero reference. Timing is
 identity stress evidence and never a learned target or classical recovery comparison.
 Signed pose components, nonpositive edge scores and null unavailable measurements
-retain their actual meanings. All declared range bins remain present. The ground-plane
+retain their actual meanings. An unavailable or out-of-tolerance timing row carries
+selection evidence only: null estimate/pose/edge, empty pixels/contacts and zero projection
+count. V2 validation rejects any populated operator field there. Other partially invalid
+rows retain independently measurable operators and their appropriate denominators.
+All declared range bins remain present. The ground-plane
 baseline caveat is explained in [coordinate-contract.md](coordinate-contract.md).
 
 ## Private aggregation, public rendering
@@ -72,7 +80,22 @@ paths resolve from the repository root. It validates the document digest, suppor
 measurement policy and run/condition identities. Every displayed numerical value,
 including zero, invalid rates, counts, seed and fault level, requires a unique verified
 claim at its exact scalar JSON pointer. Claim IDs are unique across the registry.
-Parent-object claims may supply nonnumeric context but never authorize descendants.
+Each displayed scalar claim additionally requires an optional-to-legacy `report_binding`:
+
+```yaml
+report_binding:
+  expected_summary_sha256: <digest of the exact verified safe summary>
+  expected_value: <exact finite numeric scalar at metric_path>
+```
+
+The renderer requires both fields and compares them to the loaded document and scalar.
+The expected whole-document digest binds its run, checkpoint and measurement identities;
+a rehashed replacement at the same path cannot reuse old verified claims, even when its
+numbers are unchanged. Values must be actual finite numbers, not strings or booleans.
+Numeric-free wording is allowed only with this explicit binding. Claims must be verified
+again when either the source identity or scalar changes. Legacy ClaimV1 registries and
+the generic audit still work without the optional binding; they do not authorize report
+numbers without it. Parent-object claims may supply nonnumeric context but never authorize descendants.
 Numeric claim text must match its scalar, and synthetic evidence cannot become observed.
 The generic audit retains its legacy object-pointer support; report checks are stricter.
 

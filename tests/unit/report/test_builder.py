@@ -9,6 +9,15 @@ from tests.unit.analysis.test_claims import VOCABULARY
 from tests.unit.metrics.test_summary import run_fixture
 
 
+def report_binding(summary, pointer):
+    from bevcalib.analysis.claims import _resolve_json_pointer
+
+    return {
+        "expected_summary_sha256": summary["document_sha256"],
+        "expected_value": _resolve_json_pointer(summary, pointer),
+    }
+
+
 def report_paths(summary):
     for label, run in summary["runs"].items():
         base = "/runs/" + label
@@ -61,6 +70,7 @@ def report_workspace(tmp_path: Path, summary_document):
                 "dataset_manifest_hash": summary["dataset_manifest_hash"],
                 "artifact_path": "artifacts/calibration_summary.json",
                 "metric_path": pointer,
+                "report_binding": report_binding(summary, pointer),
                 "status": "verified",
             }
         )
@@ -200,6 +210,7 @@ def test_complete_report_supports_learned_seeds_and_nonnumeric_context(
             "dataset_manifest_hash": summary["dataset_manifest_hash"],
             "artifact_path": "artifacts/calibration_summary.json",
             "metric_path": pointer,
+            "report_binding": report_binding(summary, pointer),
             "status": "verified",
         }
         for index, pointer in enumerate(report_paths(summary))
@@ -219,3 +230,88 @@ def test_complete_report_supports_learned_seeds_and_nonnumeric_context(
     assert "Learned" in html and "seed" in html
     assert "&lt;unsafe&gt;Context &amp; details&lt;/unsafe&gt;" in html
     assert "<unsafe>" not in html
+
+
+@pytest.mark.parametrize("case", ["values", "run_identity", "measurement_identity"])
+def test_verified_registry_refuses_rehashed_replacement_summary(
+    report_workspace, tmp_path: Path, case: str
+) -> None:
+    from bevcalib.artifacts.result_documents import digest
+    from bevcalib.artifacts.summary import write_safe_summary
+    from bevcalib.report.builder import build_report
+
+    claims, artifacts, summary = report_workspace
+    if case == "values":
+        statistic = summary["runs"]["identity"]["conditions"]["yaw:0"]["edge_alignment_score"]
+        statistic.update(mean=-9.0, median=-9.0, p90=-9.0)
+    elif case == "run_identity":
+        summary["runs"]["identity"]["run_identity_sha256"] = "d" * 64
+    else:
+        summary["measurement_identity_sha256"] = "e" * 64
+    summary["document_sha256"] = digest(
+        {k: v for k, v in summary.items() if k != "document_sha256"}
+    )
+    write_safe_summary(summary, artifacts / "calibration_summary.json")
+    with pytest.raises(ValueError, match="verified summary identity"):
+        build_report(claims, artifacts, tmp_path / "out", repository_root=tmp_path)
+    assert not (tmp_path / "out").exists()
+
+
+def test_numeric_free_claim_text_does_not_replace_explicit_scalar_binding(
+    report_workspace, tmp_path: Path
+) -> None:
+    from bevcalib.report.builder import build_report
+
+    claims, artifacts, _ = report_workspace
+    registry = json.loads(claims.read_text(encoding="utf-8"))
+    for claim in registry["claims"]:
+        claim.pop("report_binding", None)
+    claims.write_text(json.dumps(registry), encoding="utf-8")
+    with pytest.raises(ValueError, match="explicit report binding"):
+        build_report(claims, artifacts, tmp_path / "out", repository_root=tmp_path)
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "wrong_value",
+        "missing_value",
+        "missing_digest",
+        "null",
+        "boolean",
+        "string",
+        "nan",
+        "infinity",
+        "extra",
+    ],
+)
+def test_report_requires_a_complete_exact_finite_scalar_binding(
+    report_workspace, tmp_path: Path, case: str
+) -> None:
+    from bevcalib.report.builder import build_report
+
+    claims, artifacts, _ = report_workspace
+    registry = json.loads(claims.read_text(encoding="utf-8"))
+    binding = registry["claims"][0]["report_binding"]
+    if case == "wrong_value":
+        binding["expected_value"] = 987654321
+    elif case == "missing_value":
+        binding.pop("expected_value")
+    elif case == "missing_digest":
+        binding.pop("expected_summary_sha256")
+    elif case == "null":
+        binding["expected_value"] = None
+    elif case == "boolean":
+        binding["expected_value"] = False
+    elif case == "string":
+        binding["expected_value"] = str(binding["expected_value"])
+    elif case == "nan":
+        binding["expected_value"] = float("nan")
+    elif case == "infinity":
+        binding["expected_value"] = float("inf")
+    else:
+        binding["extra"] = 1
+    claims.write_text(json.dumps(registry), encoding="utf-8")
+    with pytest.raises(ValueError):
+        build_report(claims, artifacts, tmp_path / "out", repository_root=tmp_path)
+    assert not (tmp_path / "out").exists()

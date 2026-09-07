@@ -53,6 +53,12 @@ def build_report(
             raise ValueError("report claim pointer does not exist") from exc
         numbers = _text_numbers(claim.text)
         if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if claim.report_binding is None:
+                raise ValueError("displayed scalar requires an explicit report binding")
+            if claim.report_binding.expected_summary_sha256 != summary.document_sha256:
+                raise ValueError("report artifact differs from the verified summary identity")
+            if Decimal(str(claim.report_binding.expected_value)) != Decimal(str(value)):
+                raise ValueError("report scalar differs from its verified expected value")
             if any(number != Decimal(str(value)) for number in numbers):
                 raise ValueError("claim text number differs from its exact scalar")
             if claim.metric_path in scalar_claims:

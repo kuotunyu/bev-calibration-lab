@@ -7,7 +7,7 @@ import pytest
 import torch
 from tests.unit.analysis.test_claims import VOCABULARY
 from tests.unit.nuscenes_adapter.test_installation import installation_root as installation_root
-from tests.unit.report.test_builder import report_paths
+from tests.unit.report.test_builder import report_binding, report_paths
 from tests.unit.test_evaluation import evaluation_workspace as evaluation_workspace
 from tests.unit.training.test_torch_backend import tiny_model
 from tests.unit.training.test_torch_backend import training_workspace as training_workspace
@@ -61,6 +61,7 @@ def test_native_cli_evaluation_exports_to_portable_identical_reports(
             "dataset_manifest_hash": summary["dataset_manifest_hash"],
             "artifact_path": "artifacts/calibration_summary.json",
             "metric_path": pointer,
+            "report_binding": report_binding(summary, pointer),
             "status": "verified",
         }
         for index, pointer in enumerate(report_paths(summary))

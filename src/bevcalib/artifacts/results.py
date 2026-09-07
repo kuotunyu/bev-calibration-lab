@@ -160,6 +160,17 @@ class CalibrationResultV2(BaseModel):
                     raise ValueError("timing reason disagrees with fixed tolerance")
             elif self.timing.reason != "nominal_pair":
                 raise ValueError("metadata faults must retain the nominal sensor pair")
+        if self.timing.reason in ("outside_tolerance", "no_available_lidar") and any(
+            (
+                self.estimate is not None,
+                self.pose is not None,
+                bool(self.pixel_errors_px),
+                self.projection_count != 0,
+                self.edge_alignment_score is not None,
+                bool(self.ground_contacts),
+            )
+        ):
+            raise ValueError("unavailable timing requires unmeasured operators and zero counts")
         if len(self.pixel_errors_px) > self.projection_count:
             raise ValueError("projection valid count exceeds available count")
         if len({box.box_token for box in self.ground_contacts}) != len(self.ground_contacts):

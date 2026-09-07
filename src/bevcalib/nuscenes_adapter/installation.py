@@ -42,6 +42,8 @@ class NuScenesInstallation:
     available_payloads: frozenset[str] = frozenset()
     candidates: dict[tuple[str, str, str], tuple[SensorPacket, ...]] = field(default_factory=dict)
 
+    annotations_by_sample: dict[str, tuple[dict[str, Any], ...]] = field(default_factory=dict)
+
     def lookup(self, table: str, token: str) -> dict[str, Any]:
         try:
             return self.tables[table][token]
@@ -233,8 +235,12 @@ def resolve_installation(dataroot: Path, version: str) -> NuScenesInstallation:
             grouped.setdefault((*installation.scene_log(token), channel), {}).setdefault(
                 packet.timestamp_us, packet
             )
+    annotations: dict[str, list[dict[str, Any]]] = {}
+    for box in tables["sample_annotation"].values():
+        annotations.setdefault(box["sample_token"], []).append(box)
     return replace(
         installation,
+        annotations_by_sample={sample: tuple(boxes) for sample, boxes in annotations.items()},
         available_payloads=available,
         table_sha256=table_hashes,
         candidates={

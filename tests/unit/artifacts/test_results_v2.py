@@ -154,6 +154,16 @@ def test_outside_tolerance_retains_selection_but_cannot_be_valid() -> None:
     }
     with pytest.raises(ValueError, match="timing"):
         CalibrationResultV2.model_validate(doc)
+    doc.update(
+        estimate=None,
+        pose=None,
+        pixel_errors_px=[],
+        projection_count=0,
+        edge_alignment_score=None,
+        ground_contacts=[],
+    )
+    with pytest.raises(ValueError, match="invalid timing"):
+        CalibrationResultV2.model_validate(doc)
     doc.update(valid=False, invalid_reason="outside_tolerance")
     assert CalibrationResultV2.model_validate(doc).lidar.token == "lidar"
 
@@ -191,4 +201,53 @@ def test_untruthful_selection_reason_or_duplicate_object_is_refused(case: str) -
     else:
         doc["ground_contacts"] *= 2
     with pytest.raises(ValueError):
+        CalibrationResultV2.model_validate(doc)
+
+
+@pytest.mark.parametrize("reason", ["no_available_lidar", "outside_tolerance"])
+@pytest.mark.parametrize(
+    "field",
+    [
+        "estimate",
+        "pose",
+        "pixel_errors_px",
+        "projection_count",
+        "edge_alignment_score",
+        "ground_contacts",
+    ],
+)
+def test_unavailable_timing_rejects_each_populated_measurement(reason: str, field: str) -> None:
+    from bevcalib.artifacts.results import CalibrationResultV2
+
+    original = row_document()
+    doc = deepcopy(original)
+    doc.update(
+        fault_axis="time",
+        fault_level=100,
+        fault={
+            "rotation_rpy_deg": [0, 0, 0],
+            "translation_xyz_m": [0, 0, 0],
+            "requested_time_offset_ms": 100,
+        },
+        estimate=None,
+        pose=None,
+        pixel_errors_px=[],
+        projection_count=0,
+        edge_alignment_score=None,
+        ground_contacts=[],
+        valid=False,
+        invalid_reason=reason,
+    )
+    doc["timing"] = {
+        "requested_offset_ms": 100,
+        "realized_offset_ms": -20 if reason == "outside_tolerance" else None,
+        "absolute_error_ms": 120 if reason == "outside_tolerance" else None,
+        "reason": reason,
+    }
+    if reason == "no_available_lidar":
+        doc["lidar"] = None
+    doc[field] = original[field]
+    if field == "pixel_errors_px":
+        doc["projection_count"] = len(doc[field])
+    with pytest.raises(ValueError, match="unavailable timing"):
         CalibrationResultV2.model_validate(doc)

@@ -8,7 +8,10 @@ from tests.unit.artifacts.test_result_documents import inputs, rows_for
 
 
 def run_fixture(
-    tmp_path: Path, specifications=(("identity", None, None), ("classical", None, None))
+    tmp_path: Path,
+    specifications=(("identity", None, None), ("classical", None, None)),
+    *,
+    missing_timing: bool = False,
 ):
     from bevcalib.artifacts.result_documents import EvaluationIdentity, finalize_run, save_scene
     from bevcalib.cohort.manifest import save_manifest
@@ -26,6 +29,27 @@ def run_fixture(
         rows = tuple(
             row for row in rows_for(manifest) if method == "identity" or row.fault_axis != "time"
         )
+        if missing_timing:
+            from bevcalib.artifacts.results import CalibrationResultV2
+
+            rows = tuple(
+                CalibrationResultV2.model_validate(
+                    row.model_dump()
+                    | {
+                        "lidar": None,
+                        "timing": {
+                            "requested_offset_ms": int(row.fault_level),
+                            "realized_offset_ms": None,
+                            "absolute_error_ms": None,
+                            "reason": "no_available_lidar",
+                        },
+                        "invalid_reason": "no_available_lidar",
+                    }
+                )
+                if row.fault_axis == "time" and row.fault_level != 0
+                else row
+                for row in rows
+            )
         save_scene(directory, run_identity, manifest, rows)
         finalize_run(directory, run_identity, manifest)
     return root, manifest
@@ -204,3 +228,67 @@ def test_unmeasured_operator_denominators_and_eighty_boundary_are_honest() -> No
     far = summary["ground_contact_by_range"]["80+"]
     assert far["total"] == 2 and far["count"] == 1 and far["invalid"] == 1 and far["mean"] == 2.0
     assert far["reasons"] == {"range_cutoff": 1}
+
+
+@pytest.mark.parametrize("reason", ["outside_tolerance", "no_available_lidar"])
+def test_complete_all_unavailable_timing_run_has_no_measured_denominators(
+    tmp_path: Path, reason: str
+) -> None:
+    from bevcalib.metrics.summary import summarize_result_runs
+
+    root, _ = run_fixture(tmp_path, missing_timing=reason == "no_available_lidar")
+    summary = summarize_result_runs(root, synthetic_fixture=True)
+    row = summary["runs"]["identity"]["conditions"]["time:100"]
+    assert row["validity"] == {
+        "total": 2,
+        "valid": 0,
+        "invalid": 2,
+        "invalid_rate": 1.0,
+        "reasons": {reason: 2},
+    }
+    assert row["edge_alignment_score"] == {"count": 0, "mean": None, "median": None, "p90": None}
+    assert row["pixel_error_px"] == {
+        "count": 0,
+        "mean": None,
+        "median": None,
+        "p90": None,
+        "projection_count": 0,
+    }
+    assert row["pose"]["rotation_geodesic_error_deg"] == {
+        "count": 0,
+        "mean": None,
+        "median": None,
+        "p90": None,
+    }
+    assert all(
+        group
+        == {
+            "count": 0,
+            "mean": None,
+            "median": None,
+            "p90": None,
+            "total": 0,
+            "invalid": 0,
+            "reasons": {},
+        }
+        for group in row["ground_contact_by_range"].values()
+    )
+
+
+def test_partially_invalid_extrinsic_row_retains_actual_operator_denominators() -> None:
+    from tests.unit.artifacts.test_results_v2 import row_document
+
+    from bevcalib.artifacts.results import CalibrationResultV2
+    from bevcalib.metrics.summary import summarize_condition
+
+    doc = row_document() | {
+        "edge_alignment_score": None,
+        "valid": False,
+        "invalid_reason": "no_image_edges",
+    }
+    summary = summarize_condition([CalibrationResultV2.model_validate(doc)])
+    assert summary["validity"]["invalid"] == 1
+    assert summary["edge_alignment_score"]["count"] == 0
+    assert summary["pixel_error_px"]["count"] == 2
+    assert summary["pose"]["translation_error_m"]["count"] == 1
+    assert summary["ground_contact_by_range"]["10-20"]["count"] == 1

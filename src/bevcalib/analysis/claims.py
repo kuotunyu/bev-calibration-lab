@@ -12,10 +12,18 @@ import json
 import re
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Literal, Self
+from typing import Annotated, Any, Literal, Self
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictFloat,
+    StrictInt,
+    ValidationError,
+    model_validator,
+)
 
 ALLOWED_EVIDENCE_TYPES = ("observed", "derived", "synthetic", "illustrative")
 CLAIM_REQUIRED_FIELDS = (
@@ -37,6 +45,14 @@ def _reject_json_constant(value: str) -> None:
     raise ValueError(f"non-finite JSON constant: {value}")
 
 
+class ReportScalarBinding(BaseModel):
+    """The exact safe artifact and scalar that a report claim actually verified."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    expected_summary_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    expected_value: StrictInt | Annotated[StrictFloat, Field(allow_inf_nan=False)]
+
+
 class ClaimV1(BaseModel):
     """One immutable public statement linked to an exact metric in an exact artifact."""
 
@@ -50,6 +66,8 @@ class ClaimV1(BaseModel):
     artifact_path: str = Field(min_length=1)
     metric_path: str = Field(pattern=r"^/")
     status: Literal["draft", "verified", "rejected", "superseded"]
+    # Optional for the legacy audit contract; mandatory for displayed report scalars.
+    report_binding: ReportScalarBinding | None = None
 
 
 class ClaimsRegistryV1(BaseModel):

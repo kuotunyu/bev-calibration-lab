@@ -76,7 +76,16 @@ def rows_for(manifest):  # type: ignore[no-untyped-def]
                 },
             )
             if axis == "time" and level != 0:
-                doc.update(valid=False, invalid_reason="outside_tolerance")
+                doc.update(
+                    valid=False,
+                    invalid_reason="outside_tolerance",
+                    estimate=None,
+                    pose=None,
+                    pixel_errors_px=[],
+                    projection_count=0,
+                    edge_alignment_score=None,
+                    ground_contacts=[],
+                )
             rows.append(CalibrationResultV2.model_validate(doc))
     return tuple(rows)
 
