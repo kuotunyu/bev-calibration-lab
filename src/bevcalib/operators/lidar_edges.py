@@ -100,15 +100,32 @@ def trimmed_distance_transform_score(
     correct calibration would score no better than a wrong one.
     """
 
-    if not 0.0 < trim_quantile <= 1.0:
-        raise ValueError(f"trim quantile must be within (0, 1], got {trim_quantile}")
-
     edges = np.asarray(image_edges, dtype=bool)
     if edges.ndim != 2:
         raise ValueError(f"image edges must be a two-dimensional mask, got shape {edges.shape}")
     if not edges.any():
         raise ValueError("the image has no edges to measure against")
 
+    return trimmed_distance_field_score(
+        projected_uv, np.asarray(distance_transform_edt(~edges), dtype=np.float64), trim_quantile
+    )
+
+
+def trimmed_distance_field_score(
+    projected_uv: Float64Array,
+    distance_field: Float64Array,
+    trim_quantile: float = DEFAULT_TRIM_QUANTILE,
+) -> float:
+    """Same score using a precomputed field; validate accessed distances in O(points).
+
+    The image adapter computes the field once. Only sampled field entries enter
+    this measurement, so validation does not scan every image pixel per candidate.
+    """
+    if not 0.0 < trim_quantile <= 1.0:
+        raise ValueError(f"trim quantile must be within (0, 1], got {trim_quantile}")
+    field = np.asarray(distance_field, dtype=np.float64)
+    if field.ndim != 2 or 0 in field.shape:
+        raise ValueError("distance field must be a nonempty two-dimensional array")
     uv = np.asarray(projected_uv, dtype=np.float64)
     if uv.ndim != 2 or uv.shape[1] != 2:
         raise ValueError(f"projected points must have shape [N, 2], got {uv.shape}")
@@ -117,12 +134,14 @@ def trimmed_distance_transform_score(
     if not np.all(np.isfinite(uv)):
         raise ValueError("projected points must be finite to be scored")
 
-    height, width = edges.shape
+    height, width = field.shape
     columns = np.floor(uv[:, 0]).astype(np.int64)
     rows = np.floor(uv[:, 1]).astype(np.int64)
     if np.any((columns < 0) | (columns >= width) | (rows < 0) | (rows >= height)):
         raise ValueError("a projected point falls outside the image bounds")
 
-    distances = np.asarray(distance_transform_edt(~edges), dtype=np.float64)[rows, columns]
+    distances = field[rows, columns]
+    if not np.isfinite(distances).all() or np.any(distances < 0):
+        raise ValueError("sampled distance field values must be finite and nonnegative")
     keep = max(1, math.ceil(uv.shape[0] * trim_quantile))
     return -float(np.sort(distances)[:keep].mean())

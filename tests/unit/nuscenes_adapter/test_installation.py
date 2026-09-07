@@ -111,6 +111,7 @@ def test_metadata_without_payload_is_not_timing_availability(installation_root: 
     assert result.selected_sample_data_token == "lidar"
     assert result.absolute_error_ms == 120
     (installation_root / "samples/LIDAR_TOP/lidar.bin").unlink()
+    installation = resolve_installation(installation_root, "v1.0-mini")
     result = installation.select_timing("camera", -50)
     assert result.reason == "no_available_lidar"
     assert result.realized_offset_ms is None
@@ -194,7 +195,9 @@ def test_preflight_reports_each_offset_available_and_invalid_counts(
 
     report = resolve_installation(installation_root, "v1.0-mini").preflight()
     assert report["dataset_version"] == "v1.0-mini"
-    assert report["timing"]["100"] == {
+    assert {
+        key: value for key, value in report["timing"]["100"].items() if key != "selections"
+    } == {
         "total": 1,
         "valid": 1,
         "invalid": 0,

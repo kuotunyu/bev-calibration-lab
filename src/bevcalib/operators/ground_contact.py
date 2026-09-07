@@ -138,9 +138,10 @@ def observe_ground_contact(
     The observation is oracle-controlled on purpose. The contact point comes from
     the ground-truth box and is projected with the TRUE calibration, so the
     detection is perfect by construction and contributes no error of its own. Only
-    the back-projection uses the assumed calibration. Whatever separates
-    `assumed_ground_xy_m` from `oracle_ground_xy_m` is therefore calibration error
-    and nothing else, which is the only reason the study can attribute it.
+    the back-projection uses the assumed calibration and the horizontal ego plane.
+    The oracle XY is the ground-truth box bottom, which can lie off that plane.
+    Absolute XY residual therefore includes plane-model error even at zero fault;
+    compare against the zero-fault baseline before attributing a change to calibration.
     """
 
     contact = bottom_center_global(box_center_global, size_wlh, orientation_wxyz)

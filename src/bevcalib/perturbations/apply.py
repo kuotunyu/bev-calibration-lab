@@ -35,7 +35,7 @@ def fault_to_se3(fault: CalibrationFaultModel) -> SE3:
     nonzero can tell them apart, and there is one.
 
     The requested timing offset is deliberately ignored here. Timing changes which
-    camera frame is paired with the sweep, never the geometry of the pairing.
+    LiDAR sweep is paired with the fixed camera, never the calibration metadata.
     """
 
     roll, pitch, yaw = (math.radians(value) for value in fault.rotation_rpy_deg)

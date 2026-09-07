@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+from bisect import bisect_left
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -36,6 +38,9 @@ class NuScenesInstallation:
     dataroot: Path
     version: str
     tables: dict[str, dict[str, dict[str, Any]]]
+    table_sha256: dict[str, str] = field(default_factory=dict)
+    available_payloads: frozenset[str] = frozenset()
+    candidates: dict[tuple[str, str, str], tuple[SensorPacket, ...]] = field(default_factory=dict)
 
     def lookup(self, table: str, token: str) -> dict[str, Any]:
         try:
@@ -77,13 +82,11 @@ class NuScenesInstallation:
     def select_timing(self, camera_token: str, requested_offset_ms: int) -> TimingSelection:
         camera = self.packet(camera_token, "CAM_FRONT")
         scene_log = self.scene_log(camera_token)
-        candidates = tuple(
-            self.packet(token, "LIDAR_TOP")
-            for token in self.tables["sample_data"]
-            if self.channel(token) == "LIDAR_TOP"
-            and self.scene_log(token) == scene_log
-            and self.payload_path(token).is_file()
-        )
+        indexed = self.candidates.get((*scene_log, "LIDAR_TOP"), ())
+        target = camera.timestamp_us + requested_offset_ms * 1000
+        position = bisect_left(indexed, target, key=lambda packet: packet.timestamp_us)
+        # One token-minimal packet per timestamp makes these the only possible winners.
+        candidates = indexed[max(0, position - 1) : position + 1]
         return select_lidar_for_timing_fault(
             candidates,
             camera.timestamp_us,
@@ -146,11 +149,27 @@ class NuScenesInstallation:
     def preflight(self) -> dict[str, Any]:
         records = self.scene_records()
         camera_tokens = [token for scene in records for token in scene.camera_sample_data_tokens]
+        required = {
+            token
+            for scene in records
+            for token in scene.camera_sample_data_tokens + scene.lidar_sample_data_tokens
+        }
+        missing_required = sorted(required - self.available_payloads)
+        if missing_required:
+            raise ValueError(f"missing required paired keyframe payload: {missing_required}")
         timing = {}
         for offset in TIMING_OFFSET_MS:
             selections = [self.select_timing(token, offset) for token in camera_tokens]
             valid = sum(s.valid for s in selections)
             timing[str(offset)] = {
+                "selections": [
+                    asdict(selection)
+                    | {
+                        "camera_token": token,
+                        "camera_timestamp_us": self.lookup("sample_data", token)["timestamp"],
+                    }
+                    for token, selection in zip(camera_tokens, selections, strict=True)
+                ],
                 "total": len(selections),
                 "valid": valid,
                 "invalid": len(selections) - valid,
@@ -161,12 +180,13 @@ class NuScenesInstallation:
             }
         return {
             "dataset_version": self.version,
+            "table_sha256": self.table_sha256,
             "scenes": len(records),
             "samples": len(camera_tokens),
             "missing_payloads": sorted(
                 token
                 for token in self.tables["sample_data"]
-                if not self.payload_path(token).is_file()
+                if token not in self.available_payloads
             ),
             "timing": timing,
         }
@@ -180,8 +200,11 @@ def resolve_installation(dataroot: Path, version: str) -> NuScenesInstallation:
     if not root.is_dir() or not (root / version).is_dir():
         raise FileNotFoundError(f"nuScenes root or {version} table directory is missing: {root}")
     tables = {}
+    table_hashes = {}
     for name in TABLES:
-        rows = json.loads((root / version / f"{name}.json").read_text(encoding="utf-8"))
+        raw = (root / version / f"{name}.json").read_bytes()
+        rows = json.loads(raw)
+        table_hashes[name] = hashlib.sha256(raw).hexdigest()
         mapped = {row["token"]: row for row in rows}
         if len(mapped) != len(rows):
             raise ValueError(f"duplicate {name} token")
@@ -199,4 +222,22 @@ def resolve_installation(dataroot: Path, version: str) -> NuScenesInstallation:
             installation.packet(token, channel)
         if channel == "CAM_FRONT":
             validate_intrinsic(calibrated["camera_intrinsic"])
-    return installation
+    available = frozenset(
+        token for token in tables["sample_data"] if installation.payload_path(token).is_file()
+    )
+    grouped: dict[tuple[str, str, str], dict[int, SensorPacket]] = {}
+    for token in sorted(available):
+        channel = installation.channel(token)
+        if channel == "LIDAR_TOP":
+            packet = installation.packet(token, channel)
+            grouped.setdefault((*installation.scene_log(token), channel), {}).setdefault(
+                packet.timestamp_us, packet
+            )
+    return replace(
+        installation,
+        available_payloads=available,
+        table_sha256=table_hashes,
+        candidates={
+            key: tuple(packets[t] for t in sorted(packets)) for key, packets in grouped.items()
+        },
+    )

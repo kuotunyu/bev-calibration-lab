@@ -182,3 +182,41 @@ bias, dtype and device. Under independent, equal unit-variance input channels th
 preserves convolution output variance. Real RGB, depth and mask distributions
 are not assumed to match. Training targets remain inverse calibration faults in
 degrees and metres, and timing is a separate stress condition.
+
+
+## Native image alignment and availability snapshots
+
+The camera stays at native resolution for evaluation, with its native intrinsic matrix
+and pixel units. `bev-image-edges/v1:pillow-RGB-to-L:float64-sobel-axes01-reflect:hypot:positive-quantile0.90-linear:positive-and-ge`
+uses Pillow RGB-to-L, float64 SciPy Sobel along axes 0 and 1 with reflect boundaries,
+and the hypotenuse magnitude. The threshold is NumPy's linear 90th percentile of
+strictly positive magnitudes; retain positive magnitudes at least that threshold.
+This adaptive per-image threshold is a fixed algorithm, never fitted on evaluation
+results. A constant image has no measurable edges. Evaluation provenance records
+the policy and each actual threshold. The distance field is computed once per fixed
+image and reused; floor indexing, negative mean and 90% trimming remain unchanged.
+A classical candidate with no in-frame LiDAR edges receives only the search penalty
+`-hypot(width, height)`. The final result records missing projection as invalid/null,
+never this penalty as a measured score. An empty image edge mask invalidates before search.
+
+A resolved installation captures original JSON table byte hashes and on-disk payload
+availability once. Timing candidates are indexed by scene/log/channel and timestamp;
+token ordering breaks ties. Refresh by resolving a new installation, not by changing
+availability mid-run. Preflight rejects missing paired CAM_FRONT/LIDAR_TOP keyframe
+payloads; optional missing sweeps remain explicit coverage information. Its per-offset
+selection rows preserve fixed camera and selected LiDAR tokens/timestamps, actual gap,
+approximation error, validity and reason. Actual payload reads still fail if a file
+vanishes after resolution; snapshot selection never substitutes a different frame.
+
+## Oracle-controlled IPM baseline
+
+Ground-contact XY is reconstructed on the horizontal plane through ego origin and
+compared with the actual GT box bottom XY. A GT bottom off that plane creates an
+absolute residual even when true and assumed calibration are identical. For a camera
+at height 1 m, contact at height 0.2 m and horizontal distance 10 m, the ray intersects
+the zero-height plane at 12.5 m: a 2.5 m baseline without any calibration fault.
+Report this plane-model baseline separately from changes under calibration faults.
+GT range is the existing operator's 3D distance from the true camera origin to the
+box bottom. All five declared range bins remain visible, including 80+: exactly
+80 m can be valid while values greater than 80 m are excluded by the fixed cutoff.
+Empty valid denominators have null means and explicit invalid counts/reasons.

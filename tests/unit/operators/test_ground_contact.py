@@ -2,10 +2,8 @@
 
 The operator is deliberately oracle-controlled. The contact point comes from the
 ground-truth 3D box and is projected with the TRUE calibration, so the detection is
-perfect by construction. Only the back-projection uses the assumed, possibly faulty
-calibration. Whatever error appears in the reconstructed position is therefore
-calibration error and nothing else, which is the only way the study can attribute
-it.
+perfect by construction. Back-projection uses the assumed calibration and a flat
+plane; absolute XY residual can include a plane-model baseline at zero fault.
 """
 
 from __future__ import annotations
@@ -495,3 +493,47 @@ def test_a_ray_that_never_lands_still_reports_where_the_box_was_seen() -> None:
     assert observation.valid is False
     assert observation.true_uv == pytest.approx(seen.true_uv, abs=1e-9)
     assert not any(math.isnan(value) for value in observation.true_uv)
+
+
+@pytest.mark.parametrize("bottom_z,expected_x", [(0.0, 10.0), (0.2, 12.5)])
+def test_zero_fault_retains_the_flat_plane_baseline(bottom_z: float, expected_x: float) -> None:
+    from bevcalib.operators.ground_contact import observe_ground_contact
+
+    camera = SE3(rotation_wxyz=CAMERA_FROM_GLOBAL.rotation_wxyz, translation_xyz_m=(0.0, 1.0, 0.0))
+    observed = observe_ground_contact(
+        box_token="off-plane",
+        box_center_global=np.array([10.0, 0.0, bottom_z + 1.0]),
+        size_wlh=(2.0, 4.0, 2.0),
+        orientation_wxyz=IDENTITY_QUATERNION,
+        true_camera_from_global=camera,
+        assumed_camera_from_global=camera,
+        intrinsic=INTRINSIC,
+        image_size_wh=IMAGE_SIZE,
+        ground_z_global=0.0,
+    )
+    assert observed.valid
+    np.testing.assert_allclose(observed.assumed_ground_xy_m, [expected_x, 0.0], atol=1e-12)
+    np.testing.assert_allclose(observed.oracle_ground_xy_m, [10.0, 0.0], atol=1e-12)
+    assert np.linalg.norm(
+        np.subtract(observed.assumed_ground_xy_m, observed.oracle_ground_xy_m)
+    ) == pytest.approx(expected_x - 10.0)
+
+
+@pytest.mark.parametrize("range_m,valid", [(80.0, True), (80.001, False)])
+def test_declared_eighty_plus_bin_retains_cutoff_boundary(range_m: float, valid: bool) -> None:
+    from bevcalib.operators.ground_contact import observe_ground_contact
+
+    camera = SE3(rotation_wxyz=CAMERA_FROM_GLOBAL.rotation_wxyz, translation_xyz_m=(0.0, 1.0, 0.0))
+    observed = observe_ground_contact(
+        box_token="boundary",
+        box_center_global=np.array([np.sqrt(range_m**2 - 1.0), 0.0, 1.0]),
+        size_wlh=(2.0, 4.0, 2.0),
+        orientation_wxyz=IDENTITY_QUATERNION,
+        true_camera_from_global=camera,
+        assumed_camera_from_global=camera,
+        intrinsic=INTRINSIC,
+        image_size_wh=IMAGE_SIZE,
+        ground_z_global=0.0,
+    )
+    assert observed.range_m == pytest.approx(range_m)
+    assert observed.valid == valid

@@ -6,6 +6,7 @@ from bevcalib.artifacts.results import CalibrationFaultModel
 from bevcalib.nuscenes_adapter.frames import SensorPacket
 from bevcalib.nuscenes_adapter.sweeps import TimingSelection, choose_nearest_sweep
 
+from .apply import inverse_fault
 from .schedule import TIMING_MAX_SELECTION_ERROR_MS
 
 MICROSECONDS_PER_MILLISECOND = 1000
@@ -72,4 +73,5 @@ def learned_six_dof_target(
             "a timing fault cannot be a learned 6DoF target: "
             f"requested_time_offset_ms is {fault.requested_time_offset_ms}, not 0"
         )
-    return fault.rotation_rpy_deg, fault.translation_xyz_m
+    correction = inverse_fault(fault)
+    return correction.rotation_rpy_deg, correction.translation_xyz_m

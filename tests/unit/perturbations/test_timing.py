@@ -107,7 +107,19 @@ def test_the_learned_target_is_the_six_degrees_of_freedom_and_nothing_else() -> 
         requested_time_offset_ms=0,
     )
 
-    assert learned_six_dof_target(injected) == ((1.0, -0.5, 0.25), (0.1, 0.0, -0.05))
+    import numpy as np
+
+    from bevcalib.geometry.quaternions import quaternion_to_matrix
+    from bevcalib.geometry.se3 import compose
+    from bevcalib.perturbations.apply import fault_to_se3
+
+    rotation, translation = learned_six_dof_target(injected)
+    correction = CalibrationFaultModel(
+        rotation_rpy_deg=rotation, translation_xyz_m=translation, requested_time_offset_ms=0
+    )
+    recovered = compose(fault_to_se3(injected), fault_to_se3(correction))
+    np.testing.assert_allclose(quaternion_to_matrix(recovered.rotation_wxyz), np.eye(3), atol=1e-12)
+    np.testing.assert_allclose(recovered.translation_xyz_m, np.zeros(3), atol=1e-12)
 
 
 def test_a_fault_carrying_a_timing_offset_cannot_be_a_learned_target() -> None:
