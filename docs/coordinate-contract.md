@@ -263,3 +263,22 @@ scene, log, sample and sensor tokens. A report consumes safe aggregate JSON and 
 claims registry without requiring the private manifest, row files, data or checkpoints.
 Formal paired scene bootstrap and the final five-document study artifact set remain
 Task J; these descriptive summaries do not substitute for those statistical results.
+
+## Dataset readiness verification
+
+The [trainval preflight record](verification/nuscenes-preflight.md) binds the installed
+metadata and frozen cohort identities. The official-devkit mini checks compare
+camera-frame points, optical depth, projection masks, valid pixel coordinates and
+global-box transformations using the two sensor timestamps. They require nonempty
+comparisons, absolute tolerance `1e-6` and zero relative tolerance.
+
+The CLI failure rehearsal swaps the calibrated-sensor and ego-pose lookup namespaces
+and requires a diagnostic naming the unresolved input. It verifies this concrete
+broken-chain refusal; it does not claim that arbitrary numerically valid inverted
+transforms can be recognized without independent reference evidence.
+
+Timing availability is measured from the actual installation snapshot. Retained mini
+sweeps can provide coverage for their own scenes, while trainval keyframe archives
+do not supply the remaining scenes' sweep payloads. Each offset keeps its own actual
+nearest-candidate approximation errors, valid/invalid denominator and reasons. A
+successful keyframe preflight therefore does not imply complete timing coverage.

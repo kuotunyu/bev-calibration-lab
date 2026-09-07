@@ -37,13 +37,14 @@ This is the one thing that breaks silently and stays broken.
 
 ## Order gate
 
-P1 `driving-risk-metrics` released v1.0.1 on 2026-09-06; the P2 data order gate is
-open. The sole active workspace plan is
-`docs/superpowers/plans/2026-09-06-three-releases-master-plan.md`. Its Task F may
-proceed independently under section 0.3 after P3 E3 local acceptance while E2 human
-replay and E4 public release remain pending. Follow the current task boundaries:
-F does not authorize a real cohort freeze, formal training, Colab or Task G.
-P2 public Git operations remain gated on its own release-time human authorization.
+In the portfolio workspace, when the sibling plan exists, the active plan is
+`../docs/superpowers/plans/2026-09-06-three-releases-master-plan.md`.
+Follow its currently dispatched task and acceptance boundaries; a completed task does
+not authorize the next task. Data preparation, cohort freeze, formal training and
+Colab execution each follow that plan's explicit scope. P2 public Git operations
+in this release session remain gated on its own release-time human authorization.
+Standalone contributors use this repository's contracts and verification instructions;
+they do not require the unshipped portfolio plan.
 Nothing here imports `drivemetrics` or depends on P1 at runtime; the shared artifact
 envelope is a specification each repository implements independently.
 
