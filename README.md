@@ -49,9 +49,12 @@ account holder, is not distributed here, and is never committed.
 ```bash
 # The train extra is not optional for development: the learned corrector is
 # first-party code and the coverage gate covers it.
-uv sync --frozen --all-groups --extra train
+uv sync --frozen --all-groups --extra train --extra report
 uv run bev-calib --help
 ```
+
+Native commands, private aggregation and portable claim-bound rendering are documented
+in [docs/commands-and-report.md](docs/commands-and-report.md).
 
 ## Quality gates
 

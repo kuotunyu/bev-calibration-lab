@@ -4,6 +4,11 @@ from __future__ import annotations
 
 import typer
 
+from bevcalib.cli import cohort, data
+from bevcalib.cli.evaluate import evaluate
+from bevcalib.cli.report import audit_claims, report
+from bevcalib.cli.train import train
+
 app = typer.Typer(
     name="bev-calib",
     help="Calibration fault sensitivity and recovery for LiDAR-camera BEV perception.",
@@ -14,3 +19,11 @@ app = typer.Typer(
 @app.callback()
 def main() -> None:
     """Group the calibration lab commands under one entry point."""
+
+
+app.add_typer(data.app, name="data")
+app.add_typer(cohort.app, name="cohort")
+app.command()(evaluate)
+app.command()(train)
+app.command()(report)
+app.command("audit-claims")(audit_claims)

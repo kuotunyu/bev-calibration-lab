@@ -76,6 +76,8 @@ def summarize_condition(rows: Sequence[CalibrationResultV2]) -> dict[str, Any]:
         }
     successes = sum(recovered(p.rotation_geodesic_error_deg, p.translation_error_m) for p in poses)
     return {
+        "fault_axis": rows[0].fault_axis,
+        "fault_level": rows[0].fault_level,
         "validity": {
             "total": len(rows),
             "valid": valid,
