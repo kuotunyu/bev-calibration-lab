@@ -65,3 +65,15 @@ def test_cached_score_refuses_invalid_distance_field(field) -> None:
 
     with pytest.raises(ValueError, match="distance field"):
         trimmed_distance_field_score(np.array([[0.0, 0.0]]), field)
+
+
+def test_threshold_only_pass_does_not_build_a_distance_field() -> None:
+    from bevcalib.operators.image_edges import image_edge_evidence
+
+    rgb = np.zeros((4, 6, 3), dtype=np.uint8)
+    rgb[:, 3:] = 255
+    actual = image_edge_evidence(rgb, with_distance_field=False)
+    complete = image_edge_evidence(rgb)
+    assert actual.threshold == complete.threshold
+    np.testing.assert_array_equal(actual.mask, complete.mask)
+    assert actual.distance_field is None

@@ -9,7 +9,7 @@ import numpy.typing as npt
 from PIL import Image
 from scipy.ndimage import distance_transform_edt, sobel
 
-IMAGE_EDGE_POLICY = "bev-image-edges/v1:pillow-RGB-to-L:float64-sobel-axes01-reflect:hypot:positive-quantile0.90-linear:positive-and-ge"
+from bevcalib.artifacts.measurements import IMAGE_EDGE_POLICY as IMAGE_EDGE_POLICY
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,9 @@ class ImageEdgeEvidence:
     policy: str = IMAGE_EDGE_POLICY
 
 
-def image_edge_evidence(rgb: npt.NDArray[np.uint8]) -> ImageEdgeEvidence:
+def image_edge_evidence(
+    rgb: npt.NDArray[np.uint8], *, with_distance_field: bool = True
+) -> ImageEdgeEvidence:
     if rgb.ndim != 3 or rgb.shape[2] != 3 or 0 in rgb.shape or rgb.dtype != np.uint8:
         raise ValueError("image edges require a nonempty RGB uint8 image")
     gray = np.asarray(Image.fromarray(rgb).convert("L"), dtype=np.float64)
@@ -31,5 +33,9 @@ def image_edge_evidence(rgb: npt.NDArray[np.uint8]) -> ImageEdgeEvidence:
     threshold = float(np.quantile(positive, 0.90, method="linear"))
     mask = (magnitude > 0) & (magnitude >= threshold)
     return ImageEdgeEvidence(
-        mask, threshold, np.asarray(distance_transform_edt(~mask), dtype=np.float64)
+        mask,
+        threshold,
+        np.asarray(distance_transform_edt(~mask), dtype=np.float64)
+        if with_distance_field
+        else None,
     )

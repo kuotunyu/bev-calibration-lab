@@ -23,6 +23,14 @@ def inputs():  # type: ignore[no-untyped-def]
         dataset_manifest_hash=manifest.manifest_sha256,
         dataset_version=manifest.dataset_version,
         evidence_type="synthetic",
+        measurements={
+            "table_sha256": {"scene": "a" * 64},
+            "images": {
+                token: {"rgb_sha256": "b" * 64, "width": 6, "height": 4, "edge_threshold": 1.0}
+                for scene in manifest.scenes
+                for token in scene.camera_sample_data_tokens
+            },
+        },
         producer={
             "commit": "a" * 40,
             "lock_sha256": "b" * 64,
@@ -219,3 +227,45 @@ def test_unknown_formal_fault_is_not_silently_rounded() -> None:
 
     with pytest.raises(ValueError, match="inventory"):
         fault_for_condition("time", 100.5)
+
+
+@pytest.mark.parametrize(
+    "method,seed,checkpoint", [("classical", None, None), ("learned", 17, "c" * 64)]
+)
+def test_correction_run_inventory_rejects_timing_even_at_zero(
+    tmp_path: Path, method, seed, checkpoint
+) -> None:
+    from bevcalib.artifacts.result_documents import (
+        EvaluationIdentity,
+        finalize_run,
+        load_result_run,
+        save_scene,
+    )
+
+    identity, manifest = inputs()
+    identity = EvaluationIdentity.model_validate(
+        identity.model_dump() | {"method": method, "seed": seed, "checkpoint_sha256": checkpoint}
+    )
+    rows = rows_for(manifest)
+    with pytest.raises(ValueError, match="inventory"):
+        save_scene(tmp_path / "wrong", identity, manifest, rows)
+    supported = tuple(row for row in rows if row.fault_axis != "time")
+    save_scene(tmp_path / "right", identity, manifest, supported)
+    finalize_run(tmp_path / "right", identity, manifest)
+    assert len(load_result_run(tmp_path / "right", identity, manifest)) == 120
+    zero = next(row for row in rows if row.fault_axis == "time" and row.fault_level == 0)
+    with pytest.raises(ValueError, match="inventory"):
+        save_scene(tmp_path / "zero", identity, manifest, (*supported, zero))
+
+
+def test_measurement_input_inventory_is_bound_to_the_verified_manifest(tmp_path: Path) -> None:
+    from bevcalib.artifacts.result_documents import condition_inventory, save_scene
+
+    identity, manifest = inputs()
+    changed = identity.model_copy(
+        update={"measurements": identity.measurements.model_copy(update={"images": {}})}
+    )
+    with pytest.raises(ValueError, match="measurement image inventory"):
+        save_scene(tmp_path, changed, manifest, rows_for(manifest))
+    with pytest.raises(ValueError, match="unknown"):
+        condition_inventory("unknown")

@@ -220,3 +220,23 @@ GT range is the existing operator's 3D distance from the true camera origin to t
 box bottom. All five declared range bins remain visible, including 80+: exactly
 80 m can be valid while values greater than 80 m are excluded by the fixed cutoff.
 Empty valid denominators have null means and explicit invalid counts/reasons.
+
+
+## Complete evaluation inventories
+
+The authoritative inventory is method-specific: identity produces all 67 declared
+single-axis conditions per sample, including seven timing conditions. Classical
+and learned runs produce only the 60 rotation/translation conditions, retaining
+each extrinsic axis's zero reference. Timing is measured only by the identity
+stress run; it is never a learned target, correction-method completion row or
+correction/recovery denominator. Complete-run validation rejects missing, duplicate
+or unsupported rows, including a time-zero row inserted into a correction run.
+
+The V2 evaluation identity binds native decoded RGB byte hashes, image dimensions,
+the actual per-image edge thresholds and full policy, plus original metadata table
+hashes. A threshold-only first pass establishes identity without retaining full
+images/fields for the entire cohort. The measurement pass checks RGB identity,
+computes one distance field per camera and caches LiDAR edge extraction per selected
+packet across conditions. Missing operators remain null with explicit reasons.
+Scene documents are written atomically under distinct method/run roots; completion
+is written only after the method-specific inventory and byte hashes revalidate.

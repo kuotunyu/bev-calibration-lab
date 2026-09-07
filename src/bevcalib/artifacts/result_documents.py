@@ -10,6 +10,7 @@ from typing import Any, Literal, Self
 from pydantic import BaseModel, ConfigDict, model_validator
 
 from bevcalib.artifacts.envelope import canonical_json_bytes
+from bevcalib.artifacts.measurements import EvaluationMeasurements
 from bevcalib.artifacts.results import CalibrationFaultModel, CalibrationResultV2
 from bevcalib.artifacts.run_record import RunProvenance
 from bevcalib.cohort.manifest import CohortManifestV2, Digest
@@ -35,6 +36,7 @@ class EvaluationIdentity(BaseModel):
     dataset_version: str
     evidence_type: Literal["observed", "synthetic"]
     producer: RunProvenance
+    measurements: EvaluationMeasurements
 
     @model_validator(mode="after")
     def coherent(self) -> Self:
@@ -66,6 +68,17 @@ class RunCompleteV2(BaseModel):
     document_sha256: Digest
 
 
+def condition_inventory(method: str) -> tuple[tuple[FaultAxis, float], ...]:
+    """Timing is identity-only stress; correction methods contain sixty SE(3) rows."""
+    if method not in ("identity", "classical", "learned"):
+        raise ValueError("unknown evaluation method")
+    return tuple(
+        condition
+        for condition in formal_single_axis_faults()
+        if method == "identity" or condition[0] != "time"
+    )
+
+
 def fault_for_condition(axis: FaultAxis, level: float) -> CalibrationFaultModel:
     if (axis, level) not in formal_single_axis_faults():
         raise ValueError("fault condition is not in the formal inventory")
@@ -93,6 +106,10 @@ def _validate_identity(identity: EvaluationIdentity, manifest: CohortManifestV2)
         or identity.dataset_version != verified.dataset_version
     ):
         raise ValueError("run identity differs from verified cohort")
+    if set(identity.measurements.images) != {
+        token for scene in verified.scenes for token in scene.camera_sample_data_tokens
+    }:
+        raise ValueError("measurement image inventory differs from verified cohort")
     if identity.evidence_type == "observed" and (
         verified.role != "evaluation"
         or verified.dataset_version != "v1.0-trainval"
@@ -103,7 +120,7 @@ def _validate_identity(identity: EvaluationIdentity, manifest: CohortManifestV2)
 
 
 def _validate_rows(
-    rows: tuple[CalibrationResultV2, ...], manifest: CohortManifestV2, scene_token: str
+    rows: tuple[CalibrationResultV2, ...], manifest: CohortManifestV2, scene_token: str, method: str
 ) -> None:
     scene = next((scene for scene in manifest.scenes if scene.scene_token == scene_token), None)
     if scene is None:
@@ -111,7 +128,7 @@ def _validate_rows(
     expected = {
         (sample, axis, level)
         for sample in scene.sample_tokens
-        for axis, level in formal_single_axis_faults()
+        for axis, level in condition_inventory(method)
     }
     if (
         len(rows) != len(expected)
@@ -157,7 +174,7 @@ def save_scene(
     if not rows:
         raise ValueError("scene row inventory is empty")
     scene_token = rows[0].scene_token
-    _validate_rows(rows, manifest, scene_token)
+    _validate_rows(rows, manifest, scene_token, identity.method)
     path = directory / scene_filename(scene_token)
     _atomic_document(
         path,
@@ -194,7 +211,7 @@ def _scene_inventory(
         document = SceneResultDocumentV2.model_validate(_checked_body(path))
         if document.identity != identity:
             raise ValueError("scene identity differs from run identity")
-        _validate_rows(document.rows, manifest, scene.scene_token)
+        _validate_rows(document.rows, manifest, scene.scene_token, identity.method)
         hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
         rows.extend(document.rows)
     return hashes, tuple(rows)
