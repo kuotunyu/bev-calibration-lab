@@ -240,3 +240,26 @@ computes one distance field per camera and caches LiDAR edge extraction per sele
 packet across conditions. Missing operators remain null with explicit reasons.
 Scene documents are written atomically under distinct method/run roots; completion
 is written only after the method-specific inventory and byte hashes revalidate.
+
+
+## Runtime protocol support and public summaries
+
+Protocol resolution parses the exact referenced perturbation bytes before hashing
+them and refuses values different from the compiled V1 schedule, timing tolerance,
+training bounds or recovery thresholds. This check is shared by formal freeze,
+training and evaluation. Comments or YAML key ordering can change the byte identity
+while leaving the supported mathematical values unchanged.
+
+Private evaluation roots carry one verified V2 manifest sidecar. Reusing a root for
+a different cohort is refused. Descriptive aggregation verifies completed run hashes,
+method inventories, seeds/checkpoints, evidence type and measurement input identity.
+It preserves signed component statistics, per-operator measured denominators, complete
+row validity/reasons and all GT range bins with null summaries for empty measurements.
+The three learned seeds remain separate. Identity alone contributes timing stress;
+its timing conditions have no pose-recovery summary.
+
+Public summary export contains aggregate numbers and provenance hashes, excluding
+scene, log, sample and sensor tokens. A report consumes safe aggregate JSON and its
+claims registry without requiring the private manifest, row files, data or checkpoints.
+Formal paired scene bootstrap and the final five-document study artifact set remain
+Task J; these descriptive summaries do not substitute for those statistical results.

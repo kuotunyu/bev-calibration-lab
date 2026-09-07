@@ -11,6 +11,7 @@ import yaml
 from pydantic import BaseModel, ConfigDict, Field
 
 from bevcalib.artifacts.envelope import canonical_json_bytes
+from bevcalib.perturbations.schedule import parse_perturbation_matrix
 
 
 class _StrictModel(BaseModel):
@@ -61,10 +62,12 @@ def resolve_protocol(path: Path) -> ResolvedProtocol:
     source = Path(path)
     protocol = CohortProtocolV1.model_validate(yaml.safe_load(source.read_text(encoding="utf-8")))
     perturbations_path = (source.parent / protocol.perturbations).resolve()
+    perturbation_bytes = perturbations_path.read_bytes()
+    parse_perturbation_matrix(perturbation_bytes)
     identity = {
         "schema_version": "bev-calibration-protocol-identity/v1",
         "protocol": protocol.model_dump(mode="json"),
-        "perturbations_sha256": hashlib.sha256(perturbations_path.read_bytes()).hexdigest(),
+        "perturbations_sha256": hashlib.sha256(perturbation_bytes).hexdigest(),
     }
     return ResolvedProtocol(
         protocol=protocol,

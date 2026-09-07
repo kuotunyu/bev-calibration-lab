@@ -274,3 +274,38 @@ def test_service_retains_empty_selector_evidence_without_placeholder_scores(
         and row.invalid_reason == "no_available_lidar"
         for row in timing
     )
+
+
+def test_artifact_root_binds_one_verified_manifest(evaluation_workspace, tmp_path: Path) -> None:
+    from bevcalib.cohort.manifest import load_manifest
+    from bevcalib.evaluation import evaluate_calibration
+
+    root, manifest = evaluation_workspace
+    result = evaluate_calibration(
+        PROTOCOL, manifest, "identity", tmp_path / "out", dataroot=root, synthetic_fixture=True
+    )
+    sidecar = result.directory.parent / "evaluation_manifest.json"
+    assert load_manifest(sidecar) == load_manifest(manifest)
+    sidecar.write_text(json.dumps(cohort_document("evaluation", "other", 1)), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"artifact root.*cohort"):
+        evaluate_calibration(
+            PROTOCOL, manifest, "classical", tmp_path / "out", dataroot=root, synthetic_fixture=True
+        )
+    assert not list((tmp_path / "out").glob("classical-*"))
+
+
+def test_compatible_methods_reuse_the_exact_manifest_sidecar(
+    evaluation_workspace, tmp_path: Path
+) -> None:
+    from bevcalib.evaluation import evaluate_calibration
+
+    root, manifest = evaluation_workspace
+    first = evaluate_calibration(
+        PROTOCOL, manifest, "identity", tmp_path / "out", dataroot=root, synthetic_fixture=True
+    )
+    original = (first.directory.parent / "evaluation_manifest.json").read_bytes()
+    second = evaluate_calibration(
+        PROTOCOL, manifest, "classical", tmp_path / "out", dataroot=root, synthetic_fixture=True
+    )
+    assert first.directory != second.directory
+    assert (second.directory.parent / "evaluation_manifest.json").read_bytes() == original

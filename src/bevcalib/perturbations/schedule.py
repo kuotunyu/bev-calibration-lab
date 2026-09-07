@@ -73,7 +73,31 @@ class PerturbationMatrixV1(BaseModel):
 def load_perturbation_matrix(path: Path) -> PerturbationMatrixV1:
     """Load and strictly validate one perturbation matrix document."""
 
-    return PerturbationMatrixV1.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
+    return parse_perturbation_matrix(path.read_bytes())
+
+
+def parse_perturbation_matrix(raw: bytes) -> PerturbationMatrixV1:
+    """Validate the exact bytes the caller binds into a protocol identity."""
+    from bevcalib.metrics.calibration import (
+        RECOVERY_ROTATION_THRESHOLD_DEG,
+        RECOVERY_TRANSLATION_THRESHOLD_M,
+    )
+
+    matrix = PerturbationMatrixV1.model_validate(yaml.safe_load(raw))
+    supported = PerturbationMatrixV1(
+        schema_version="bev-perturbation-matrix/v1",
+        rotation_single_axis_deg=ROTATION_SINGLE_AXIS_DEG,
+        translation_single_axis_m=TRANSLATION_SINGLE_AXIS_M,
+        timing_offset_ms=TIMING_OFFSET_MS,
+        timing_max_selection_error_ms=TIMING_MAX_SELECTION_ERROR_MS,
+        learned_training_rotation_bound_deg=LEARNED_TRAINING_ROTATION_BOUND_DEG,
+        learned_training_translation_bound_m=LEARNED_TRAINING_TRANSLATION_BOUND_M,
+        recovery_rotation_threshold_deg=RECOVERY_ROTATION_THRESHOLD_DEG,
+        recovery_translation_threshold_m=RECOVERY_TRANSLATION_THRESHOLD_M,
+    )
+    if matrix != supported:
+        raise ValueError("referenced perturbation matrix differs from supported compiled V1 values")
+    return matrix
 
 
 def formal_single_axis_faults() -> tuple[tuple[FaultAxis, float], ...]:

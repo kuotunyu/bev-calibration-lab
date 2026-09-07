@@ -16,7 +16,12 @@ from bevcalib.artifacts.result_documents import (
     save_scene,
 )
 from bevcalib.artifacts.run_record import RunRecordV1, load_run_provenance
-from bevcalib.cohort.manifest import CohortManifestV2, load_formal_manifest, load_manifest
+from bevcalib.cohort.manifest import (
+    CohortManifestV2,
+    load_formal_manifest,
+    load_manifest,
+    save_manifest,
+)
 from bevcalib.cohort.protocol import resolve_protocol
 from bevcalib.evaluation_measurements import invalid_timing_result, measure_condition
 from bevcalib.nuscenes_adapter.installation import resolve_installation
@@ -116,6 +121,9 @@ def evaluate_calibration(
     directory = output_dir / f"{method}-{identity.run_id}"
     if directory.exists():
         raise FileExistsError("refusing to overwrite an existing evaluation run")
+    sidecar = output_dir / "evaluation_manifest.json"
+    if sidecar.exists() and load_manifest(sidecar) != manifest:
+        raise ValueError("artifact root is already bound to a different cohort")
     for scene in manifest.scenes:
         rows = []
         for index, camera_token in enumerate(scene.camera_sample_data_tokens):
@@ -162,6 +170,9 @@ def evaluate_calibration(
                         predictor=predictor,
                     )
                 )
+        if not sidecar.exists():
+            output_dir.mkdir(parents=True, exist_ok=True)
+            save_manifest(manifest, sidecar)
         save_scene(directory, identity, manifest, tuple(rows))
     finalize_run(directory, identity, manifest)
     return EvaluationResult(directory, identity)
