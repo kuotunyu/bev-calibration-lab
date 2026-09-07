@@ -7,11 +7,15 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from .envelope import PortfolioArtifactEnvelopeV1, canonical_json_bytes
-from .results import CalibrationResultV1
+from .result_documents import RunCompleteV2, SceneResultDocumentV2
+from .results import CalibrationResultV1, CalibrationResultV2
 from .run_record import RunRecordV1
 
 _SCHEMA_MODELS: tuple[tuple[str, type[BaseModel]], ...] = (
     ("calibration_result_v1.json", CalibrationResultV1),
+    ("calibration_result_v2.json", CalibrationResultV2),
+    ("scene_result_v2.json", SceneResultDocumentV2),
+    ("run_complete_v2.json", RunCompleteV2),
     ("portfolio_artifact_envelope_v1.json", PortfolioArtifactEnvelopeV1),
     ("run_record_v1.json", RunRecordV1),
 )
