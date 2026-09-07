@@ -63,17 +63,11 @@ def build_five_channel_input(
 def five_channel_stem_weight(existing_weight: npt.NDArray[Any]) -> npt.NDArray[np.float64]:
     """Widen a `[out, 3, k, k]` stem kernel to `[out, 5, k, k]`.
 
-    The three colour kernels are copied through untouched, because keeping what
-    the pretrained stem learned is the entire reason for adapting rather than
-    rebuilding. Each new channel starts as the mean of the three: a zero kernel
-    would learn from nothing, and a random one would inject noise into a stem that
-    already works, while the colour mean starts the new channel as another
-    intensity-like input, the closest thing to what the stem knows how to read.
-
-    This does raise the stem's response to a uniform input by two thirds, since
-    five channels now carry what three did. That is left alone deliberately: the
-    layer after the stem is normalised, and rescaling the colour kernels would
-    change the pretrained response this adaptation exists to preserve.
+    Append two mean-RGB kernels, then scale each output's five-channel kernel to
+    preserve its original RGB squared weight energy. This preserves convolution
+    output variance for independent unit-variance inputs, not a claim that real
+    RGB, projected depth and validity masks have identical distributions. A zero
+    output kernel remains zero.
     """
 
     weight = np.asarray(existing_weight, dtype=np.float64)
@@ -83,7 +77,16 @@ def five_channel_stem_weight(existing_weight: npt.NDArray[Any]) -> npt.NDArray[n
             f"got {weight.shape}"
         )
     colour_mean = weight.mean(axis=1, keepdims=True)
-    return np.concatenate([weight, colour_mean, colour_mean], axis=1)
+    expanded = np.concatenate([weight, colour_mean, colour_mean], axis=1)
+    original_energy = np.square(weight).sum(axis=(1, 2, 3), keepdims=True)
+    expanded_energy = np.square(expanded).sum(axis=(1, 2, 3), keepdims=True)
+    ratio = np.divide(
+        original_energy,
+        expanded_energy,
+        out=np.zeros_like(original_energy),
+        where=expanded_energy > 0,
+    )
+    return expanded * np.sqrt(ratio)
 
 
 def _find_three_channel_stem(model: Any) -> tuple[str, Any]:
@@ -113,6 +116,8 @@ def initialize_convnextv2_five_channel(model: object) -> object:
         stride=stem.stride,
         padding=stem.padding,
         bias=stem.bias is not None,
+        device=stem.weight.device,
+        dtype=stem.weight.dtype,
     )
     adapted_bias = adapted.bias
     with torch.no_grad():

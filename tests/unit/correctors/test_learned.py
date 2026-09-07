@@ -194,29 +194,22 @@ def test_a_colour_channel_that_is_not_finite_is_rejected() -> None:
         build_five_channel_input(rgb, depth, valid)
 
 
-def test_the_new_stem_keeps_the_pretrained_colour_kernels_untouched() -> None:
-    """The whole point of adapting rather than rebuilding is to keep what was learned."""
+def test_the_new_stem_preserves_each_output_kernels_energy() -> None:
+    """Hand calculation: RGB energy 14, expanded energy 22, scale sqrt(7/11)."""
 
     from bevcalib.correctors.learned import five_channel_stem_weight
 
-    existing = np.arange(96 * 3 * 4 * 4, dtype=np.float64).reshape(96, 3, 4, 4)
+    existing = np.array([1.0, 2.0, 3.0]).reshape(1, 3, 1, 1)
 
     adapted = five_channel_stem_weight(existing)
 
-    assert adapted.shape == (96, 5, 4, 4)
-    np.testing.assert_array_equal(adapted[:, :3], existing)
+    assert adapted.shape == (1, 5, 1, 1)
+    np.testing.assert_allclose(adapted.ravel(), np.array([1, 2, 3, 2, 2]) * np.sqrt(7 / 11))
+    assert np.square(adapted).sum() == pytest.approx(14.0)
 
 
-def test_each_new_stem_channel_starts_as_the_average_of_the_colour_channels() -> None:
-    """A zero kernel would learn from nothing; a random one would inject noise into a
-    pretrained stem. The colour mean starts each new channel as another intensity-like
-    input, which is the closest thing to what the stem already knows how to read.
-
-    It does raise the stem's total response to a uniform input by two thirds, since
-    five channels now carry what three did. That is left as it is because the layer
-    that follows is normalised, and because rescaling would change the pretrained
-    colour response this adaptation exists to preserve.
-    """
+def test_each_new_stem_channel_is_the_mean_of_the_scaled_colour_channels() -> None:
+    """Scale each output independently; preserve colour proportions and total energy."""
 
     from bevcalib.correctors.learned import five_channel_stem_weight
 
@@ -224,9 +217,21 @@ def test_each_new_stem_channel_starts_as_the_average_of_the_colour_channels() ->
 
     adapted = five_channel_stem_weight(existing)
 
-    colour_mean = existing.mean(axis=1)
+    colour_mean = adapted[:, :3].mean(axis=1)
     np.testing.assert_allclose(adapted[:, 3], colour_mean, atol=1e-15)
     np.testing.assert_allclose(adapted[:, 4], colour_mean, atol=1e-15)
+    np.testing.assert_allclose(
+        np.square(adapted).sum((1, 2, 3)), np.square(existing).sum((1, 2, 3))
+    )
+
+
+def test_zero_output_kernels_remain_zero_without_nan() -> None:
+    from bevcalib.correctors.learned import five_channel_stem_weight
+
+    original = np.array([[0, 0, 0], [1, 2, 3]], dtype=np.float64).reshape(2, 3, 1, 1)
+    adapted = five_channel_stem_weight(original)
+    np.testing.assert_array_equal(adapted[0], np.zeros((5, 1, 1)))
+    assert np.square(adapted[1]).sum() == pytest.approx(14.0)
 
 
 @pytest.mark.parametrize("shape", [(96, 4, 4, 4), (96, 3, 4), (3, 4, 4)])
@@ -291,16 +296,19 @@ def test_the_adapted_stem_carries_the_pretrained_weights_and_bias_across() -> No
 
     from bevcalib.correctors.learned import initialize_convnextv2_five_channel
 
-    model = convnext_like()
+    model = convnext_like().double()
     original = model.embeddings.patch_embeddings.weight.detach().clone()
     original_bias = model.embeddings.patch_embeddings.bias.detach().clone()
 
     initialize_convnextv2_five_channel(model)
 
     adapted = model.embeddings.patch_embeddings
-    torch.testing.assert_close(adapted.weight[:, :3], original)
-    torch.testing.assert_close(adapted.weight[:, 3], original.mean(dim=1))
-    torch.testing.assert_close(adapted.weight[:, 4], original.mean(dim=1))
+    assert adapted.weight.dtype == original.dtype
+    torch.testing.assert_close(
+        adapted.weight.square().sum((1, 2, 3)), original.square().sum((1, 2, 3))
+    )
+    torch.testing.assert_close(adapted.weight[:, 3], adapted.weight[:, :3].mean(dim=1))
+    torch.testing.assert_close(adapted.weight[:, 4], adapted.weight[:, :3].mean(dim=1))
     torch.testing.assert_close(adapted.bias, original_bias)
 
 

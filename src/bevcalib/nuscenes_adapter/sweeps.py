@@ -17,10 +17,12 @@ class TimingSelection:
     """What was asked for, what was available, and how far apart the two were."""
 
     requested_offset_ms: int
-    realized_offset_ms: float
-    selected_sample_data_token: str
-    absolute_error_ms: float
+    realized_offset_ms: float | None
+    selected_sample_data_token: str | None
+    absolute_error_ms: float | None
     valid: bool
+    selected_timestamp_us: int | None
+    reason: str
 
 
 def choose_nearest_sweep(
@@ -32,12 +34,10 @@ def choose_nearest_sweep(
 ) -> TimingSelection:
     """Pick the sweep nearest `target_timestamp_us` and report the timing actually achieved.
 
-    A timing fault asks for the camera frame a fixed number of milliseconds from
-    the LiDAR sweep, and usually no frame exists at exactly that instant. The
-    request is therefore served by the nearest real sweep, and the difference is
-    recorded rather than assumed away.
+    This is a sensor-agnostic nearest selector. The timing service supplies only
+    available LIDAR_TOP packets from the fixed camera's scene and log.
 
-    `realized_offset_ms` is measured from the LiDAR reference, not from the
+    `realized_offset_ms` is measured from the camera reference, not from the
     request, because it is the physical gap between the two sensors and that is
     what a result depends on. The reference is recovered from the request:
     `target = reference + requested_offset`.
@@ -66,4 +66,6 @@ def choose_nearest_sweep(
         selected_sample_data_token=chosen.sample_data_token,
         absolute_error_ms=absolute_error_ms,
         valid=absolute_error_ms <= max_error_ms,
+        selected_timestamp_us=chosen.timestamp_us,
+        reason="valid" if absolute_error_ms <= max_error_ms else "outside_tolerance",
     )

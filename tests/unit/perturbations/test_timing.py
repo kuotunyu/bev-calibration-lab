@@ -1,7 +1,7 @@
-"""Contracts for timing faults: which camera frame a requested offset actually gets.
+"""Contracts for timing faults: which LiDAR sweep a requested offset actually gets.
 
 A timing fault is the one perturbation that changes nothing about the geometry.
-It changes which camera frame is paired with the sweep, and the pairing is served
+It changes which LiDAR sweep is paired with the sweep, and the pairing is served
 by whatever frame really exists, so what was asked for and what was obtained are
 recorded separately.
 """
@@ -25,10 +25,10 @@ def sweep(token: str, offset_ms: float) -> SensorPacket:
         sample_data_token=token,
         timestamp_us=REFERENCE_US + round(offset_ms * 1000),
         calibrated_sensor=FramedTransform(
-            target="camera_ego", source="camera_sensor", value=IDENTITY
+            target="lidar_ego", source="lidar_sensor", value=IDENTITY
         ),
-        ego_pose=FramedTransform(target="global", source="camera_ego", value=IDENTITY),
-        file_relative_path=f"samples/CAM_FRONT/{token}.jpg",
+        ego_pose=FramedTransform(target="global", source="lidar_ego", value=IDENTITY),
+        file_relative_path=f"samples/LIDAR_TOP/{token}.bin",
     )
 
 
@@ -52,18 +52,18 @@ def test_the_requested_offset_becomes_a_timestamp_in_microseconds() -> None:
     assert timing_target_timestamp_us(REFERENCE_US, 0) == REFERENCE_US
 
 
-def test_a_timing_fault_selects_the_camera_frame_nearest_the_request() -> None:
+def test_a_timing_fault_selects_the_lidar_sweep_nearest_the_request() -> None:
     """The whole point: a 100 ms request is served by whatever frame is actually there."""
 
-    from bevcalib.perturbations.timing import select_camera_for_timing_fault
+    from bevcalib.perturbations.timing import select_lidar_for_timing_fault
 
-    selection = select_camera_for_timing_fault(
-        (sweep("cam-0", 0.0), sweep("cam-1", 95.0), sweep("cam-2", 150.0)),
+    selection = select_lidar_for_timing_fault(
+        (sweep("lidar-0", 0.0), sweep("lidar-1", 95.0), sweep("lidar-2", 150.0)),
         REFERENCE_US,
         fault(time_ms=100),
     )
 
-    assert selection.selected_sample_data_token == "cam-1"
+    assert selection.selected_sample_data_token == "lidar-1"
     assert selection.requested_offset_ms == 100
     assert selection.realized_offset_ms == pytest.approx(95.0)
     assert selection.valid
@@ -72,25 +72,25 @@ def test_a_timing_fault_selects_the_camera_frame_nearest_the_request() -> None:
 def test_a_request_no_frame_can_serve_is_recorded_as_unmet() -> None:
     """Past 25 ms the pairing is not the one that was asked for, and saying so is the point."""
 
-    from bevcalib.perturbations.timing import select_camera_for_timing_fault
+    from bevcalib.perturbations.timing import select_lidar_for_timing_fault
 
-    selection = select_camera_for_timing_fault(
-        (sweep("cam-0", 0.0),), REFERENCE_US, fault(time_ms=200)
+    selection = select_lidar_for_timing_fault(
+        (sweep("lidar-0", 0.0),), REFERENCE_US, fault(time_ms=200)
     )
 
     assert not selection.valid
     assert selection.absolute_error_ms == pytest.approx(200.0)
-    assert selection.selected_sample_data_token == "cam-0"
+    assert selection.selected_sample_data_token == "lidar-0"
 
 
 @pytest.mark.parametrize(("error_ms", "expected"), [(25.0, True), (25.001, False)])
 def test_the_selection_limit_is_the_protocol_constant(error_ms: float, expected: bool) -> None:
     """25 ms inclusive, taken from the perturbation matrix rather than retyped here."""
 
-    from bevcalib.perturbations.timing import select_camera_for_timing_fault
+    from bevcalib.perturbations.timing import select_lidar_for_timing_fault
 
-    selection = select_camera_for_timing_fault(
-        (sweep("cam-0", 50.0 + error_ms),), REFERENCE_US, fault(time_ms=50)
+    selection = select_lidar_for_timing_fault(
+        (sweep("lidar-0", 50.0 + error_ms),), REFERENCE_US, fault(time_ms=50)
     )
 
     assert selection.valid is expected
@@ -130,10 +130,69 @@ def test_a_fault_carrying_a_timing_offset_cannot_be_a_learned_target() -> None:
         learned_six_dof_target(fault(time_ms=50, rotation=(1.0, 0.0, 0.0)))
 
 
-def test_asking_with_no_camera_frames_fails_closed() -> None:
-    """A sample with no camera sweeps cannot serve any timing request, met or unmet."""
+def test_asking_with_no_lidar_sweeps_records_missing_evidence() -> None:
+    from bevcalib.perturbations.timing import select_lidar_for_timing_fault
 
-    from bevcalib.perturbations.timing import select_camera_for_timing_fault
+    result = select_lidar_for_timing_fault((), REFERENCE_US, fault(time_ms=50))
+    assert not result.valid
+    assert result.reason == "no_available_lidar"
+    assert result.requested_offset_ms == 50
+    assert result.selected_sample_data_token is None
+    assert result.realized_offset_ms is None
+    assert result.absolute_error_ms is None
 
-    with pytest.raises(ValueError, match=r"^cannot choose a sweep: no sweeps were offered$"):
-        select_camera_for_timing_fault((), REFERENCE_US, fault(time_ms=0))
+
+def test_fixed_camera_and_selected_lidar_use_their_actual_poses() -> None:
+    from dataclasses import replace
+
+    from bevcalib.nuscenes_adapter.frames import lidar_to_camera_chain
+    from bevcalib.perturbations.timing import select_lidar_for_timing_fault
+
+    camera = SensorPacket(
+        sample_token="fixed-sample",
+        sample_data_token="fixed-camera",
+        timestamp_us=REFERENCE_US + 20_000,
+        calibrated_sensor=FramedTransform(
+            target="camera_ego", source="camera_sensor", value=IDENTITY
+        ),
+        ego_pose=FramedTransform(
+            target="global",
+            source="camera_ego",
+            value=SE3(rotation_wxyz=(1, 0, 0, 0), translation_xyz_m=(2, 0, 0)),
+        ),
+        file_relative_path="samples/CAM_FRONT/fixed.jpg",
+    )
+    selected = replace(
+        sweep("selected", 115),
+        ego_pose=FramedTransform(
+            target="global",
+            source="lidar_ego",
+            value=SE3(rotation_wxyz=(1, 0, 0, 0), translation_xyz_m=(11, 0, 0)),
+        ),
+    )
+    result = select_lidar_for_timing_fault(
+        (sweep("nominal", 0), selected), camera.timestamp_us, fault(100)
+    )
+    assert result.selected_sample_data_token == "selected"
+    assert result.realized_offset_ms == 95
+    assert result.absolute_error_ms == 5
+    assert result.reason == "valid"
+    assert result.selected_timestamp_us == REFERENCE_US + 115_000
+    assert lidar_to_camera_chain(selected, camera).value.translation_xyz_m == (9, 0, 0)
+    assert camera.timestamp_us == REFERENCE_US + 20_000
+    assert camera.sample_data_token == "fixed-camera"
+
+
+def test_the_timing_api_refuses_camera_candidates() -> None:
+    from dataclasses import replace
+
+    from bevcalib.perturbations.timing import select_lidar_for_timing_fault
+
+    bad = replace(
+        sweep("wrong", 0),
+        calibrated_sensor=FramedTransform(
+            target="camera_ego", source="camera_sensor", value=IDENTITY
+        ),
+    )
+    with pytest.raises(ValueError, match="LiDAR"):
+        select_lidar_for_timing_fault((bad,), REFERENCE_US, fault(0))

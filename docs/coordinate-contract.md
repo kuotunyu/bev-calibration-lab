@@ -149,7 +149,7 @@ Two things a fault never does. It never touches an observation: no point and no
 pixel changes, because an error mixing a sensing change with a calibration change
 could not be attributed to either, and a test hashes the raw bytes before and
 after to keep it that way. And a timing fault never moves the geometry: it
-changes which camera frame is paired with the sweep, and it is refused as a
+changes which LiDAR sweep is paired with the fixed camera, and it is refused as a
 learned 6DoF target because no pose expresses it.
 
 ## Enforcement
@@ -159,3 +159,26 @@ transform, and `compose_framed` refuses to compose when the left transform does
 not start in the frame the right one lands in. The frame set is closed: adding a
 frame is a protocol change, and `FRAME_NAMES` is asserted by a test rather than
 assumed.
+
+## Fixed camera timing selection
+
+The keyframe CAM_FRONT image, token and exposure timestamp stay fixed. Select
+actual available LIDAR_TOP payloads in that scene and log nearest to
+`camera_timestamp_us + requested_offset_ms * 1000`. Metadata-only sweeps are not
+available. Use both selected sensors' actual timestamped ego poses; never relabel
+a timestamp or substitute the nominal LiDAR sweep for missing timing data.
+Record selected token/timestamp, realized camera-relative offset, absolute error
+and reason. The 25 ms limit is inclusive. No candidate means null selection and
+null timing measurements; an out-of-tolerance candidate retains its evidence but
+is invalid. Neither case contributes a zero measurement to valid denominators.
+
+## Five-channel pretrained initialization
+
+Start from the ImageNet RGB stem and append two mean-RGB kernels for normalized
+projected depth and its validity mask. For each output channel, multiply the
+entire five-channel kernel by
+`sqrt(sum(W_rgb**2) / sum(W_five**2))`; a zero kernel remains zero. Preserve source
+bias, dtype and device. Under independent, equal unit-variance input channels this
+preserves convolution output variance. Real RGB, depth and mask distributions
+are not assumed to match. Training targets remain inverse calibration faults in
+degrees and metres, and timing is a separate stress condition.

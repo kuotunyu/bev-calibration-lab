@@ -1,4 +1,4 @@
-"""Timing faults: which camera frame a requested offset actually gets."""
+"""Timing faults: select LiDAR relative to a fixed camera exposure."""
 
 from __future__ import annotations
 
@@ -22,24 +22,36 @@ def timing_target_timestamp_us(reference_timestamp_us: int, requested_offset_ms:
     return reference_timestamp_us + requested_offset_ms * MICROSECONDS_PER_MILLISECOND
 
 
-def select_camera_for_timing_fault(
+def select_lidar_for_timing_fault(
     sweeps: tuple[SensorPacket, ...],
-    lidar_timestamp_us: int,
+    camera_timestamp_us: int,
     fault: CalibrationFaultModel,
-    max_error_ms: float = TIMING_MAX_SELECTION_ERROR_MS,
 ) -> TimingSelection:
-    """Serve a fault's timing request from the camera frames that actually exist.
+    """Serve the request using available LiDAR; the camera exposure stays fixed.
 
     A request of 100 ms is served by whatever frame is nearest to that instant,
     and the gap between the two is recorded rather than assumed away. Beyond the
     tolerance the selection is still returned and marked invalid, because which
-    frame was nearest is evidence about the data.
+    sweep was nearest is evidence about the data. The installation service must
+    first filter candidates by LIDAR_TOP channel, scene/log and actual payload.
     """
 
+    if any(sweep.calibrated_sensor.source != "lidar_sensor" for sweep in sweeps):
+        raise ValueError("timing candidates must be LiDAR readings")
+    if not sweeps:
+        return TimingSelection(
+            requested_offset_ms=fault.requested_time_offset_ms,
+            realized_offset_ms=None,
+            selected_sample_data_token=None,
+            absolute_error_ms=None,
+            valid=False,
+            selected_timestamp_us=None,
+            reason="no_available_lidar",
+        )
     return choose_nearest_sweep(
         sweeps,
-        timing_target_timestamp_us(lidar_timestamp_us, fault.requested_time_offset_ms),
-        max_error_ms,
+        timing_target_timestamp_us(camera_timestamp_us, fault.requested_time_offset_ms),
+        TIMING_MAX_SELECTION_ERROR_MS,
         requested_offset_ms=fault.requested_time_offset_ms,
     )
 
