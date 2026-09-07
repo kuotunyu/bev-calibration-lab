@@ -37,12 +37,15 @@ This is the one thing that breaks silently and stays broken.
 
 ## Order gate
 
-P1 `driving-risk-metrics` is not released yet. Under the 2026-09-02 plan revision, this
-repository may build its packaging foundation and its data-independent core, which is tasks
-P2-01 through P2-15. **Do not start P2-16 or anything after it**: no nuScenes preflight, no
-frozen cohort, no smoke run, no formal experiment until P1 is released and its `v1.0.0` tag
-resolves. Nothing here imports `drivemetrics` or depends on P1 at runtime; the shared
-artifact envelope is a specification that each repository implements independently.
+P1 `driving-risk-metrics` released v1.0.1 on 2026-09-06; the P2 data order gate is
+open. The sole active workspace plan is
+`docs/superpowers/plans/2026-09-06-three-releases-master-plan.md`. Its Task F may
+proceed independently under section 0.3 after P3 E3 local acceptance while E2 human
+replay and E4 public release remain pending. Follow the current task boundaries:
+F does not authorize a real cohort freeze, formal training, Colab or Task G.
+P2 public Git operations remain gated on its own release-time human authorization.
+Nothing here imports `drivemetrics` or depends on P1 at runtime; the shared artifact
+envelope is a specification each repository implements independently.
 
 ## Evidence vocabulary
 

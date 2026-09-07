@@ -12,14 +12,15 @@ from pathlib import Path
 from typing import Any, Literal, Protocol
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from bevcalib.artifacts.envelope import canonical_json_bytes
 from bevcalib.artifacts.run_record import RunRecordV1, load_run_provenance
+from bevcalib.cohort.manifest import CohortManifestV2, load_formal_manifest
+from bevcalib.cohort.protocol import resolve_protocol
 
 # The protocol reserves exactly twenty distinct-log train scenes for choosing the
 # checkpoint. A shorter manifest would select on less evidence while looking the same.
-CALIBRATION_SCENE_COUNT = 20
 CHECKPOINT_FILENAME = "selected_checkpoint.pt"
 RUN_RECORD_FILENAME = "run_record.json"
 
@@ -50,33 +51,6 @@ class CalibrationTrainingResult:
     run_record_path: Path
 
 
-class CohortSceneV1(BaseModel):
-    """One scene, with the log it came from. The log is what disjointness is about."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    scene_token: str = Field(min_length=1)
-    log_token: str = Field(min_length=1)
-    sample_tokens: tuple[str, ...]
-
-
-class CohortManifestV1(BaseModel):
-    """A frozen cohort as the trainer needs to see it.
-
-    This is the document `cohort/manifest.py` must produce at P2-06. It is defined
-    here because the consumer is what decides which facts the producer has to
-    carry, and because the trainer had to be built and tested before the dataset
-    could be touched.
-    """
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    schema_version: Literal["bev-calibration-cohort/v1"]
-    role: Literal["development", "calibration", "evaluation"]
-    scenes: tuple[CohortSceneV1, ...]
-    manifest_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-
-
 class CorrectorConfigV1(BaseModel):
     """Everything that could change a result, pinned before the first formal run."""
 
@@ -86,6 +60,8 @@ class CorrectorConfigV1(BaseModel):
     protocol_path: str = Field(min_length=1)
     architecture: Literal["convnextv2_tiny"]
     input_channels: Literal[5]
+    input_height: int = Field(gt=0)
+    input_width: int = Field(gt=0)
     epochs: int = Field(gt=0)
     batch_size: int = Field(gt=0)
     optimizer: Literal["adamw"]
@@ -98,6 +74,13 @@ class CorrectorConfigV1(BaseModel):
     translation_scale_m: float = Field(gt=0.0)
     huber_delta: float = Field(gt=0.0)
 
+    @field_validator("input_height", "input_width")
+    @classmethod
+    def validate_stride(cls, value: int) -> int:
+        if value % 32 != 0:
+            raise ValueError(f"{value} is not a multiple of 32; ConvNeXtV2 would pad silently")
+        return value
+
 
 def load_corrector_config(path: Path) -> CorrectorConfigV1:
     """Load and strictly validate one corrector configuration."""
@@ -105,17 +88,7 @@ def load_corrector_config(path: Path) -> CorrectorConfigV1:
     return CorrectorConfigV1.model_validate(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
 
 
-def _load_cohort(path: Path, expected_role: str) -> CohortManifestV1:
-    manifest = CohortManifestV1.model_validate(json.loads(Path(path).read_text(encoding="utf-8")))
-    if manifest.role != expected_role:
-        raise ValueError(
-            f"the {expected_role} manifest declares role {manifest.role!r}; a cohort cannot "
-            "stand in for another, and the evaluation cohort cannot be trained or selected on"
-        )
-    return manifest
-
-
-def _require_disjoint(development: CohortManifestV1, calibration: CohortManifestV1) -> None:
+def _require_disjoint(development: CohortManifestV2, calibration: CohortManifestV2) -> None:
     """Refuse any overlap between the two cohorts, log overlap included.
 
     The log check is the one that matters. Two scenes from one log are the same
@@ -139,6 +112,16 @@ def _require_disjoint(development: CohortManifestV1, calibration: CohortManifest
             "sample",
             {token for scene in development.scenes for token in scene.sample_tokens},
             {token for scene in calibration.scenes for token in scene.sample_tokens},
+        ),
+        (
+            "camera sample-data",
+            {token for scene in development.scenes for token in scene.camera_sample_data_tokens},
+            {token for scene in calibration.scenes for token in scene.camera_sample_data_tokens},
+        ),
+        (
+            "LiDAR sample-data",
+            {token for scene in development.scenes for token in scene.lidar_sample_data_tokens},
+            {token for scene in calibration.scenes for token in scene.lidar_sample_data_tokens},
         ),
     ):
         shared = sorted(left & right)
@@ -188,15 +171,23 @@ def train_learned_corrector(
     if seed not in loaded.seeds:
         raise ValueError(f"seed {seed} is not one of the approved seeds {list(loaded.seeds)}")
 
-    development = _load_cohort(development_manifest, "development")
-    calibration = _load_cohort(calibration_manifest, "calibration")
+    protocol_path = (config_path.parent / loaded.protocol_path).resolve()
+    protocol = resolve_protocol(protocol_path)
+    protocol_hash = protocol.protocol_hash
+    dataset_version = protocol.dataset_version
+    development = load_formal_manifest(
+        development_manifest,
+        expected_role="development",
+        protocol_hash=protocol_hash,
+        dataset_version=dataset_version,
+    )
+    calibration = load_formal_manifest(
+        calibration_manifest,
+        expected_role="calibration",
+        protocol_hash=protocol_hash,
+        dataset_version=dataset_version,
+    )
     _require_disjoint(development, calibration)
-    if len(calibration.scenes) != CALIBRATION_SCENE_COUNT:
-        raise ValueError(
-            f"the calibration cohort must hold exactly {CALIBRATION_SCENE_COUNT} scenes, "
-            f"got {len(calibration.scenes)}"
-        )
-
     directory = Path(output_dir)
     record_path = directory / RUN_RECORD_FILENAME
     if record_path.exists():
@@ -204,11 +195,10 @@ def train_learned_corrector(
     directory.mkdir(parents=True, exist_ok=True)
 
     provenance = load_run_provenance()
-    protocol_path = (config_path.parent / loaded.protocol_path).resolve()
     identity: dict[str, Any] = {
         "run_id": f"{loaded.architecture}-seed-{seed}",
         "config_sha256": _sha256_file(config_path),
-        "protocol_sha256": _sha256_file(protocol_path),
+        "protocol_sha256": protocol_hash,
         "cohort_manifest_sha256": hashlib.sha256(
             canonical_json_bytes(
                 {

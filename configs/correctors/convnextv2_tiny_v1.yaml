@@ -6,13 +6,14 @@
 # version and a new evaluation, not an edit to this file.
 schema_version: bev-corrector-config/v1
 
-# Resolved relative to this file. Its hash becomes the run record's protocol hash,
-# because the perturbation matrix is what defines the experiment this corrector
-# is trained for.
-protocol_path: ../perturbations/formal_v1.yaml
+# Resolved relative to this file. The protocol identity hashes the validated YAML
+# and referenced perturbation bytes, binding dataset, allocation and fault matrix.
+protocol_path: ../protocols/nuscenes_calibration_v1.yaml
 
 architecture: convnextv2_tiny
 input_channels: 5
+input_height: 448
+input_width: 800
 
 epochs: 30
 batch_size: 16

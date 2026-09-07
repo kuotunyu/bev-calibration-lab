@@ -164,6 +164,7 @@ def test_the_engine_drives_a_real_backend_through_a_whole_run(tmp_path: Path) ->
     configs = tmp_path / "configs"
     (configs / "correctors").mkdir(parents=True)
     (configs / "perturbations").mkdir()
+    shutil.copytree(repo_root / "configs/protocols", configs / "protocols")
     shutil.copyfile(
         repo_root / "configs" / "perturbations" / "formal_v1.yaml",
         configs / "perturbations" / "formal_v1.yaml",
@@ -175,21 +176,11 @@ def test_the_engine_drives_a_real_backend_through_a_whole_run(tmp_path: Path) ->
     config.write_text(yaml.safe_dump(document | {"epochs": 3}), encoding="utf-8")
 
     def cohort(role: str, prefix: str, count: int) -> Path:
-        scenes = [
-            {
-                "scene_token": f"{prefix}-scene-{index}",
-                "log_token": f"{prefix}-log-{index}",
-                "sample_tokens": (f"{prefix}-sample-{index}",),
-            }
-            for index in range(count)
-        ]
-        body = {"schema_version": "bev-calibration-cohort/v1", "role": role, "scenes": scenes}
-        payload = json.dumps(body, sort_keys=True, separators=(",", ":")).encode()
+        from tests.unit.training.test_engine import cohort_document
+
+        body = cohort_document(role, prefix, count)
         path = tmp_path / f"{role}.json"
-        path.write_text(
-            json.dumps(body | {"manifest_sha256": hashlib.sha256(payload).hexdigest()}),
-            encoding="utf-8",
-        )
+        path.write_text(json.dumps(body), encoding="utf-8")
         return path
 
     class TorchBackend:

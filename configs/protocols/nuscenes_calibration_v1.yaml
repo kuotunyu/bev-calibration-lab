@@ -1,0 +1,14 @@
+schema_version: bev-calibration-protocol/v1
+dataset:
+  version: v1.0-trainval
+  keyframes_only: true
+cohort:
+  development: 100
+  calibration: 20
+  evaluation: 30
+  location_stratified: true
+  log_disjoint: true
+perturbations: ../perturbations/formal_v1.yaml
+bootstrap:
+  resamples: 5000
+  seed: 20260831

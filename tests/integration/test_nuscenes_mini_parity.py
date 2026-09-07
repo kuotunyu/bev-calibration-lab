@@ -10,9 +10,9 @@ Nothing else depends on it. Every rule the adapter implements is covered by unit
 tests on synthetic records, so a skip here reduces confidence in one specific
 thing, agreement with the devkit, and weakens no coverage.
 
-The dataset itself is gated: under the 2026-09-02 plan revision, P2 may not read
-real nuScenes data until P1 is released. This test therefore skips by design for
-now, and the skip reason says so rather than being silent about it.
+P1 is released and the data order gate is open. This test still requires an
+explicit NUSCENES_ROOT for a task authorized to read real data. Its absence is a
+skip, not evidence that the dataset is uninstalled.
 """
 
 from __future__ import annotations
@@ -37,8 +37,8 @@ def nuscenes_root() -> Path:
     root = os.environ.get("NUSCENES_ROOT")
     if root is None:
         pytest.skip(
-            "NUSCENES_ROOT is not set. The nuScenes dataset is not installed, and under the "
-            "2026-09-02 plan revision P2 may not read it until P1 is released. Every adapter "
+            "NUSCENES_ROOT is not set for this run. P1 is released; a data-authorized task "
+            "must explicitly select the nuScenes root to run real-data parity. Every adapter "
             "rule is covered by unit tests on synthetic records; this test adds agreement with "
             "the official devkit, which cannot be checked without the data."
         )

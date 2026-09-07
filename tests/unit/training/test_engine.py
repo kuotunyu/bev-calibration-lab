@@ -30,17 +30,67 @@ PROVENANCE = {
 
 
 def cohort_document(role: str, prefix: str, scene_count: int) -> dict[str, Any]:
+    from bevcalib.cohort.protocol import resolve_protocol
+
     scenes = [
         {
             "scene_token": f"{prefix}-scene-{index}",
-            "log_token": f"{prefix}-log-{index // 3}",
+            "log_token": f"{prefix}-log-{index}",
             "sample_tokens": (f"{prefix}-sample-{index}-0", f"{prefix}-sample-{index}-1"),
+            "location": "boston-seaport",
+            "official_split": "val" if role == "evaluation" else "train",
+            "camera_sample_data_tokens": (
+                f"{prefix}-camera-{index}-0",
+                f"{prefix}-camera-{index}-1",
+            ),
+            "lidar_sample_data_tokens": (f"{prefix}-lidar-{index}-0", f"{prefix}-lidar-{index}-1"),
+            "sample_timestamps": (100, 200),
+            "camera_timestamps": (101, 201),
+            "lidar_timestamps": (98, 198),
         }
         for index in range(scene_count)
     ]
-    document = {"schema_version": "bev-calibration-cohort/v1", "role": role, "scenes": scenes}
+    count = {"development": 100, "calibration": 20, "evaluation": 30}[role]
+    document = {
+        "schema_version": "bev-calibration-cohort/v2",
+        "role": role,
+        "scenes": scenes,
+        "dataset_version": "v1.0-trainval",
+        "protocol_hash": resolve_protocol(
+            REPO_ROOT / "configs/protocols/nuscenes_calibration_v1.yaml"
+        ).protocol_hash,
+        "allocation": [
+            {
+                "location": loc,
+                "requested": count if i == 0 else 0,
+                "available": scene_count if i == 0 else 0,
+                "available_logs": scene_count if i == 0 else 0,
+                "selected": scene_count if i == 0 else 0,
+                "shortage_reason": "insufficient_scenes"
+                if i == 0 and scene_count < count
+                else None,
+            }
+            for i, loc in enumerate(
+                (
+                    "boston-seaport",
+                    "singapore-hollandvillage",
+                    "singapore-onenorth",
+                    "singapore-queenstown",
+                )
+            )
+        ],
+    }
     payload = json.dumps(document, sort_keys=True, separators=(",", ":")).encode()
     return document | {"manifest_sha256": hashlib.sha256(payload).hexdigest()}
+
+
+def rehash(document: dict[str, Any]) -> None:
+    payload = json.dumps(
+        {k: v for k, v in document.items() if k != "manifest_sha256"},
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    document["manifest_sha256"] = hashlib.sha256(payload).hexdigest()
 
 
 def write_cohort(path: Path, role: str, prefix: str, scene_count: int) -> Path:
@@ -97,6 +147,7 @@ def workspace(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Path
     configs = tmp_path / "configs"
     (configs / "correctors").mkdir(parents=True)
     (configs / "perturbations").mkdir()
+    shutil.copytree(REPO_ROOT / "configs/protocols", configs / "protocols")
     shutil.copyfile(
         REPO_ROOT / "configs" / "perturbations" / "formal_v1.yaml",
         configs / "perturbations" / "formal_v1.yaml",
@@ -125,6 +176,77 @@ def train(workspace: dict[str, Path], backend: FakeBackend, **overrides: Any) ->
         "backend": backend,
     }
     return train_learned_corrector(**(arguments | overrides))
+
+
+def test_legacy_manifest_is_refused_before_backend(workspace: dict[str, Path]) -> None:
+    document = {
+        "schema_version": "bev-calibration-cohort/v1",
+        "role": "development",
+        "scenes": [],
+        "manifest_sha256": "a" * 64,
+    }
+    rehash(document)
+    workspace["development"].write_text(json.dumps(document), encoding="utf-8")
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match="legacy"):
+        train(workspace, backend)
+    assert backend.calls == []
+
+
+def test_changed_scene_with_stale_digest_is_refused_before_backend(
+    workspace: dict[str, Path],
+) -> None:
+    path = workspace["development"]
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["scenes"][0]["scene_token"] = "synthetic-tampered-scene"
+    path.write_text(json.dumps(document), encoding="utf-8")
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match="hash"):
+        train(workspace, backend)
+    assert backend.calls == []
+
+
+@pytest.mark.parametrize(
+    "mutation,match",
+    [
+        ("protocol", "protocol hash"),
+        ("dataset", "dataset version"),
+        ("logs", "20 distinct logs"),
+        ("split", "official split"),
+    ],
+)
+def test_validly_rehashed_wrong_provenance_is_refused_before_backend(
+    workspace: dict[str, Path], mutation: str, match: str
+) -> None:
+    path = workspace["calibration"]
+    document = json.loads(path.read_text(encoding="utf-8"))
+    if mutation == "protocol":
+        document["protocol_hash"] = "f" * 64
+    elif mutation == "dataset":
+        document["dataset_version"] = "v1.0-mini"
+    elif mutation == "logs":
+        document["scenes"][1]["log_token"] = document["scenes"][0]["log_token"]
+    else:
+        for scene in document["scenes"]:
+            scene["official_split"] = "val"
+    rehash(document)
+    path.write_text(json.dumps(document), encoding="utf-8")
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match=match):
+        train(workspace, backend)
+    assert backend.calls == []
+
+
+def test_sample_leakage_is_refused_before_backend(workspace: dict[str, Path]) -> None:
+    path = workspace["calibration"]
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["scenes"][0]["sample_tokens"][0] = "dev-sample-0-0"
+    rehash(document)
+    path.write_text(json.dumps(document), encoding="utf-8")
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match="share a sample"):
+        train(workspace, backend)
+    assert backend.calls == []
 
 
 def test_the_seed_is_set_before_anything_random_can_exist(workspace: dict[str, Path]) -> None:
@@ -237,16 +359,20 @@ def test_the_run_record_ties_the_result_to_its_config_cohort_and_machine(
         assert len(record[key]) == 64
 
 
-def test_the_protocol_hash_is_the_perturbation_matrix_the_corrector_is_trained_for(
+def test_the_protocol_hash_binds_the_resolved_dataset_and_cohort_contract(
     workspace: dict[str, Path],
 ) -> None:
     """A corrector is only meaningful against the fault distribution it was trained on."""
 
     result = train(workspace, FakeBackend())
 
-    matrix = (workspace["config"].parent.parent / "perturbations" / "formal_v1.yaml").read_bytes()
+    from bevcalib.cohort.protocol import resolve_protocol
+
+    resolved = resolve_protocol(
+        workspace["config"].parent.parent / "protocols" / "nuscenes_calibration_v1.yaml"
+    )
     record = json.loads(result.run_record_path.read_text(encoding="utf-8"))
-    assert record["protocol_sha256"] == hashlib.sha256(matrix).hexdigest()
+    assert record["protocol_sha256"] == resolved.protocol_hash
 
 
 def test_two_runs_of_the_same_thing_produce_the_same_record_apart_from_its_clock(
@@ -280,7 +406,12 @@ def test_a_manifest_playing_the_wrong_part_is_refused(
 ) -> None:
     """Handing the evaluation cohort to a trainer is the mistake that voids the study."""
 
-    wrong = write_cohort(tmp_path / "wrong.json", role, "wrong", 20)
+    wrong = write_cohort(
+        tmp_path / "wrong.json",
+        role,
+        "wrong",
+        {"development": 100, "calibration": 20, "evaluation": 30}[role],
+    )
 
     expected = rf"^the {role_key} manifest declares role '{role}'; "
     with pytest.raises(ValueError, match=expected):
@@ -298,6 +429,7 @@ def test_the_two_cohorts_may_not_share_a_log(workspace: dict[str, Path], tmp_pat
     document = cohort_document("calibration", "cal", 20)
     document["scenes"][0]["log_token"] = "dev-log-0"
     overlapping = tmp_path / "overlap.json"
+    rehash(document)
     overlapping.write_text(json.dumps(document), encoding="utf-8")
 
     with pytest.raises(ValueError, match=r"^the development and calibration cohorts share a log: "):
@@ -311,6 +443,7 @@ def test_the_two_cohorts_may_not_share_a_scene(workspace: dict[str, Path], tmp_p
     document["scenes"][0]["scene_token"] = "dev-scene-0"
     document["scenes"][0]["log_token"] = "cal-log-0"
     overlapping = tmp_path / "overlap.json"
+    rehash(document)
     overlapping.write_text(json.dumps(document), encoding="utf-8")
 
     with pytest.raises(
@@ -359,6 +492,8 @@ def test_the_committed_config_pins_everything_that_could_change_a_result() -> No
 
     assert config.architecture == "convnextv2_tiny"
     assert config.input_channels == 5
+    assert config.input_height == 448
+    assert config.input_width == 800
     assert config.epochs == 30
     assert config.batch_size == 16
     assert config.optimizer == "adamw"
@@ -399,3 +534,61 @@ def test_a_calibration_loss_that_is_not_a_number_stops_the_run(
 
     record = json.loads((workspace["output"] / "run_record.json").read_text(encoding="utf-8"))
     assert record["status"] == "failed"
+
+
+@pytest.mark.parametrize("field", ["input_height", "input_width"])
+@pytest.mark.parametrize("value", [0, -32, 450])
+def test_input_size_rejects_nonpositive_or_non_stride_values(
+    tmp_path: Path, field: str, value: int
+) -> None:
+    from bevcalib.training.engine import load_corrector_config
+
+    document = yaml.safe_load(COMMITTED_CONFIG.read_text(encoding="utf-8"))
+    assert document["input_height"] == 448 and document["input_width"] == 800
+    document[field] = value
+    path = tmp_path / "bad.yaml"
+    path.write_text(yaml.safe_dump(document), encoding="utf-8")
+    with pytest.raises(ValueError):
+        load_corrector_config(path)
+
+
+@pytest.mark.parametrize("change", ["modified", "missing", "dataset"])
+def test_resolved_protocol_drift_fails_before_backend(
+    workspace: dict[str, Path], change: str
+) -> None:
+    matrix = workspace["config"].parent.parent / "perturbations/formal_v1.yaml"
+    if change == "modified":
+        matrix.write_bytes(matrix.read_bytes() + b"\n# synthetic drift\n")
+    elif change == "missing":
+        matrix.unlink()
+    else:
+        path = workspace["config"].parent.parent / "protocols/nuscenes_calibration_v1.yaml"
+        doc = yaml.safe_load(path.read_text())
+        doc["dataset"]["version"] = "v1.0-mini"
+        path.write_text(yaml.safe_dump(doc))
+    backend = FakeBackend()
+    with pytest.raises((ValueError, FileNotFoundError)):
+        train(workspace, backend)
+    assert backend.calls == []
+
+
+@pytest.mark.parametrize(
+    "field,match",
+    [
+        ("camera_sample_data_tokens", "camera sample-data"),
+        ("lidar_sample_data_tokens", "LiDAR sample-data"),
+    ],
+)
+def test_sensor_identifier_leakage_is_refused(
+    workspace: dict[str, Path], field: str, match: str
+) -> None:
+    path = workspace["calibration"]
+    doc = json.loads(path.read_text())
+    dev = json.loads(workspace["development"].read_text())
+    doc["scenes"][0][field][0] = dev["scenes"][0][field][0]
+    rehash(doc)
+    path.write_text(json.dumps(doc))
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match=match):
+        train(workspace, backend)
+    assert backend.calls == []
