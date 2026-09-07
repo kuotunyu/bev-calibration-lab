@@ -18,6 +18,7 @@ from bevcalib.artifacts.envelope import canonical_json_bytes
 from bevcalib.artifacts.run_record import RunRecordV1, load_run_provenance
 from bevcalib.cohort.manifest import CohortManifestV2, load_formal_manifest
 from bevcalib.cohort.protocol import resolve_protocol
+from bevcalib.cohort.records import validate_records
 
 # The protocol reserves exactly twenty distinct-log train scenes for choosing the
 # checkpoint. A shorter manifest would select on less evidence while looking the same.
@@ -129,6 +130,9 @@ def _require_disjoint(development: CohortManifestV2, calibration: CohortManifest
             raise ValueError(
                 f"the development and calibration cohorts share a {name}: {shared[:5]}"
             )
+    # Preserve the producer's combined identifier namespace across both roles,
+    # including camera/LiDAR and sample/sensor collisions in different fields.
+    validate_records(development.scenes + calibration.scenes)
 
 
 def _sha256_file(path: Path) -> str:

@@ -18,7 +18,7 @@ class _StrictModel(BaseModel):
 
 
 class _Dataset(_StrictModel):
-    version: str = Field(min_length=1)
+    version: Literal["v1.0-trainval"]
     keyframes_only: Literal[True]
 
 

@@ -60,3 +60,16 @@ def test_protocol_contract_rejects_unsupported_changes(tmp_path, section, key, v
     path.write_text(yaml.safe_dump(doc))
     with pytest.raises(ValueError):
         resolve_protocol(path)
+
+
+@pytest.mark.parametrize("version", ["v1.0-mini", "synthetic-unknown-version"])
+def test_formal_resolver_refuses_nonempty_unsupported_dataset(tmp_path, version):
+    from bevcalib.cohort.protocol import resolve_protocol
+
+    shutil.copytree(REPO_ROOT / "configs", tmp_path / "configs")
+    path = tmp_path / "configs/protocols/nuscenes_calibration_v1.yaml"
+    doc = yaml.safe_load(path.read_text(encoding="utf-8"))
+    doc["dataset"]["version"] = version
+    path.write_text(yaml.safe_dump(doc), encoding="utf-8")
+    with pytest.raises(ValueError, match=r"v1\.0-trainval"):
+        resolve_protocol(path)

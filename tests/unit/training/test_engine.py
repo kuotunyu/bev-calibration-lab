@@ -592,3 +592,71 @@ def test_sensor_identifier_leakage_is_refused(
     with pytest.raises(ValueError, match=match):
         train(workspace, backend)
     assert backend.calls == []
+
+
+@pytest.mark.parametrize("version", ["v1.0-mini", "synthetic-unknown-version"])
+def test_matching_rehashed_inputs_cannot_authorize_an_unsupported_dataset(
+    workspace: dict[str, Path], version: str
+) -> None:
+    """Integrity cannot turn an unsupported formal dataset into an approved one."""
+    from bevcalib.cohort.manifest import CohortManifestV2
+
+    root = workspace["config"].parent.parent
+    protocol_path = root / "protocols/nuscenes_calibration_v1.yaml"
+    protocol = yaml.safe_load(protocol_path.read_text(encoding="utf-8"))
+    protocol["dataset"]["version"] = version
+    protocol_path.write_text(yaml.safe_dump(protocol), encoding="utf-8")
+    identity = {
+        "schema_version": "bev-calibration-protocol-identity/v1",
+        "protocol": protocol,
+        "perturbations_sha256": hashlib.sha256(
+            (root / "perturbations/formal_v1.yaml").read_bytes()
+        ).hexdigest(),
+    }
+    protocol_hash = hashlib.sha256(
+        json.dumps(identity, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    for role in ("development", "calibration"):
+        path = workspace[role]
+        doc = json.loads(path.read_text(encoding="utf-8"))
+        doc["dataset_version"] = version
+        doc["protocol_hash"] = protocol_hash
+        rehash(doc)
+        CohortManifestV2.model_validate(doc)  # Each input is internally valid and hash-bound.
+        path.write_text(json.dumps(doc), encoding="utf-8")
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match=r"v1\.0-trainval"):
+        train(workspace, backend)
+    assert backend.calls == []
+    assert not workspace["output"].exists()
+
+
+@pytest.mark.parametrize(
+    "development_field,calibration_field",
+    [
+        ("camera_sample_data_tokens", "lidar_sample_data_tokens"),
+        ("lidar_sample_data_tokens", "camera_sample_data_tokens"),
+        ("sample_tokens", "camera_sample_data_tokens"),
+        ("sample_tokens", "lidar_sample_data_tokens"),
+        ("camera_sample_data_tokens", "sample_tokens"),
+        ("lidar_sample_data_tokens", "sample_tokens"),
+    ],
+)
+def test_rehashed_cross_field_identifier_collisions_fail_before_backend(
+    workspace: dict[str, Path], development_field: str, calibration_field: str
+) -> None:
+    from bevcalib.cohort.manifest import CohortManifestV2
+
+    dev = json.loads(workspace["development"].read_text(encoding="utf-8"))
+    path = workspace["calibration"]
+    cal = json.loads(path.read_text(encoding="utf-8"))
+    cal["scenes"][0][calibration_field][0] = dev["scenes"][0][development_field][0]
+    rehash(cal)
+    CohortManifestV2.model_validate(dev)
+    CohortManifestV2.model_validate(cal)
+    path.write_text(json.dumps(cal), encoding="utf-8")
+    backend = FakeBackend()
+    with pytest.raises(ValueError, match="identifier belongs to multiple scenes"):
+        train(workspace, backend)
+    assert backend.calls == []
+    assert not workspace["output"].exists()
