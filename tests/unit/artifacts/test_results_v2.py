@@ -55,6 +55,58 @@ def row_document() -> dict:
     }
 
 
+@pytest.mark.parametrize("requested_ms", [-200, -100, -50, 0, 50, 100, 200])
+@pytest.mark.parametrize("error_us", [-25001, -25000, -1001, 1001, 25000, 25001, 26001])
+def test_native_fractional_timing_selection_round_trips_exactly(
+    requested_ms: int, error_us: int
+) -> None:
+    from bevcalib.artifacts.results import CalibrationResultV2
+    from bevcalib.geometry.frames import FramedTransform
+    from bevcalib.geometry.se3 import SE3
+    from bevcalib.nuscenes_adapter.frames import SensorPacket
+    from bevcalib.nuscenes_adapter.sweeps import choose_nearest_sweep
+
+    reference = 1_538_984_233_547_259
+    target = reference + requested_ms * 1000
+    identity = SE3(rotation_wxyz=(1, 0, 0, 0), translation_xyz_m=(0, 0, 0))
+    packet = SensorPacket(
+        sample_token="sample",
+        sample_data_token="lidar",
+        timestamp_us=target + error_us,
+        calibrated_sensor=FramedTransform(
+            target="lidar_ego", source="lidar_sensor", value=identity
+        ),
+        ego_pose=FramedTransform(target="global", source="lidar_ego", value=identity),
+        file_relative_path="samples/LIDAR_TOP/fractional.bin",
+    )
+    selection = choose_nearest_sweep((packet,), target, requested_offset_ms=requested_ms)
+    doc = row_document()
+    doc.update(fault_axis="time", fault_level=requested_ms)
+    doc["fault"].update(translation_xyz_m=[0, 0, 0], requested_time_offset_ms=requested_ms)
+    doc["camera"]["timestamp_us"] = reference
+    doc["lidar"]["timestamp_us"] = packet.timestamp_us
+    doc["timing"] = {
+        "requested_offset_ms": requested_ms,
+        "realized_offset_ms": selection.realized_offset_ms,
+        "absolute_error_ms": selection.absolute_error_ms,
+        "reason": selection.reason,
+    }
+    if not selection.valid:
+        doc.update(
+            estimate=None,
+            pose=None,
+            pixel_errors_px=[],
+            projection_count=0,
+            edge_alignment_score=None,
+            ground_contacts=[],
+            valid=False,
+            invalid_reason=selection.reason,
+        )
+    row = CalibrationResultV2.model_validate(doc)
+    assert row.timing.absolute_error_ms == abs(error_us) / 1000
+    assert row.valid is (abs(error_us) <= 25000)
+
+
 def test_actual_negative_edge_operator_and_signed_pose_round_trip() -> None:
     from bevcalib.artifacts.results import CalibrationResultV2
 

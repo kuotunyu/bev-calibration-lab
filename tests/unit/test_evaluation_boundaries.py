@@ -209,6 +209,7 @@ def test_actual_trained_checkpoint_runs_learned_service_without_evaluation_train
         rows = load_result_run(result.directory, result.identity, load_manifest(evaluation))
         assert len(rows) == 60 and all(row.fault_axis != "time" for row in rows)
         assert result.identity.seed == 17
+        assert result.identity.producer.hardware["inference_device"] == "cpu"
         assert all(row.estimate is not None for row in rows)
         assert {
             scene["scene_token"]

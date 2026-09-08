@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass
+from functools import lru_cache
 
 import numpy as np
 import numpy.typing as npt
@@ -28,6 +29,7 @@ class BootstrapInterval:
     seed: int
 
 
+@lru_cache(maxsize=32)
 def _resample_indices(seed: int, resamples: int, size: int) -> npt.NDArray[np.int64]:
     """Deterministic resample indices, derived from SHA-256 in counter mode.
 
@@ -52,7 +54,9 @@ def _resample_indices(seed: int, resamples: int, size: int) -> npt.NDArray[np.in
         values[filled : filled + take] = chunk[:take]
         filled += take
         counter += 1
-    return (values % size).astype(np.int64).reshape(resamples, size)
+    indices = (values % size).astype(np.int64).reshape(resamples, size)
+    indices.flags.writeable = False
+    return indices
 
 
 def paired_scene_bootstrap(

@@ -14,6 +14,16 @@ import pytest
 DEFAULT_SEED = 20260831
 
 
+def test_repeated_scene_sizes_reuse_immutable_resampling_indices() -> None:
+    from bevcalib.metrics.bootstrap import _resample_indices
+
+    first = _resample_indices(DEFAULT_SEED, 5000, 30)
+    second = _resample_indices(DEFAULT_SEED, 5000, 30)
+    assert first is second
+    with pytest.raises(ValueError, match="read-only"):
+        first[0, 0] = 99
+
+
 def paired(**scenes: tuple[float, float]) -> dict[str, tuple[float, float]]:
     return dict(scenes)
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 from collections import Counter
 from collections.abc import Sequence
 from pathlib import Path
@@ -11,24 +10,16 @@ from typing import Any
 import numpy as np
 
 from bevcalib.artifacts.result_documents import (
-    RunCompleteV2,
     condition_inventory,
     digest,
     load_result_run,
 )
+from bevcalib.artifacts.result_sets import FORMAL_RUNS as FORMAL_RUNS
+from bevcalib.artifacts.result_sets import SYNTHETIC_PAIR as SYNTHETIC_PAIR
+from bevcalib.artifacts.result_sets import load_run_set
 from bevcalib.artifacts.results import CalibrationResultV2
-from bevcalib.cohort.manifest import CohortManifestV2, load_formal_manifest, load_manifest
 from bevcalib.metrics.calibration import recovered
 from bevcalib.metrics.reprojection import RANGE_BINS, range_bin
-
-FORMAL_RUNS = {
-    ("identity", None),
-    ("classical", None),
-    ("learned", 17),
-    ("learned", 42),
-    ("learned", 73),
-}
-SYNTHETIC_PAIR = {("identity", None), ("classical", None)}
 
 
 def statistic(values: Sequence[float]) -> dict[str, Any]:
@@ -107,46 +98,13 @@ def summarize_condition(rows: Sequence[CalibrationResultV2]) -> dict[str, Any]:
 def summarize_result_runs(
     artifacts_dir: Path, *, synthetic_fixture: bool = False
 ) -> dict[str, Any]:
-    manifest_path = artifacts_dir / "evaluation_manifest.json"
-    manifest = load_manifest(manifest_path)
-    if not isinstance(manifest, CohortManifestV2) or manifest.role != "evaluation":
-        raise ValueError("summary requires a verified V2 evaluation manifest")
-    if not synthetic_fixture:
-        manifest = load_formal_manifest(
-            manifest_path,
-            expected_role="evaluation",
-            protocol_hash=manifest.protocol_hash,
-            dataset_version="v1.0-trainval",
-        )
-    directories = sorted(path for path in artifacts_dir.iterdir() if path.is_dir())
-    markers = [
-        RunCompleteV2.model_validate_json((path / "run_complete.json").read_bytes())
-        for path in directories
-    ]
-    keys = [(marker.identity.method, marker.identity.seed) for marker in markers]
-    if len(keys) != len(set(keys)) or (
-        set(keys) != FORMAL_RUNS and not (synthetic_fixture and set(keys) == SYNTHETIC_PAIR)
-    ):
-        raise ValueError(
-            "complete run inventory must contain identity/classical and all three learned seeds; synthetic pair is explicit only"
-        )
-    checkpoints = [
-        marker.identity.checkpoint_sha256
-        for marker in markers
-        if marker.identity.method == "learned"
-    ]
-    if len(checkpoints) != len(set(checkpoints)):
-        raise ValueError("learned seeds must have distinct checkpoint identities")
-    measurements = markers[0].identity.measurements
+    manifest, verified_runs = load_run_set(artifacts_dir, synthetic_fixture=synthetic_fixture)
+    measurements = verified_runs[0].marker.identity.measurements
     runs = {}
-    for directory, marker in zip(directories, markers, strict=True):
-        identity = marker.identity
-        if identity.measurements != measurements or identity.evidence_type != (
-            "synthetic" if synthetic_fixture else "observed"
-        ):
-            raise ValueError("run measurement identity or evidence type differs")
-        rows = load_result_run(directory, identity, manifest)
-        label = identity.method if identity.seed is None else f"learned-{identity.seed}"
+    for run in verified_runs:
+        identity = run.marker.identity
+        rows = load_result_run(run.directory, identity, manifest)
+        label = run.label
         conditions = {}
         for axis, level in condition_inventory(identity.method):
             selected = [row for row in rows if row.fault_axis == axis and row.fault_level == level]
@@ -156,9 +114,7 @@ def summarize_result_runs(
             "seed": identity.seed,
             "checkpoint_sha256": identity.checkpoint_sha256,
             "run_identity_sha256": identity.run_id,
-            "source_complete_sha256": hashlib.sha256(
-                (directory / "run_complete.json").read_bytes()
-            ).hexdigest(),
+            "source_complete_sha256": run.source_complete_sha256,
             "conditions": conditions,
         }
     body = {

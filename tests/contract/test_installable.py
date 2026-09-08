@@ -205,3 +205,25 @@ def test_a_root_relative_markdown_link_resolves_from_the_repository_root(tmp_pat
     (tmp_path / "README.md").write_text("[card](/docs/card.md)\n", encoding="utf-8")
 
     assert dev.verify_docs_links(tmp_path) == 0
+
+
+def test_private_evidence_copies_are_outside_public_documentation(tmp_path: Path) -> None:
+    from bevcalib import dev
+
+    private_copy = tmp_path / "artifacts" / "preflight" / "historical.md"
+    private_copy.parent.mkdir(parents=True)
+    private_copy.write_text("[original relative link](../dataset-card.md)", encoding="utf-8")
+    (tmp_path / "README.md").write_text("# Public repository", encoding="utf-8")
+
+    assert dev.verify_docs_links(tmp_path) == 0
+
+
+@pytest.mark.parametrize("relative", ["README.md", "docs/card.md", "docs/artifacts/card.md"])
+def test_public_broken_links_remain_checked(tmp_path: Path, relative: str) -> None:
+    from bevcalib import dev
+
+    public_file = tmp_path / relative
+    public_file.parent.mkdir(parents=True, exist_ok=True)
+    public_file.write_text("[missing](missing-card.md)", encoding="utf-8")
+
+    assert dev.verify_docs_links(tmp_path) == 1

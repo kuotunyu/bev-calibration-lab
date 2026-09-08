@@ -26,6 +26,7 @@ from bevcalib.geometry.projection import project_camera
 from bevcalib.geometry.se3 import compose, inverse, transform_points
 from bevcalib.metrics.calibration import calibration_errors
 from bevcalib.nuscenes_adapter.frames import SensorPacket, lidar_to_camera_chain
+from bevcalib.nuscenes_adapter.sweeps import timing_measurements
 from bevcalib.operators.ground_contact import ground_plane_z_from_ego, observe_ground_contact
 from bevcalib.operators.image_edges import ImageEdgeEvidence
 from bevcalib.operators.lidar_edges import trimmed_distance_field_score
@@ -175,7 +176,11 @@ def measure_condition(
         reasons.append("no_projected_lidar_edges")
     if not any(contact.error_m is not None for contact in contacts):
         reasons.append("no_valid_ground_contact")
-    realized = (observation.lidar.timestamp_us - observation.camera.timestamp_us) / 1000
+    realized, timing_error = timing_measurements(
+        observation.camera.timestamp_us,
+        observation.lidar.timestamp_us,
+        fault.requested_time_offset_ms,
+    )
     return CalibrationResultV2(
         schema_version="bev-calibration-result/v2",
         sample_token=observation.camera.sample_token,
@@ -189,7 +194,7 @@ def measure_condition(
         timing=TimingEvidence(
             requested_offset_ms=fault.requested_time_offset_ms,
             realized_offset_ms=realized,
-            absolute_error_ms=abs(realized - fault.requested_time_offset_ms),
+            absolute_error_ms=timing_error,
             reason="valid" if axis == "time" else "nominal_pair",
         ),
         pose=pose,

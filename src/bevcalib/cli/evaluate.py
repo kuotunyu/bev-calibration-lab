@@ -1,5 +1,6 @@
 """Evaluate native measurements; data roots stay in the invoking shell."""
 
+import os
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
@@ -36,5 +37,6 @@ def evaluate(
             checkpoint=checkpoint,
             synthetic_fixture=options.synthetic_fixture,
             model_factory=options.model_factory,
+            device=os.environ.get("BEVCALIB_DEVICE", "cpu"),
         )
     typer.echo(str(result.directory))

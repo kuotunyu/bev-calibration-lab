@@ -101,6 +101,7 @@ class LearnedPredictor:
     model: Any
     metadata: dict[str, Any]
     checkpoint_sha256: str
+    device: str = "cpu"
 
     def predict(self, tensor: np.ndarray) -> np.ndarray:
         import torch
@@ -113,7 +114,9 @@ class LearnedPredictor:
             raise ValueError("learned input shape or values differ from checkpoint preprocessing")
         with torch.no_grad():
             result = (
-                self.model(torch.as_tensor(tensor, dtype=torch.float32).unsqueeze(0))
+                self.model(
+                    torch.as_tensor(tensor, dtype=torch.float32, device=self.device).unsqueeze(0)
+                )
                 .cpu()
                 .numpy()[0]
             )
@@ -151,10 +154,16 @@ def load_learned_checkpoint(
     expected_seed: int,
     allow_synthetic: bool = False,
     model_factory: Callable[[], Any] | None = None,
+    device: str = "cpu",
 ) -> LearnedPredictor:
     import torch
 
     from bevcalib.training.torch_backend import create_configured_model
+
+    if device not in ("cpu", "cuda"):
+        raise ValueError(f"unsupported inference device: {device}")
+    if device == "cuda" and not torch.cuda.is_available():
+        raise ValueError("CUDA inference was requested but CUDA is unavailable")
 
     checkpoint_hash = hashlib.sha256(path.read_bytes()).hexdigest()
     record = RunRecordV1.model_validate_json((path.parent / "run_record.json").read_bytes())
@@ -210,5 +219,6 @@ def load_learned_checkpoint(
         config.model_dump(), synthetic_fixture=True, model_factory=model_factory
     )
     model.load_state_dict(payload["state_dict"], strict=True)
+    model.to(device)
     model.eval()
-    return LearnedPredictor(model, metadata, checkpoint_hash)
+    return LearnedPredictor(model, metadata, checkpoint_hash, device)

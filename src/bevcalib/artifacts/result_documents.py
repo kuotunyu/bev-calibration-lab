@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any, Literal, Self
 
@@ -231,13 +232,51 @@ def finalize_run(directory: Path, identity: EvaluationIdentity, manifest: Cohort
     return path
 
 
-def load_result_run(
+def iter_result_scenes(
     directory: Path, identity: EvaluationIdentity, manifest: CohortManifestV2
-) -> tuple[CalibrationResultV2, ...]:
+) -> Iterator[tuple[CalibrationResultV2, ...]]:
+    """Validate the entire inventory, then yield one verified scene at a time."""
+    _validate_identity(identity, manifest)
     marker = RunCompleteV2.model_validate(_checked_body(directory / "run_complete.json"))
     if marker.identity != identity:
         raise ValueError("complete marker differs from expected run identity")
-    files, rows = _scene_inventory(directory, identity, manifest)
-    if files != marker.files:
+    expected = {scene_filename(scene.scene_token): scene for scene in manifest.scenes}
+    actual = {path.name for path in directory.glob("*.json") if path.name != "run_complete.json"}
+    if actual != set(expected):
+        raise ValueError("scene file inventory is missing or unexpected")
+    if set(marker.files) != set(expected):
         raise ValueError("completed run file hash mismatch")
-    return rows
+    for name, scene in expected.items():
+        yield load_result_scene(
+            directory / name, identity, manifest, scene.scene_token, marker.files[name]
+        )
+
+
+def load_result_scene(
+    path: Path,
+    identity: EvaluationIdentity,
+    manifest: CohortManifestV2,
+    scene_token: str,
+    expected_sha256: str,
+) -> tuple[CalibrationResultV2, ...]:
+    """Read one scene against a verified completion marker; retain no other scene."""
+    payload = path.read_bytes()
+    if hashlib.sha256(payload).hexdigest() != expected_sha256:
+        raise ValueError("completed run file hash mismatch")
+    body = json.loads(payload)
+    if body.get("document_sha256") != digest(
+        {k: v for k, v in body.items() if k != "document_sha256"}
+    ):
+        raise ValueError("document hash mismatch")
+    document = SceneResultDocumentV2.model_validate(body)
+    if document.identity != identity:
+        raise ValueError("scene identity differs from run identity")
+    _validate_rows(document.rows, manifest, scene_token, identity.method)
+    return document.rows
+
+
+def load_result_run(
+    directory: Path, identity: EvaluationIdentity, manifest: CohortManifestV2
+) -> tuple[CalibrationResultV2, ...]:
+    """Legacy materialized API; aggregation should consume verified scenes instead."""
+    return tuple(row for rows in iter_result_scenes(directory, identity, manifest) for row in rows)

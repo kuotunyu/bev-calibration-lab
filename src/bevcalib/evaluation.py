@@ -46,6 +46,7 @@ def evaluate_calibration(
     checkpoint: Path | None = None,
     synthetic_fixture: bool = False,
     model_factory: Callable[[], Any] | None = None,
+    device: str = "cpu",
 ) -> EvaluationResult:
     if method not in ("identity", "classical", "learned"):
         raise ValueError("unknown evaluation method")
@@ -90,8 +91,15 @@ def evaluate_calibration(
             expected_seed=seed,
             allow_synthetic=synthetic_fixture,
             model_factory=model_factory,
+            device=device,
         )
         predictor.validate_evaluation(manifest)
+    producer = producer.model_copy(
+        update={
+            "hardware": producer.hardware
+            | {"inference_device": "cpu" if predictor is None else predictor.device}
+        }
+    )
     installation = resolve_installation(dataroot, protocol.dataset_version)
     actual_scenes = {scene.scene_token: scene for scene in installation.scene_records()}
     if any(actual_scenes.get(scene.scene_token) != scene for scene in manifest.scenes):

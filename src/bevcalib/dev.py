@@ -95,6 +95,7 @@ def _iter_markdown_files(repo_root: Path) -> list[Path]:
         path
         for path in sorted(repo_root.glob("**/*.md"))
         if not excluded.intersection(path.relative_to(repo_root).parts)
+        and path.relative_to(repo_root).parts[0] != "artifacts"
     ]
 
 

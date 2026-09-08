@@ -12,6 +12,18 @@ MICROSECONDS_PER_MILLISECOND = 1000
 DEFAULT_MAX_ERROR_MS = 25.0
 
 
+def timing_measurements(
+    reference_timestamp_us: int, selected_timestamp_us: int, requested_offset_ms: int
+) -> tuple[float, float]:
+    """Derive realized offset and error before rounding to floating milliseconds."""
+    delta_us = selected_timestamp_us - reference_timestamp_us
+    target_delta_us = requested_offset_ms * MICROSECONDS_PER_MILLISECOND
+    return (
+        delta_us / MICROSECONDS_PER_MILLISECOND,
+        abs(delta_us - target_delta_us) / MICROSECONDS_PER_MILLISECOND,
+    )
+
+
 @dataclass(frozen=True)
 class TimingSelection:
     """What was asked for, what was available, and how far apart the two were."""
@@ -57,12 +69,12 @@ def choose_nearest_sweep(
         ),
     )
     reference_us = target_timestamp_us - requested_offset_ms * MICROSECONDS_PER_MILLISECOND
-    absolute_error_ms = (
-        abs(chosen.timestamp_us - target_timestamp_us) / MICROSECONDS_PER_MILLISECOND
+    realized_offset_ms, absolute_error_ms = timing_measurements(
+        reference_us, chosen.timestamp_us, requested_offset_ms
     )
     return TimingSelection(
         requested_offset_ms=requested_offset_ms,
-        realized_offset_ms=(chosen.timestamp_us - reference_us) / MICROSECONDS_PER_MILLISECOND,
+        realized_offset_ms=realized_offset_ms,
         selected_sample_data_token=chosen.sample_data_token,
         absolute_error_ms=absolute_error_ms,
         valid=absolute_error_ms <= max_error_ms,

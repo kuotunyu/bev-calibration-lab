@@ -6,6 +6,8 @@ from typing import Annotated, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from bevcalib.nuscenes_adapter.sweeps import timing_measurements
+
 # JSON has no NaN or Infinity. Refusing them at the boundary is what keeps a
 # single bad sample from turning an entire aggregate into NaN much later, in a
 # place where the cause is no longer visible.
@@ -146,8 +148,9 @@ class CalibrationResultV2(BaseModel):
         else:
             if self.lidar.channel != "LIDAR_TOP" or self.lidar.token == self.camera.token:
                 raise ValueError("selected sensor must be a distinct LIDAR_TOP")
-            realized = (self.lidar.timestamp_us - self.camera.timestamp_us) / 1000
-            error = abs(realized - self.timing.requested_offset_ms)
+            realized, error = timing_measurements(
+                self.camera.timestamp_us, self.lidar.timestamp_us, self.timing.requested_offset_ms
+            )
             if (
                 self.timing.realized_offset_ms != realized
                 or self.timing.absolute_error_ms != error

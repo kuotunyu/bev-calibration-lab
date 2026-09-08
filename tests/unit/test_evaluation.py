@@ -97,6 +97,7 @@ def test_real_service_preserves_fixed_observations_all_rows_and_negative_scores(
     )
     assert result.identity.measurements.images["camera"].edge_threshold > 0
     assert result.identity.measurements.table_sha256
+    assert result.identity.producer.hardware["inference_device"] == "cpu"
     assert (result.directory / "run_complete.json").is_file()
 
 
@@ -115,6 +116,32 @@ def test_default_formal_service_refuses_underfill_before_dataroot(
             dataroot=tmp_path / "missing",
         )
     assert not (tmp_path / "absent").exists()
+
+
+def test_measured_fractional_timing_matches_native_selection(evaluation_workspace) -> None:
+    from bevcalib.evaluation_measurements import measure_condition
+    from bevcalib.nuscenes_adapter.installation import resolve_installation
+    from bevcalib.nuscenes_adapter.sweeps import choose_nearest_sweep
+    from bevcalib.operators.image_edges import image_edge_evidence
+    from bevcalib.preprocessing import load_observation
+
+    root, _ = evaluation_workspace
+    installation = resolve_installation(root, "v1.0-trainval")
+    scene = installation.scene_records()[0]
+    observation = load_observation(installation, scene, 0)
+    target = observation.camera.timestamp_us + 100_000
+    packet = dataclasses.replace(observation.lidar, timestamp_us=target + 1001)
+    selection = choose_nearest_sweep((packet,), target, requested_offset_ms=100)
+    row = measure_condition(
+        dataclasses.replace(observation, lidar=packet),
+        scene_token=scene.scene_token,
+        axis="time",
+        level=100,
+        method="identity",
+        edges=image_edge_evidence(observation.rgb),
+        edge_points=observation.points[:, :3],
+    )
+    assert row.timing.absolute_error_ms == selection.absolute_error_ms == 1.001
 
 
 def test_learned_requires_checkpoint_before_any_dataset_access(tmp_path: Path) -> None:
