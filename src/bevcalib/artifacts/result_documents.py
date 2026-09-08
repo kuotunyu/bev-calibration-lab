@@ -199,27 +199,23 @@ def _checked_body(path: Path) -> dict[str, Any]:
 
 def _scene_inventory(
     directory: Path, identity: EvaluationIdentity, manifest: CohortManifestV2
-) -> tuple[dict[str, str], tuple[CalibrationResultV2, ...]]:
+) -> dict[str, str]:
     _validate_identity(identity, manifest)
     expected = {scene_filename(scene.scene_token): scene for scene in manifest.scenes}
     actual = {path.name for path in directory.glob("*.json") if path.name != "run_complete.json"}
     if actual != set(expected):
         raise ValueError("scene file inventory is missing or unexpected")
     hashes: dict[str, str] = {}
-    rows: list[CalibrationResultV2] = []
     for name, scene in expected.items():
         path = directory / name
-        document = SceneResultDocumentV2.model_validate(_checked_body(path))
-        if document.identity != identity:
-            raise ValueError("scene identity differs from run identity")
-        _validate_rows(document.rows, manifest, scene.scene_token, identity.method)
-        hashes[name] = hashlib.sha256(path.read_bytes()).hexdigest()
-        rows.extend(document.rows)
-    return hashes, tuple(rows)
+        checksum = hashlib.sha256(path.read_bytes()).hexdigest()
+        load_result_scene(path, identity, manifest, scene.scene_token, checksum)
+        hashes[name] = checksum
+    return hashes
 
 
 def finalize_run(directory: Path, identity: EvaluationIdentity, manifest: CohortManifestV2) -> Path:
-    files, _ = _scene_inventory(directory, identity, manifest)
+    files = _scene_inventory(directory, identity, manifest)
     path = directory / "run_complete.json"
     _atomic_document(
         path,
