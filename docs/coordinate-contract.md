@@ -221,6 +221,28 @@ box bottom. All five declared range bins remain visible, including 80+: exactly
 80 m can be valid while values greater than 80 m are excluded by the fixed cutoff.
 Empty valid denominators have null means and explicit invalid counts/reasons.
 
+### Cross-run GT range pairing
+
+Analysis policy V2 pairs exact scene, sample and box identities while allowing a
+GT range span of at most `1e-9 m`, with zero relative tolerance. This fixed absolute
+budget follows the geometry contract; it is not fitted to measured recovery or
+evaluation performance. Float64 composition, quaternion conversion and inverse
+round trips can produce different last bits on different arithmetic runtimes.
+Bitwise equality is therefore not a portable geometric identity check.
+
+The entire group's maximum minus minimum must satisfy the budget. Every original
+range must also have the same half-open range bin and the same `range <= 80 m`
+classification. In particular, `80` and the next representable number above it
+are rejected even though both are in the `80+` bin. Values straddling any bin edge
+are also rejected, regardless of how small their difference is. Material range
+drift still fails the comparison instead of becoming an exclusion.
+
+The analyzer never rounds, replaces or averages the recorded ranges. Measured
+errors, raw artifact hashes, missing/invalid-object exclusions, frame/scene
+weighting and the fixed bootstrap are unchanged. The revised policy identifier
+and exact numerical rule are included in every formal analysis document; raw
+evaluation producer identities retain their original source commits.
+
 
 ## Complete evaluation inventories
 

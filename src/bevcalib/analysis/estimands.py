@@ -9,12 +9,13 @@ from typing import cast
 
 import numpy as np
 
-from bevcalib.analysis.policy import HIGHER_BETTER
+from bevcalib.analysis.policy import GT_RANGE_ABSOLUTE_TOLERANCE_M, HIGHER_BETTER
 from bevcalib.artifacts.results import CalibrationResultV2, GroundContactResult
 from bevcalib.artifacts.statistics import Estimate, PairedEstimate, Support
 from bevcalib.metrics.bootstrap import paired_scene_bootstrap
 from bevcalib.metrics.calibration import recovered
 from bevcalib.metrics.reprojection import range_bin
+from bevcalib.operators.ground_contact import MAX_RANGE_M
 
 
 @dataclass(frozen=True)
@@ -105,9 +106,17 @@ def scene_pairs(
                 for token in sorted(all_objects):
                     contacts = [frame.contacts.get(token) for frame in frames]
                     ranges = {contact.range_m for contact in contacts if contact is not None}
-                    if len(ranges) != 1:
+                    # Geometry arithmetic can differ across CPU builds. Bound the
+                    # entire span, with no relative scaling or value rewriting;
+                    # discrete bin and operator-cutoff decisions must stay exact.
+                    bins = {range_bin(value) for value in ranges}
+                    if (
+                        max(ranges) - min(ranges) > GT_RANGE_ABSOLUTE_TOLERANCE_M
+                        or len(bins) != 1
+                        or len({value <= MAX_RANGE_M for value in ranges}) != 1
+                    ):
                         raise ValueError("paired object GT range differs between methods")
-                    if range_bin(next(iter(ranges))) != metric.split("/", 1)[1]:
+                    if next(iter(bins)) != metric.split("/", 1)[1]:
                         continue
                     total_objects += 1
                     if all(

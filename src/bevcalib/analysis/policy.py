@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from bevcalib.metrics.reprojection import RANGE_BINS
 
-POLICY_ID = "bev-calibration-analysis/v1:frame-then-scene:fixed-three-seeds"
+POLICY_ID = "bev-calibration-analysis/v2:frame-then-scene:fixed-three-seeds:bounded-gt-range"
+# The geometry contract's absolute precision, not fitted to evaluation outcomes.
+# Relative tolerance is zero; bin and 80 m validity decisions must agree exactly.
+GT_RANGE_ABSOLUTE_TOLERANCE_M = 1e-9
 METRIC_UNITS = {
     "rotation_geodesic_deg": "degree",
     **{
@@ -43,7 +46,7 @@ ESTIMAND_DESCRIPTION = {
     "policy_id": POLICY_ID,
     "sampling_unit": "scene; equal scene weights; equal matched-frame weights within scene",
     "pixel": "mean of per-frame P50/P90, then mean across scenes; each frame quantile uses its own within-row valid point errors; no cross-method point pairing",
-    "bev": "exact sample and box identity; identical GT range; common valid objects averaged within frame, frames within scene; all five fixed GT range bins",
+    "bev": "exact sample and box identity; GT range span <= 1e-9 m, zero relative tolerance, identical range bin and inclusive 80 m cutoff classification; common valid objects averaged within frame, frames within scene; all five fixed GT range bins",
     "pose": "signed bias descriptors retained; absolute per-axis errors used for improvement; translation converted from metres to centimetres",
     "recovery": "joint geodesic <=0.25 degrees and translation norm <=5 cm; rate percent, improvement percentage points",
     "directions": "error before-minus-after; edge/recovery after-minus-before",
