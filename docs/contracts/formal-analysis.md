@@ -1,6 +1,9 @@
 # Formal calibration analysis contract
 
-This policy is fixed before locked evaluation. The five artifacts are
+The estimands, weighting and bootstrap were fixed before locked evaluation.
+Analysis policy V2 clarifies the cross-runtime GT range identity check after
+an exact-equality failure; it does not alter measured errors or tune recovery
+thresholds. The five artifacts are
 `metrics.json`, `intervals.json`, `recovery.json`, `timing.json`, and
 `exclusions.json`. Their Pydantic models and generated JSON Schemas bind the same
 protocol, frozen cohort, measurement identity, producer revision/lock, and five
@@ -34,8 +37,12 @@ projection, edge, or ground-contact measurement.
   and measured-pixel counts separately.
 - Edges: average measured distance-field scores per frame and scene, in pixels.
   Scores are nonpositive; a larger score is better. An absent score stays null.
-- BEV: match the exact sample and box identity and require identical ground-truth
-  ranges. Average errors of common valid boxes within a frame, then frames within
+- BEV: match the exact sample and box identity. Ground-truth ranges must have a
+  whole-group span at most `1e-9 m` (zero relative tolerance), identical range
+  bins and identical inclusive 80 m cutoff classifications. Original ranges
+  and measured errors are never rewritten. See the
+  [numerical pairing contract](../coordinate-contract.md#cross-run-gt-range-pairing).
+  Average errors of common valid boxes within a frame, then frames within
   a scene, then scenes. Retain the fixed 0–10, 10–20, 20–40, 40–80, and 80+ metre
   bins and disclose paired object, frame, and scene counts. Exact 80 m is within
   the operator cutoff; values above it remain excluded. No-data bins are null.
@@ -86,6 +93,11 @@ their hashes, shared identity, complete metric inventories, support, and the
 duplicated recovery/timing/exclusion views. It can validate the portable files
 without private sensor payloads. Raw scene documents, sample/box identifiers,
 cohort manifests, and checkpoints remain private.
+
+The JSON document schema version remains V1 because its structure is unchanged;
+the embedded analysis policy identifier is V2. The current validator refuses old
+V1 policy documents and mixed policy descriptions instead of silently relabeling
+them. Original raw evaluation documents retain their original producer identity.
 
 ## Learned inference device
 
