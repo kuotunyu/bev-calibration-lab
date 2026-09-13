@@ -1,5 +1,31 @@
 # Native commands and portable reports
 
+## Offline synthetic calibration explorer
+
+The [explorer candidate](demo/calibration-explorer.html) embeds Plotly.js and
+preserves its copyright and MIT notice. It needs no dataset, model, server, or
+network connection. Browser interaction acceptance is still pending.
+
+With the report extra installed, reproduce it in a new local output file:
+
+```python
+from pathlib import Path
+from bevcalib.report.explorer import build_explorer
+
+output = Path("calibration-explorer.html")
+with output.open("xb") as handle:
+    handle.write(build_explorer().encode("utf-8"))
+```
+
+Each axis button resets to zero and replaces the slider with that axis's declared
+levels. Fixed observations, assumed projection, reconstructed ground points, and
+BEV errors update together. Ground-plot ranges adapt to retain every point; use
+the metre values when comparing conditions. The three points are first-party
+synthetic geometry, and neither calibration recovery nor AEB performance is
+measured by this demonstration.
+
+## Native evaluation and report commands
+
 Commands use the locked Python environment. Install the existing `train` and `report`
 extras when preparing a new development environment; runtime adapters import Torch,
 timm and Jinja only at their service boundaries. No command downloads dataset files
@@ -104,4 +130,93 @@ all GT-range bins for the explicitly labeled yaw-zero baseline. Additional verif
 scalar claims render as measurement cards. Empty bins show unavailable estimates.
 The HTML has embedded style and SVG, escaped text, no remote assets, private manifests
 or checkpoint dependencies, and deterministic bytes on repeated builds. There are no
-formal values or automatically verified claims bundled with this implementation.
+automatically generated formal claims in this legacy interface; use the explicit
+formal mode below for the five-document result set.
+
+## Formal five-document publication
+
+The formal mode reads the existing `metrics.json`, `intervals.json`, `recovery.json`,
+`timing.json`, and `exclusions.json` together. It validates their schemas, document
+digests, shared source identity, declared estimands, and cross-document consistency.
+It does not read sensor data, train a model, run inference, or recompute statistics.
+
+Run from the repository root in the locked environment. These commands create a new
+candidate registry and report under the ignored artifact directory; they do not
+overwrite the reviewed `docs/claims.yaml`:
+
+```bash
+uv run --frozen bev-calib generate-claims --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output artifacts/formal-publication/claims.yaml
+uv run --frozen bev-calib audit-claims --claims artifacts/formal-publication/claims.yaml
+uv run --frozen bev-calib report --formal --figures --claims artifacts/formal-publication/claims.yaml --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output-dir artifacts/formal-publication/site
+```
+
+Existing output registries and report directories are refused. For another build,
+choose a new output directory, preserving the prior result for comparison. Promoting
+a candidate to the committed registry is a separate reviewed source change.
+
+`--figures` adds two offline SVGs and linked previews to the same report. Open the
+standalone SVG links to inspect exact-value tooltips; an HTML image preview does
+not expose the SVG's individual point tooltips. Omitting this option produces the
+tables alone. The option requires `--formal`.
+
+The recovery figure has six axes and three columns: absolute recovery for all five
+methods, paired improvement over identity, and paired improvement over classical.
+Absolute rates use percent; improvements use percentage points. The fixed-three-seed
+mean appears only in the paired comparisons where the source defines it, never as
+an invented absolute ensemble curve. The BEV figure retains all sixty extrinsic
+conditions, five methods and five GT range bins on a shared vertical scale. Identity
+timing stress stays in the separate tables. Unsupported values remain unavailable,
+break the plotted line, and retain their reasons and support; they are not zeros.
+Point tooltips carry source document digests, exact claims, values and support.
+Overlapping markers expose the neighboring observations' provenance together.
+
+The report includes every method and condition for geodesic rotation, translation
+norm, both pixel quantile estimands, edge alignment, and all fixed BEV range bins.
+Recovery uses the recovery document; paired comparisons retain their original
+before/after/improvement values and intervals. Timing remains identity-only stress.
+Global validity counts, operator support, unavailable values and their reasons stay
+visible. Signed and per-axis pose descriptors remain in the complete linked metrics
+document rather than being relabeled as the displayed aggregate pose metrics.
+
+Every displayed numeric result has a verified scalar claim. In formal mode,
+`ReportScalarBinding.expected_summary_sha256` binds the referenced formal document's
+`document_sha256`; it does not refer to a legacy `calibration_summary.json`.
+`expected_value` retains its exact numeric value. Missing display claims, duplicate
+IDs, stale bindings, incompatible evidence labels, and escaped artifact paths are
+refused before the report is written. The standalone HTML carries the original five
+source files and a registry copy; registry artifact paths remain relative to the
+source repository for audit commands.
+
+Source consistency checks compare validated models, including schema defaults, so
+omitting an optional null field does not count as changing the result. Actual changes
+to a validated source model or to the registry during construction are refused.
+Copied evidence retains the original source bytes, including omitted optional fields.
+
+Omitting `--formal` keeps the legacy safe-summary report interface.
+
+## Validate a complete set of study inputs
+
+`bev-calib validate-study` combines the formal publication audit with independently
+frozen study/validator expectations, all five raw runs and all three selected
+checkpoint byte hashes. Every expected raw scene is read, so this command requires
+CPU, RAM and disk-read capacity even though it does not allocate a GPU. Do not
+launch it concurrently with another memory-intensive job without resource planning.
+
+```bash
+uv run --frozen bev-calib validate-study \
+  --expectations artifacts/validation/expected-study.json \
+  --artifacts-dir docs/evidence/nuscenes_calibration_v1 \
+  --claims artifacts/formal-publication/claims.yaml \
+  --raw-runs-dir /path/to/private/completed-runs \
+  --checkpoint-17 /path/to/private/seed17/selected_checkpoint.pt \
+  --checkpoint-42 /path/to/private/seed42/selected_checkpoint.pt \
+  --checkpoint-73 /path/to/private/seed73/selected_checkpoint.pt \
+  --repository-root .
+```
+
+The paths above are interface examples, not prepared experiment inputs. Preserve
+the separately reviewed expectation file; never fill it from the result being
+accepted. See [the expectation contract](contracts/fault-study-expectations.md)
+for its exact schemas and source snapshot scope. The CLI emits a JSON
+`validated-inputs` receipt and exits zero only after all checks pass. That receipt
+is not a full experiment/efficacy, package-installation or release acceptance.

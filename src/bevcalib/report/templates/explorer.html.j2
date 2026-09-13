@@ -1,0 +1,22 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calibration explorer · synthetic</title>
+<style>
+body{margin:0;background:#f4f8fa;color:#203852;font:16px/1.6 Arial,sans-serif}
+main{max-width:1200px;margin:auto;padding:24px}h1{font-size:32px;margin:0}
+p{max-width:900px}section{background:white;border:1px solid #cddce5;overflow:auto}
+footer{font-size:13px;margin-top:24px}
+</style></head><body><main>
+<h1>標定偏差如何改變投影？</h1><p>synthetic · 固定觀測、已知地面</p>
+<p>選擇一個軸，再移動離散 slider。切換軸會回到零故障。左圖比較固定像素與假設投影，
+右圖比較真實地面點與重建位置；滑鼠移到橘色點可看個別 BEV 誤差。</p>
+<section aria-label="Calibration geometry explorer">{{ plot | safe }}</section>
+<p>場景：平面 z=0；相機高度 1.5 m、朝向 +X；X 向前、Y 向左、Z 向上。
+故障在此合成場景的 global/source frame 注入（true ∘ fault）。三個觀測永遠不變。
+旋轉以 degrees、平移以 m 表示；不支援多軸插值或 timing。</p>
+<p>這是自建幾何示範，沒有使用 nuScenes 影像、點雲或模型權重。
+BEV 誤差不是偵測準確率，不代表 learned corrector 或實車安全表現。
+右圖座標範圍隨條件調整以顯示全部點；比較不同條件時請以公尺讀數為準。</p>
+<footer>Plotly.js is bundled for offline use. Its copyright and MIT license notice
+are retained in the embedded library. First-party synthetic geometry: bev-calibration-lab.</footer>
+</main></body></html>

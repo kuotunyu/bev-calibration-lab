@@ -203,6 +203,33 @@ def test_checkpoint_tensor_tampering_is_refused_by_selected_run_record(trained_c
         )
 
 
+def test_loaded_checkpoint_predicts_in_eval_mode_without_gradients(trained_checkpoint) -> None:  # type: ignore[no-untyped-def]
+    from bevcalib.training.torch_backend import load_learned_checkpoint
+
+    result, backend = trained_checkpoint
+    predictor = load_learned_checkpoint(
+        result.checkpoint_path,
+        expected_protocol_hash=backend.context["protocol_sha256"],
+        expected_seed=17,
+        allow_synthetic=True,
+        model_factory=tiny_model,
+    )
+    observed: list[tuple[bool, bool]] = []
+
+    def observe(module, inputs) -> None:  # type: ignore[no-untyped-def]
+        observed.append((module.training, torch.is_grad_enabled()))
+
+    hook = predictor.model.register_forward_pre_hook(observe)
+    try:
+        with torch.enable_grad():
+            prediction = predictor.predict(np.zeros((5, 448, 800), dtype=np.float32))
+    finally:
+        hook.remove()
+    assert observed == [(False, False)]
+    assert prediction.shape == (6,)
+    assert np.isfinite(prediction).all()
+
+
 def test_pretrained_source_hash_and_profile_are_required(tmp_path: Path) -> None:
     from bevcalib.training.torch_backend import PretrainedWeights
 

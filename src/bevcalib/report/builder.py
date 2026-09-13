@@ -26,8 +26,6 @@ def build_report(
     summary = load_safe_summary(artifact_path)
     document = summary.model_dump(mode="json")
     registry = load_registry(claims_path)
-    if len({claim.claim_id for claim in registry.claims}) != len(registry.claims):
-        raise ValueError("duplicate claim ID in report registry")
     verified = sorted(
         (claim for claim in registry.claims if claim.status == "verified"),
         key=lambda claim: claim.claim_id,

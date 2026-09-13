@@ -12,7 +12,7 @@ import json
 import re
 from decimal import Decimal
 from pathlib import Path
-from typing import Annotated, Any, Literal, Self
+from typing import Annotated, Any, Literal, Self, get_args
 
 import yaml
 from pydantic import (
@@ -90,13 +90,18 @@ class ClaimsRegistryV1(BaseModel):
             raise ValueError("claim_required_fields must match the approved vocabulary")
         if self.allowed_statuses != ALLOWED_STATUSES:
             raise ValueError("allowed_statuses must match the approved vocabulary")
+        if len({claim.claim_id for claim in self.claims}) != len(self.claims):
+            raise ValueError("duplicate claim ID in registry")
         return self
 
 
 def load_registry(claims_path: Path) -> ClaimsRegistryV1:
     """Load and strictly validate one claims registry document."""
 
-    raw_value = yaml.safe_load(claims_path.read_text(encoding="utf-8"))
+    raw_value = yaml.load(
+        claims_path.read_text(encoding="utf-8"),
+        Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader),
+    )
     return ClaimsRegistryV1.model_validate(raw_value)
 
 
@@ -157,24 +162,41 @@ def audit_claims(claims_path: Path, repository_root: Path) -> tuple[str, ...]:
     except (OSError, UnicodeDecodeError, yaml.YAMLError, ValidationError) as exc:
         return (f"claims registry is invalid: {exc}",)
 
+    from bevcalib.analysis.formal_claims import load_publication
+    from bevcalib.artifacts.documents import DOCUMENT_TYPES, FormalArtifactSet
+
+    formal_schemas = {
+        get_args(cls.model_fields["schema_version"].annotation)[0]: name
+        for name, cls in DOCUMENT_TYPES.items()
+    }
+    formal_namespaces = {schema.split("/")[0] for schema in formal_schemas}
     root = repository_root.resolve()
     violations: list[str] = []
+    artifacts: dict[Path, Any] = {}
+    resolved_paths: dict[str, Path] = {}
+    formal_sets: dict[Path, FormalArtifactSet] = {}
+    formal_failures: dict[Path, str] = {}
+    validated_formal: dict[Path, Any] = {}
     for claim in registry.claims:
-        artifact_path = (root / claim.artifact_path).resolve()
+        if claim.artifact_path not in resolved_paths:
+            resolved_paths[claim.artifact_path] = (root / claim.artifact_path).resolve()
+        artifact_path = resolved_paths[claim.artifact_path]
         if not artifact_path.is_relative_to(root):
             violations.append(
                 f"{claim.claim_id}: artifact path escapes repository: {claim.artifact_path}"
             )
             continue
-        if not artifact_path.is_file():
+        if artifact_path not in artifacts and not artifact_path.is_file():
             violations.append(f"{claim.claim_id}: artifact does not exist: {claim.artifact_path}")
             continue
 
         try:
-            artifact: Any = json.loads(
-                artifact_path.read_text(encoding="utf-8"),
-                parse_constant=_reject_json_constant,
-            )
+            if artifact_path not in artifacts:
+                artifacts[artifact_path] = json.loads(
+                    artifact_path.read_text(encoding="utf-8"),
+                    parse_constant=_reject_json_constant,
+                )
+            artifact = artifacts[artifact_path]
         except (OSError, UnicodeDecodeError, ValueError):
             violations.append(f"{claim.claim_id}: artifact is not valid UTF-8 JSON")
             continue
@@ -182,9 +204,50 @@ def audit_claims(claims_path: Path, repository_root: Path) -> tuple[str, ...]:
         if not isinstance(artifact, dict):
             violations.append(f"{claim.claim_id}: artifact root must be an object")
             continue
-        if artifact.get("protocol_hash") != claim.protocol_hash:
+        schema = artifact.get("schema_version")
+        formal_name = formal_schemas.get(schema) if isinstance(schema, str) else None
+        if formal_name is None and (
+            (isinstance(schema, str) and schema.split("/")[0] in formal_namespaces)
+            or (artifact_path.stem in DOCUMENT_TYPES and "identity" in artifact)
+        ):
+            violations.append(f"{claim.claim_id}: formal schema is missing or unsupported")
+            continue
+        identity = artifact
+        if formal_name is not None:
+            try:
+                directory = artifact_path.parent
+                if artifact_path.name != f"{formal_name}.json":
+                    raise ValueError("formal document filename differs from its schema")
+                if directory in formal_failures:
+                    raise ValueError(formal_failures[directory])
+                if directory not in formal_sets:
+                    try:
+                        formal_sets[directory] = load_publication(directory, root)
+                    except (OSError, UnicodeDecodeError, ValueError) as exc:
+                        formal_failures[directory] = str(exc)
+                        raise
+                if artifact_path not in validated_formal:
+                    document = getattr(formal_sets[directory], formal_name).model_dump(mode="json")
+                    snapshot = (
+                        DOCUMENT_TYPES[formal_name].model_validate(artifact).model_dump(mode="json")
+                    )
+                    if snapshot != document:
+                        raise ValueError("formal artifact changed during audit")
+                    validated_formal[artifact_path] = document
+                identity = validated_formal[artifact_path]["identity"]
+                allowed = (
+                    {"synthetic"}
+                    if identity["evidence_type"] == "synthetic"
+                    else {"observed", "derived"}
+                )
+                if claim.evidence_type not in allowed:
+                    raise ValueError("formal claim evidence label is incompatible")
+            except (OSError, UnicodeDecodeError, ValueError) as exc:
+                violations.append(f"{claim.claim_id}: formal evidence invalid: {exc}")
+                continue
+        if identity.get("protocol_hash") != claim.protocol_hash:
             violations.append(f"{claim.claim_id}: protocol hash mismatch")
-        if artifact.get("dataset_manifest_hash") != claim.dataset_manifest_hash:
+        if identity.get("dataset_manifest_hash") != claim.dataset_manifest_hash:
             violations.append(f"{claim.claim_id}: dataset manifest hash mismatch")
 
         try:
@@ -194,6 +257,18 @@ def audit_claims(claims_path: Path, repository_root: Path) -> tuple[str, ...]:
                 f"{claim.claim_id}: metric JSON pointer does not exist: {claim.metric_path}"
             )
             continue
+
+        if formal_name is not None:
+            binding = claim.report_binding
+            if (
+                isinstance(metric, bool)
+                or not isinstance(metric, int | float)
+                or binding is None
+                or binding.expected_summary_sha256 != artifact["document_sha256"]
+                or Decimal(str(binding.expected_value)) != Decimal(str(metric))
+            ):
+                violations.append(f"{claim.claim_id}: formal scalar binding differs from evidence")
+                continue
 
         metric_numbers = _json_numbers(metric)
         for number in _text_numbers(claim.text):

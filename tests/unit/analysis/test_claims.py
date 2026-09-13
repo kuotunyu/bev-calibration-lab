@@ -17,6 +17,22 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[3]
 COMMITTED_CLAIMS = REPO_ROOT / "docs" / "claims.yaml"
 
+
+@pytest.mark.parametrize("fallback", [False, True])
+def test_registry_yaml_loader_keeps_safe_semantics(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fallback: bool
+) -> None:
+    from bevcalib.analysis.claims import load_registry
+
+    if fallback:
+        monkeypatch.delattr(yaml, "CSafeLoader", raising=False)
+    path = write_registry(tmp_path, [])
+    assert load_registry(path).claims == ()
+    path.write_text("!!python/name:builtins.eval", encoding="utf-8")
+    with pytest.raises(yaml.YAMLError):
+        load_registry(path)
+
+
 VOCABULARY: dict[str, Any] = {
     "allowed_evidence_types": ["observed", "derived", "synthetic", "illustrative"],
     "claim_required_fields": [

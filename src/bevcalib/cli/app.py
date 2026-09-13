@@ -6,8 +6,9 @@ import typer
 
 from bevcalib.cli import cohort, data
 from bevcalib.cli.evaluate import evaluate
-from bevcalib.cli.report import audit_claims, report
+from bevcalib.cli.report import audit_claims, generate_claims, report
 from bevcalib.cli.train import train
+from bevcalib.cli.validate_study import validate_study
 
 app = typer.Typer(
     name="bev-calib",
@@ -27,3 +28,5 @@ app.command()(evaluate)
 app.command()(train)
 app.command()(report)
 app.command("audit-claims")(audit_claims)
+app.command("generate-claims")(generate_claims)
+app.command("validate-study")(validate_study)

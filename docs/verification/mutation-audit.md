@@ -1,8 +1,27 @@
 # Mutation audit
 
+## Release refresh is pending
+
+The scores below belong to the explicitly named historical commits. They do not
+validate the current formal-analysis or publication candidate. Before the next
+release, retain the five original target families and add the numerical reductions
+and pairing in `analysis/estimands.py` and `analysis/aggregate.py`. Record the actual
+Linux mutmut version, effective target inventory, pilot timings, and every mutant
+status against the final source revision. The configuration and refreshed run are
+not complete yet.
+
+The historical five-minute runtime below is not an estimate for that expanded
+scope. Limit worker count explicitly after resource admission; the inspected
+mutmut 3.7.0 implementation defaults to the machine's CPU count when no limit is
+provided. Reconfirm the CLI and configuration in the actual Linux environment
+before running it. Do not execute mutation in a shared working tree or omit the
+training dependency merely to reduce runtime.
+
+## Historical scope and evidence
+
 Mutation testing asks a question coverage cannot: not "was this line executed"
-but "would anything have noticed if it were wrong". This project runs it on the
-pure core only — `geometry`, `perturbations`, `operators`, `correctors` and
+but "would anything have noticed if it were wrong". The historical audit covered
+the pure core — `geometry`, `perturbations`, `operators`, `correctors` and
 `metrics` — because those are the modules whose arithmetic reaches a published
 number. The nuScenes adapter, the CLI, the training glue and the artifact
 writers are held to the same 100% branch gate but are not scored here: their
@@ -16,7 +35,7 @@ not matter — but the gate deliberately does not depend on any such argument,
 because a wrong one inflates the score silently while a kill needs no argument
 at all.
 
-## How to reproduce
+## Historical reproduction harness
 
 Mutmut rewrites source, so it cannot run on the Windows working tree; it runs
 on a Linux clone.
@@ -25,10 +44,11 @@ on a Linux clone.
 wsl.exe -d Ubuntu-bench -- bash -lc "bash ~/drm-tools/p2_baseline.sh"
 ```
 
-Launch it as a BACKGROUND command from the Windows side and leave it to finish.
-The whole run takes about five minutes, because this suite executes in eleven
-seconds. The script refuses to start if `NUSCENES_ROOT` is set, so the
-portfolio's order gate cannot be crossed by accident.
+The historical run used this external operator harness in the background. That
+run took about five minutes with its eleven-second test suite; this timing does
+not describe the current suite. The script refused to start if `NUSCENES_ROOT`
+was set. These external harness paths are not shipped with the repository and
+must not be assumed to exist in a new contributor's environment.
 
 Per-module work uses the same toolkit:
 
