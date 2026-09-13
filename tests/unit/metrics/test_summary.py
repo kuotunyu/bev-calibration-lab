@@ -1,10 +1,122 @@
 """Safe aggregate export from complete, compatible private V2 runs."""
 
+import hashlib
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from tests.unit.artifacts.test_result_documents import inputs, rows_for
+
+
+@pytest.mark.parametrize(
+    ("synthetic_fixture", "expected_evidence_type"),
+    ((True, "synthetic"), (False, "observed")),
+)
+def test_summary_evidence_type_matches_and_forwards_input_policy(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    synthetic_fixture: bool,
+    expected_evidence_type: str,
+) -> None:
+    """This unit fixture checks labeling policy, not acceptance of real observed data."""
+    import bevcalib.metrics.summary as summary_module
+
+    forwarded = []
+
+    class Measurements:
+        def model_dump(self, **_kwargs):
+            return {"policy": "verified-loader-fixture"}
+
+    specifications = (
+        ("identity", None, None),
+        ("classical", None, None),
+        ("learned", 17, "1" * 64),
+        ("learned", 42, "2" * 64),
+        ("learned", 73, "3" * 64),
+    )
+    verified_runs = []
+    for index, (method, seed, checkpoint) in enumerate(specifications):
+        label = method if seed is None else f"{method}-{seed}"
+        identity = SimpleNamespace(
+            method=method,
+            seed=seed,
+            checkpoint_sha256=checkpoint,
+            run_id=f"{index + 1:x}" * 64,
+            measurements=Measurements(),
+        )
+        verified_runs.append(
+            SimpleNamespace(
+                marker=SimpleNamespace(identity=identity),
+                label=label,
+                directory=tmp_path / label,
+                source_complete_sha256=f"{index + 6:x}" * 64,
+            )
+        )
+    manifest = SimpleNamespace(protocol_hash="c" * 64, manifest_sha256="d" * 64)
+
+    def verified_loader(path: Path, *, synthetic_fixture: bool):
+        forwarded.append((path, synthetic_fixture))
+        return manifest, tuple(verified_runs)
+
+    monkeypatch.setattr(summary_module, "load_run_set", verified_loader)
+    monkeypatch.setattr(summary_module, "load_result_run", lambda *_args: ())
+    monkeypatch.setattr(summary_module, "summarize_condition", lambda _rows: {})
+
+    result = summary_module.summarize_result_runs(
+        tmp_path / "input", synthetic_fixture=synthetic_fixture
+    )
+
+    assert forwarded == [(tmp_path / "input", synthetic_fixture)]
+    assert result["evidence_type"] == expected_evidence_type
+
+
+def test_summary_binds_measurement_identity_to_complete_verified_policy(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import bevcalib.metrics.summary as summary_module
+    from bevcalib.artifacts.envelope import canonical_json_bytes
+
+    identity, _manifest_fixture = inputs()
+    measurements = identity.measurements
+    manifest = SimpleNamespace(protocol_hash="c" * 64, manifest_sha256="d" * 64)
+    specifications = (
+        ("identity", None, None),
+        ("classical", None, None),
+        ("learned", 17, "1" * 64),
+        ("learned", 42, "2" * 64),
+        ("learned", 73, "3" * 64),
+    )
+    verified_runs = tuple(
+        SimpleNamespace(
+            marker=SimpleNamespace(
+                identity=SimpleNamespace(
+                    method=method,
+                    seed=seed,
+                    checkpoint_sha256=checkpoint,
+                    run_id=f"{index + 1:x}" * 64,
+                    measurements=measurements,
+                )
+            ),
+            label=method if seed is None else f"{method}-{seed}",
+            directory=tmp_path / f"run-{index}",
+            source_complete_sha256=f"{index + 6:x}" * 64,
+        )
+        for index, (method, seed, checkpoint) in enumerate(specifications)
+    )
+    monkeypatch.setattr(
+        summary_module,
+        "load_run_set",
+        lambda *_args, **_kwargs: (manifest, verified_runs),
+    )
+    monkeypatch.setattr(summary_module, "load_result_run", lambda *_args: ())
+    monkeypatch.setattr(summary_module, "summarize_condition", lambda _rows: {})
+
+    result = summary_module.summarize_result_runs(tmp_path, synthetic_fixture=False)
+    complete_policy = measurements.model_dump(mode="json")
+    expected = hashlib.sha256(canonical_json_bytes(complete_policy)).hexdigest()
+
+    assert result["measurement_identity_sha256"] == expected
 
 
 def run_fixture(

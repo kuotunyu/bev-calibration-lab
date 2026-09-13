@@ -1,0 +1,931 @@
+{
+  "classification_counts": {
+    "equivalent": 133,
+    "gap": 34,
+    "unknown": 16
+  },
+  "entries": [
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_finish_estimate__mutmut_2",
+      "reason": "**等價**。`typing.cast` 執行期原樣回傳第二參數，兩個第一參數也無副作用。`typing.cast` 的 runtime identity semantics亦適用於此處。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x__validated_initial__mutmut_6",
+      "reason": "**契約域內等價**。`initial` 標為 `Float64Array | None`，alias 是 `NDArray[np.float64]`；production 唯一 caller `evaluation_measurements.py` 不傳 initial。合法非 `None` 輸入已是 `float64`，兩式的值、dtype 與後續 copy 相同；沒有文件承諾其他 dtype。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x__validated_initial__mutmut_8",
+      "reason": "**契約域內等價**。與 `bevcalib.correctors.classical.x__validated_initial__mutmut_6` 相同；不應以超出 annotation 的 dtype 鏡像測試殺 mutant。 完整依據：`bevcalib.correctors.classical.x__validated_initial__mutmut_6` — **契約域內等價**。`initial` 標為 `Float64Array | None`，alias 是 `NDArray[np.float64]`；production 唯一 caller `evaluation_measurements.py` 不傳 initial。合法非 `None` 輸入已是 `float64`，兩式的值、dtype 與後續 copy 相同；沒有文件承諾其他 dtype。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_30",
+      "reason": "**等價**。在 return 前它只可能保持該 falsy sentinel 或於 `_BudgetExhausted` 改成 `True`；唯一讀取是 `not exhausted`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_32",
+      "reason": "**等價**。`max_evaluations >= 1` 後，正常 return 前 `value` 必被第一次 `score(current)` 覆寫；其他例外直接逸出，不會觀察初值。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_3",
+      "reason": "**契約域內等價**。annotation 是 `NDArray[np.float32]`；production `preprocessing.prepare_input` 在 transpose 後明確 `.astype(np.float32)` 才呼叫 builder。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_5",
+      "reason": "**契約域內等價**。與 `bevcalib.correctors.learned.x_build_five_channel_input__mutmut_3` 同一 annotation/caller evidence。 完整依據：`bevcalib.correctors.learned.x_build_five_channel_input__mutmut_3` — **契約域內等價**。annotation 是 `NDArray[np.float32]`；production `preprocessing.prepare_input` 在 transpose 後明確 `.astype(np.float32)` 才呼叫 builder。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_8",
+      "reason": "**契約域內等價**。annotation 是 `NDArray[np.float32]`；production depth 來自 `rasterize_min_depth`，return 前明確 `.astype(np.float32)`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_10",
+      "reason": "**契約域內等價**。與 `bevcalib.correctors.learned.x_build_five_channel_input__mutmut_8` 同一 annotation/caller evidence。 完整依據：`bevcalib.correctors.learned.x_build_five_channel_input__mutmut_8` — **契約域內等價**。annotation 是 `NDArray[np.float32]`；production depth 來自 `rasterize_min_depth`，return 前明確 `.astype(np.float32)`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_51",
+      "reason": "**等價**。右值最後寫入預先建立的 `float32` tensor；無論中間 cast 為預設 `float64`，儲存時仍 cast 回 `float32`，且右值無其他觀察者。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_53",
+      "reason": "**等價**。`usable` 明確要求 finite 且 `depth > 0.0`，因此 `log1p(depth)/log1p(MAX_DEPTH_M)` 嚴格大於零，lower clip 永不生效。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_build_five_channel_input__mutmut_65",
+      "reason": "**等價**。布林值只成為 0/1，隨後完整賦值至 `float32` tensor channel，最終值與 dtype 相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.reprojection.x_pixel_error_percentiles__mutmut_3",
+      "reason": "**契約域內等價**。annotation 是 `Float64Array`；repository production source 沒有內部 caller，文件也未承諾 integer/low-precision errors。合法 array 上兩式相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.reprojection.x_pixel_error_percentiles__mutmut_5",
+      "reason": "**契約域內等價**。與 `bevcalib.metrics.reprojection.x_pixel_error_percentiles__mutmut_3` 相同。mutation audit 只明示 validity mask 接受上游 0/1，沒有擴大 errors dtype contract。 完整依據：`bevcalib.metrics.reprojection.x_pixel_error_percentiles__mutmut_3` — **契約域內等價**。annotation 是 `Float64Array`；repository production source 沒有內部 caller，文件也未承諾 integer/low-precision errors。合法 array 上兩式相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_8",
+      "reason": "**invariant 等價**。`load_run_set` 在 `result_sets.py` 比對每個 run 的 `identity.measurements` 與第一筆，不同即拒絕；合法 run set 中兩索引相同。需保留 loader invariant 的契約測試，而非為此 mutant 加索引特例。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_57",
+      "reason": "**漏測**。非 synthetic 摘要必輸出 schema 指定的 `evidence_type == \"observed\"`。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_58",
+      "reason": "**漏測**。與 `bevcalib.metrics.summary.x_summarize_result_runs__mutmut_57` 同一 schema contract，且大小寫有意義。 完整依據：`bevcalib.metrics.summary.x_summarize_result_runs__mutmut_57` — **漏測**。非 synthetic 摘要必輸出 schema 指定的 `evidence_type == \"observed\"`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_61",
+      "reason": "**模型域內等價**。實際 `EvaluationMeasurements` 只有 Literal strings、`bool`、`dict[str, Digest]`，以及被 exclude 的 image/table dict；保留的 policy 全為 JSON primitive，Python/JSON representation 相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_63",
+      "reason": "**模型域內等價**。省略 mode 使用 Python representation；對現有 primitive-only policy 與 JSON representation 相同。`CalibrationSummaryV1.coherent` 也以同一組 primitive expected policy 比較。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_65",
+      "reason": "**模型域內等價**。Pydantic serializer 將 JSON mode 與 Python/custom mode 區分；即使非標準 mode 採非-JSON representation，現有保留欄位仍全是 primitive，結果相同。不得捏造 datetime/enum 等不存在欄位殺 mutant。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_37",
+      "reason": "**執行期等價**。兩個 module-private step tuples 都固定為長度 3；`None` 與 `False` 對等長 iterable 產生相同 pairs。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_40",
+      "reason": "**執行期等價**。同 `bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_37`；預設 non-strict 的唯一差異是長度不等時不報錯，而兩個被迭代值是同模組固定且等長的 tuples。 完整依據：`bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_37` — **執行期等價**。兩個 module-private step tuples 都固定為長度 3；`None` 與 `False` 對等長 iterable 產生相同 pairs。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_41",
+      "reason": "**執行期等價**。同 `bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_37`。 完整依據：`bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_37` — **執行期等價**。兩個 module-private step tuples 都固定為長度 3；`None` 與 `False` 對等長 iterable 產生相同 pairs。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_48",
+      "reason": "**執行期等價**。後續唯一索引是 `range(len(COORDINATE_NAMES))`，而 names 固定六項；新增的第七個 translation step 永不讀取。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.classical.x_coarse_to_fine_correct__mutmut_51",
+      "reason": "**執行期等價**。兩者皆 falsy；若找到改善都被改寫成 `True`，`while improved` 的控制流相同。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_3",
+      "reason": "**真正可觀察缺口**。輸入 annotation 是 `NDArray[Any]`、回傳 annotation 是 `NDArray[np.float64]`，且 production 會傳入常見的 float32 torch stem numpy array。直接呼叫 helper 時 mutant 保留 float32，原函數回傳 float64；這在已宣告輸入域內可觀察。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_5",
+      "reason": "**真正可觀察缺口**。與 `bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_3` 相同。這不是用未宣告 integer/low-precision fixture 擴大契約；float32 是 production caller 的實際 dtype。 完整依據：`bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_3` — **真正可觀察缺口**。輸入 annotation 是 `NDArray[Any]`、回傳 annotation 是 `NDArray[np.float64]`，且 production 會傳入常見的 float32 torch stem numpy array。直接呼叫 helper 時 mutant 保留 float32，原函數回傳 float64；這在已宣告輸入域內可觀察。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_49",
+      "reason": "**真正可觀察缺口**。zero-energy output kernel 是 docstring 與 training contract 明示的合法情形。沒有 initialized `out` 時，`where=False` 位置沒有由運算寫入，結果未定；原函數保證 ratio zero。既有 zero-kernel test 已表達正確 contract，但此次 raw run 偶然未殺此未初始化值 mutant，不能據此宣稱等價。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_53",
+      "reason": "**真正可觀察缺口**。與 `bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_49` 相同。等價與否不能以一次 allocator 恰好給出零值判斷。 完整依據：`bevcalib.correctors.learned.x_five_channel_stem_weight__mutmut_49` — **真正可觀察缺口**。zero-energy output kernel 是 docstring 與 training contract 明示的合法情形。沒有 initialized `out` 時，`where=False` 位置沒有由運算寫入，結果未定；原函數保證 ratio zero。既有 zero-kernel test 已表達正確 contract，但此次 raw run 偶然未殺此未初始化值 mutant，不能據此宣稱等價。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_10",
+      "reason": "**真正可觀察缺口**。`docs/training-contract.md` 明確要求 source dtype **and device** preserved。非預設 device 的合法 stem 會被移回預設 device，且後續 copy 可失敗；CPU-only mutation環境不擴張此契約。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_16",
+      "reason": "**凍結契約域內等價**。正式 architecture/profile 是 ConvNeXtV2-Tiny，其 stem 為 4x4/stride 4/padding 0；PyTorch Conv2d 預設 padding 也是 0。文件沒有把 adapter 宣告成任意三通道 convolution 的通用 architecture converter，因此不以 padding 1 fixture 硬殺。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_18",
+      "reason": "**真正可觀察缺口**。與 `bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_10` 相同。 完整依據：`bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_10` — **真正可觀察缺口**。`docs/training-contract.md` 明確要求 source dtype **and device** preserved。非預設 device 的合法 stem 會被移回預設 device，且後續 copy 可失敗；CPU-only mutation環境不擴張此契約。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_25",
+      "reason": "**執行期等價**。helper 原輸出為 float64，而目的 `adapted.weight.copy_` 會轉成 adapted/source dtype；中間 tensor 沒有其他 observer，final parameter 相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_27",
+      "reason": "**執行期等價**。與 `bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_25` 相同。 完整依據：`bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_25` — **執行期等價**。helper 原輸出為 float64，而目的 `adapted.weight.copy_` 會轉成 adapted/source dtype；中間 tensor 沒有其他 observer，final parameter 相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.correctors.learned.x_initialize_convnextv2_five_channel__mutmut_29",
+      "reason": "**執行期等價**。`adapted` 建構時 `bias=(stem.bias is not None)`，所以 `stem.bias` 與 `adapted.bias` 的存在性必相同；兩個 operands 永遠同真值。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.metrics.calibration.x_rotation_geodesic_error_deg__mutmut_15",
+      "reason": "**unknown**。`SE3.__post_init__` 正規化 quaternion，名義 contract 下 `abs(w) <= 1`，兩式相同；但原碼註解明說 clamp 防止 unit quaternion 的 w 因浮點誤差越過 1。這次只讀 review 沒有具體合法 SE3 pair 可證明 compose/inverse 後可達 `w > 1`，也不能證明所有平台永遠不可達，因此不把它武斷列為等價或漏測。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_13",
+      "reason": "**契約域內等價**。`CalibrationFaultModel.translation_xyz_m` 是 Pydantic `tuple[FiniteFloat, FiniteFloat, FiniteFloat]`；validated elements 是 Python floats，`np.asarray(tuple)` 已為 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_15",
+      "reason": "**契約域內等價**。同 `bevcalib.metrics.calibration.x_calibration_errors__mutmut_13`。未使用模型拒絕/轉換前的 numpy dtype 當測試輸入。 完整依據：`bevcalib.metrics.calibration.x_calibration_errors__mutmut_13` — **契約域內等價**。`CalibrationFaultModel.translation_xyz_m` 是 Pydantic `tuple[FiniteFloat, FiniteFloat, FiniteFloat]`；validated elements 是 Python floats，`np.asarray(tuple)` 已為 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_17",
+      "reason": "**契約域內等價**。同 `bevcalib.metrics.calibration.x_calibration_errors__mutmut_13`，作用於另一個同型別 validated model。 完整依據：`bevcalib.metrics.calibration.x_calibration_errors__mutmut_13` — **契約域內等價**。`CalibrationFaultModel.translation_xyz_m` 是 Pydantic `tuple[FiniteFloat, FiniteFloat, FiniteFloat]`；validated elements 是 Python floats，`np.asarray(tuple)` 已為 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_19",
+      "reason": "**契約域內等價**。同 `bevcalib.metrics.calibration.x_calibration_errors__mutmut_17`。 完整依據：`bevcalib.metrics.calibration.x_calibration_errors__mutmut_17` — **契約域內等價**。同 `bevcalib.metrics.calibration.x_calibration_errors__mutmut_13`，作用於另一個同型別 validated model。 完整依據：`bevcalib.metrics.calibration.x_calibration_errors__mutmut_13` — **契約域內等價**。`CalibrationFaultModel.translation_xyz_m` 是 Pydantic `tuple[FiniteFloat, FiniteFloat, FiniteFloat]`；validated elements 是 Python floats，`np.asarray(tuple)` 已為 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_3",
+      "reason": "**runtime equivalent，包含文件承諾的 float32 域**。完整 dataflow 證明：shape/finite/depth comparisons 對 float32 值及其 exact float64 widening相同；`validate_intrinsic` 無條件輸出 float64，使 `points @ intrinsic.T` 依 NumPy common-type resolution 在 float64 計算；`optical_depth` 與 `uv` 又各自明確配置 float64。故任何 float32 bit pattern（含 finite、NaN、Inf、±0）均無可觀察差異。actual generated-function probe亦逐 array以 `equal_nan=True` 驗證。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_5",
+      "reason": "**runtime equivalent**。與 `bevcalib.geometry.projection.x_project_camera__mutmut_3` 完全相同；省略 dtype 與 `dtype=None` 對 ndarray input一致。文件所稱 entry-point promotion 的族群結論對其他函數可成立，但在此 exact dataflow 中後續 intrinsic matmul及輸出 allocations已完成 promotion。 完整依據：`bevcalib.geometry.projection.x_project_camera__mutmut_3` — **runtime equivalent，包含文件承諾的 float32 域**。完整 dataflow 證明：shape/finite/depth comparisons 對 float32 值及其 exact float64 widening相同；`validate_intrinsic` 無條件輸出 float64，使 `points @ intrinsic.T` 依 NumPy common-type resolution 在 float64 計算；`optical_depth` 與 `uv` 又各自明確配置 float64。故任何 float32 bit pattern（含 finite、NaN、Inf、±0）均無可觀察差異。actual generated-function probe亦逐 array以 `equal_nan=True` 驗證。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_19",
+      "reason": "**runtime equivalent**。`points` 在原函數入口已正規化為 float64，slice 是 float64；copy 的值/dtype 相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_21",
+      "reason": "**runtime equivalent**。同 `bevcalib.geometry.projection.x_project_camera__mutmut_19`。 完整依據：`bevcalib.geometry.projection.x_project_camera__mutmut_19` — **runtime equivalent**。`points` 在原函數入口已正規化為 float64，slice 是 float64；copy 的值/dtype 相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_40",
+      "reason": "**runtime equivalent**。目的 dtype 仍是 float64；NumPy 將 `None` cast 為 float NaN，projectable rows 隨後被覆寫，非 projectable rows仍是 NaN。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_41",
+      "reason": "**runtime equivalent**。fill value 是 `np.nan`，其推導 dtype 已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_44",
+      "reason": "**runtime equivalent**。同 `bevcalib.geometry.projection.x_project_camera__mutmut_41`。 完整依據：`bevcalib.geometry.projection.x_project_camera__mutmut_41` — **runtime equivalent**。fill value 是 `np.nan`，其推導 dtype 已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.projection.x_project_camera__mutmut_52",
+      "reason": "**runtime equivalent**。合法 points 固定 shape `[N,3]`，所以兩個 slices 都只包含 column 2，shape 同為 `[N,1]`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_compose__mutmut_8",
+      "reason": "**contract equivalent**。`SE3.translation_xyz_m` 是固定三個 finite Python floats；`np.asarray(tuple)` 已產生 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_compose__mutmut_10",
+      "reason": "**contract equivalent**。同 `bevcalib.geometry.se3.x_compose__mutmut_8`。 完整依據：`bevcalib.geometry.se3.x_compose__mutmut_8` — **contract equivalent**。`SE3.translation_xyz_m` 是固定三個 finite Python floats；`np.asarray(tuple)` 已產生 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_inverse__mutmut_6",
+      "reason": "**contract equivalent**。同一個 frozen `SE3` translation contract，合法 tuple 的 array representation相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_inverse__mutmut_8",
+      "reason": "**contract equivalent**。同 `bevcalib.geometry.se3.x_inverse__mutmut_6`。 完整依據：`bevcalib.geometry.se3.x_inverse__mutmut_6` — **contract equivalent**。同一個 frozen `SE3` translation contract，合法 tuple 的 array representation相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_27",
+      "reason": "**contract equivalent**。estimate/truth 都是 `CalibrationFaultModel`，兩個 `rotation_rpy_deg` 都由 Pydantic 固定為三元素 `Vector3`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_30",
+      "reason": "**contract equivalent**。兩邊長度固定且相同，non-strict 不改 pairs。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.calibration.x_calibration_errors__mutmut_31",
+      "reason": "**contract equivalent**。同 `bevcalib.metrics.calibration.x_calibration_errors__mutmut_27`。 完整依據：`bevcalib.metrics.calibration.x_calibration_errors__mutmut_27` — **contract equivalent**。estimate/truth 都是 `CalibrationFaultModel`，兩個 `rotation_rpy_deg` 都由 Pydantic 固定為三元素 `Vector3`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_66",
+      "reason": "**model-domain equivalent**。保留的 policy 只有 Literal strings 與 bool；非 JSON/custom representation 對這些 primitives 與 JSON mode相同。不能捏造 datetime/enum 欄位。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_73",
+      "reason": "**真正可觀察缺口**。`measurement_identity_sha256` 必綁定完整 verified measurements identity；`None` 的 canonical digest 是另一個穩定值，會切斷 table/images policy provenance。合法 run set即可觀察，不需 invalid fixture。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_74",
+      "reason": "**model-domain equivalent**。完整 `EvaluationMeasurements` 也只包含 strings、bool、positive ints、finite float/None，以及這些 primitives 的 nested dict；Python 與 JSON representations相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_75",
+      "reason": "**model-domain equivalent**。同 `bevcalib.metrics.summary.x_summarize_result_runs__mutmut_74`；custom/non-JSON mode 不改現有 primitive tree。 完整依據：`bevcalib.metrics.summary.x_summarize_result_runs__mutmut_74` — **model-domain equivalent**。完整 `EvaluationMeasurements` 也只包含 strings、bool、positive ints、finite float/None，以及這些 primitives 的 nested dict；Python 與 JSON representations相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_summarize_result_runs__mutmut_76",
+      "reason": "**model-domain equivalent**。同 `bevcalib.metrics.summary.x_summarize_result_runs__mutmut_74`。 完整依據：`bevcalib.metrics.summary.x_summarize_result_runs__mutmut_74` — **model-domain equivalent**。完整 `EvaluationMeasurements` 也只包含 strings、bool、positive ints、finite float/None，以及這些 primitives 的 nested dict；Python 與 JSON representations相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_18",
+      "reason": "**runtime equivalent**。在此 NumPy API 中兩值都關閉 singular-vector 計算，回傳同一 singular-values array；後續只讀該 array。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_40",
+      "reason": "**unknown**。文件把 `1e-9` 宣告為容許界線，故若存在通過 singular-value guard 且 `abs(det-1)` 浮點值精確等於界線的合法 matrix，拒絕行為可觀察；本次靜態檢查不能證明該 boundary witness 可達，也不能宣稱等價。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_84",
+      "reason": "**unknown**。改變 Shepperd branch；既有 audit 說此類錯選通常代數同值但 conditioning／last-bit 是 artifact contract，且沒有一般等價證明。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85",
+      "reason": "**unknown**。合法 rotations 可改變 branch predicate；沒有證明所有可達 cases 的 canonical tuple bitwise 相同。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_86",
+      "reason": "**unknown**。同 `bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85`。 完整依據：`bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85` — **unknown**。合法 rotations 可改變 branch predicate；沒有證明所有可達 cases 的 canonical tuple bitwise 相同。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_87",
+      "reason": "**unknown**。diagonal tie 會改 branch；branches algebraically equal 不足以保證 stored quaternion 的 exact bits。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_88",
+      "reason": "**unknown**。同 `bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85`；不能由現有 sampled matrices 推廣成等價。 完整依據：`bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85` — **unknown**。合法 rotations 可改變 branch predicate；沒有證明所有可達 cases 的 canonical tuple bitwise 相同。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_89",
+      "reason": "**unknown**。同 `bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85`。 完整依據：`bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85` — **unknown**。合法 rotations 可改變 branch predicate；沒有證明所有可達 cases 的 canonical tuple bitwise 相同。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_91",
+      "reason": "**unknown**。同 `bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85`。 完整依據：`bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_85` — **unknown**。合法 rotations 可改變 branch predicate；沒有證明所有可達 cases 的 canonical tuple bitwise 相同。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_matrix_to_quaternion__mutmut_92",
+      "reason": "**unknown**。diagonal tie 改 branch且可能改 exact artifact bits；現有 audit 對整組 survivors 明確保留 outstanding。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_compose__mutmut_12",
+      "reason": "**contract equivalent**。`SE3.__post_init__` 已把 translation 固化為三個 Python `float`；`np.asarray(tuple)` 推導 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_compose__mutmut_14",
+      "reason": "**contract equivalent**。同 `bevcalib.geometry.se3.x_compose__mutmut_12`。 完整依據：`bevcalib.geometry.se3.x_compose__mutmut_12` — **contract equivalent**。`SE3.__post_init__` 已把 translation 固化為三個 Python `float`；`np.asarray(tuple)` 推導 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_transform_points__mutmut_3",
+      "reason": "**runtime equivalent**。不能因 `Float64Array` annotation 判定；公開 audit 明示 float32 caller 支援。實際下一步是與 `quaternion_to_matrix` 的 float64 matrix 做 matmul，NumPy 在運算中將 float32 values 提升為 float64，之後再加 float64 translation，故輸出值／dtype與入口先提升相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_transform_points__mutmut_5",
+      "reason": "**runtime equivalent**。同 `bevcalib.geometry.se3.x_transform_points__mutmut_3`；float32 production domain 已納入推理，並未排除。 完整依據：`bevcalib.geometry.se3.x_transform_points__mutmut_3` — **runtime equivalent**。不能因 `Float64Array` annotation 判定；公開 audit 明示 float32 caller 支援。實際下一步是與 `quaternion_to_matrix` 的 float64 matrix 做 matmul，NumPy 在運算中將 float32 values 提升為 float64，之後再加 float64 translation，故輸出值／dtype與入口先提升相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_transform_points__mutmut_17",
+      "reason": "**contract equivalent**。SE3 translation 是 Python-float tuple，推導 dtype 已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.se3.x_transform_points__mutmut_19",
+      "reason": "**contract equivalent**。同 `bevcalib.geometry.se3.x_transform_points__mutmut_17`。 完整依據：`bevcalib.geometry.se3.x_transform_points__mutmut_17` — **contract equivalent**。SE3 translation 是 Python-float tuple，推導 dtype 已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.ground_contact.x_bottom_center_global__mutmut_3",
+      "reason": "**runtime equivalent**。也不能只靠 annotation：即使 direct caller 給 float32 centre，下一個 expression 加上由 float64 quaternion rotation／offset產生的 float64 vector，NumPy 提升 centre 後所得 values／dtype與顯式先提升相同；production evaluation caller本身另已顯式建 float64 centre。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.ground_contact.x_bottom_center_global__mutmut_5",
+      "reason": "**runtime equivalent**。同 `bevcalib.operators.ground_contact.x_bottom_center_global__mutmut_3`。 完整依據：`bevcalib.operators.ground_contact.x_bottom_center_global__mutmut_3` — **runtime equivalent**。也不能只靠 annotation：即使 direct caller 給 float32 centre，下一個 expression 加上由 float64 quaternion rotation／offset產生的 float64 vector，NumPy 提升 centre 後所得 values／dtype與顯式先提升相同；production evaluation caller本身另已顯式建 float64 centre。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_16",
+      "reason": "**contract equivalent**。`inverse(...)` 回傳的 SE3 translation 仍是 Python-float tuple，推導 dtype 已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_support_for__mutmut_12",
+      "reason": "**runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數無副作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_finish_pair__mutmut_10",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_support_for__mutmut_12`。 完整依據：`bevcalib.analysis.estimands.x_support_for__mutmut_12` — **runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數無副作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_finish_pair__mutmut_15",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_support_for__mutmut_12`。 完整依據：`bevcalib.analysis.estimands.x_support_for__mutmut_12` — **runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數無副作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_finish_pair__mutmut_33",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_support_for__mutmut_12`；值仍由 `np.mean` 後外層 `float(...)` 建構。 完整依據：`bevcalib.analysis.estimands.x_support_for__mutmut_12` — **runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數無副作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_finish_pair__mutmut_39",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_finish_pair__mutmut_33`。 完整依據：`bevcalib.analysis.estimands.x_finish_pair__mutmut_33` — **runtime equivalent**。同 `bevcalib.analysis.estimands.x_support_for__mutmut_12`；值仍由 `np.mean` 後外層 `float(...)` 建構。 完整依據：`bevcalib.analysis.estimands.x_support_for__mutmut_12` — **runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數無副作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.quaternions.x_quaternion_to_matrix__mutmut_4",
+      "reason": "**contract equivalent**。`Quaternion` 是四個 finite Python floats；矩陣各 scalar expression 是 Python float，NumPy 推導 float64。歷史 audit 的 float32 promotion 契約不改此結論：此入口不是接受 array 后再 `asarray`，而是先從 frozen float tuple 做純 Python arithmetic。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_18",
+      "reason": "**contract equivalent**。origin 來自 `inverse(...).translation_xyz_m` 的三個 Python floats，推導已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.ground_contact.x_observe_ground_contact__mutmut_15",
+      "reason": "**contract equivalent**。同 `bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_18`。 完整依據：`bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_18` — **contract equivalent**。origin 來自 `inverse(...).translation_xyz_m` 的三個 Python floats，推導已是 float64。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.ground_contact.x_observe_ground_contact__mutmut_17",
+      "reason": "**contract equivalent**。同 `bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_18`。 完整依據：`bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_18` — **contract equivalent**。origin 來自 `inverse(...).translation_xyz_m` 的三個 Python floats，推導已是 float64。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.operators.ground_contact.x_reconstruct_ground_contact__mutmut_30",
+      "reason": "**unknown**。精確等於 tolerance 時拒絕結果改變；但本次靜態 review 不能證明由合法 SE3、pixel及 intrinsic 組成的 normalized ray可到達該 floating value，也不能證明不可達。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_14",
+      "reason": "**contract equivalent**。仍拋同類 `ValueError` 且保留已測／對 caller有用的 `RGB uint8` 語義片段；repository未宣告整句 byte-exact error API。不能為 mutation 裝飾字串建立鏡像測試。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_36",
+      "reason": "**runtime equivalent**。SciPy `sobel` 預設 mode 是 reflect。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_44",
+      "reason": "**runtime equivalent**。gray固定為 2D，SciPy sobel預設 `axis=-1` 即 axis 1。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_45",
+      "reason": "**runtime equivalent**。同 `bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_36`。 完整依據：`bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_36` — **runtime equivalent**。SciPy `sobel` 預設 mode 是 reflect。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_57",
+      "reason": "**合法輸入缺口**。constant uint8 RGB是明示合法且不可測量的情形；mutant回傳 scalar-shaped mask，破壞 `[H,W]` evidence shape。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_58",
+      "reason": "**合法輸入缺口**。shape保留但預設 dtype 是 float64，破壞 `ImageEdgeEvidence.mask: NDArray[np.bool_]`。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_60",
+      "reason": "**合法輸入缺口**。同 `bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_58`。 完整依據：`bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_58` — **合法輸入缺口**。shape保留但預設 dtype 是 float64，破壞 `ImageEdgeEvidence.mask: NDArray[np.bool_]`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_68",
+      "reason": "**runtime equivalent**。目前 pinned NumPy 的 quantile default method即 linear；未改变输入或输出。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_51",
+      "reason": "**unknown**。若合法 uint8→Pillow L→float64 Sobel magnitude可精確落在 `(0,1]`，threshold及mask会改变；pipeline 的整数灰阶與 Sobel kernel提示最小非零值可能不低于1，但未做可达性证明，故保持 pending unknown。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_73",
+      "reason": "**合法輸入缺口**。threshold是positive distribution的90th percentile；任何含低于threshold正梯度的合法非均匀影像，原码只选高尾，mutant选全部positive pixels，直接改变mask及distance field。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_9",
+      "reason": "**合法輸入缺口**。`CompactFrame.translation_norm_cm` 與 formal analysis 都明示 centimetres；任何 nonzero合法 pose error 會縮小 10,000 倍，直接污染 paired estimand及報告。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_support_for__mutmut_18",
+      "reason": "**runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數沒有執行期作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_support_for__mutmut_47",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_support_for__mutmut_18`；減法 operands和值不變。 完整依據：`bevcalib.analysis.estimands.x_support_for__mutmut_18` — **runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數沒有執行期作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_support_for__mutmut_51",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_support_for__mutmut_18`。 完整依據：`bevcalib.analysis.estimands.x_support_for__mutmut_18` — **runtime equivalent**。`typing.cast` 原樣回傳第二參數，第一參數沒有執行期作用。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.bootstrap.x_paired_scene_bootstrap__mutmut_18",
+      "reason": "**runtime equivalent**。不能只靠 annotation：mapping values在 comprehension 中先以 Python `float - float` 形成 Python floats，`np.array` 因而推導 float64；production estimand caller也傳 model-derived floats。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.bootstrap.x_paired_scene_bootstrap__mutmut_20",
+      "reason": "**runtime equivalent**。同 `bevcalib.metrics.bootstrap.x_paired_scene_bootstrap__mutmut_18`。 完整依據：`bevcalib.metrics.bootstrap.x_paired_scene_bootstrap__mutmut_18` — **runtime equivalent**。不能只靠 annotation：mapping values在 comprehension 中先以 Python `float - float` 形成 Python floats，`np.array` 因而推導 float64；production estimand caller也傳 model-derived floats。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_74",
+      "reason": "**runtime equivalent**。constant image已在 `positive.size == 0` 分支返回；其餘情形 threshold 是 strictly-positive samples 的 0.90 quantile，所以 `magnitude >= threshold` 已蘊含 `magnitude > 0`。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_75",
+      "reason": "**unknown**。與另一個 positive-sample guard survivor 有相同的可達性問題：若合法 uint8→Pillow L→Sobel 的 threshold 可落在 `(0,1]`，此 guard會丟掉合法 edges；未證明完整離散 pipeline 的最小正 magnitude，因此不稱 gap或equivalent。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_84",
+      "reason": "**runtime equivalent**。SciPy `distance_transform_edt` 的 distance return已是 float64；`np.asarray` 不改值或 dtype。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_86",
+      "reason": "**runtime equivalent**。同 `bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_84`。 完整依據：`bevcalib.operators.image_edges.x_image_edge_evidence__mutmut_84` — **runtime equivalent**。SciPy `distance_transform_edt` 的 distance return已是 float64；`np.asarray` 不改值或 dtype。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_lidar_depth_edges__mutmut_44",
+      "reason": "**runtime equivalent**。`usable` 明確排除 nonfinite ring rows，之後 grouping與輸出只索引 `usable_indices`；替代 sentinel 從未被可觀察路徑讀取。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_lidar_depth_edges__mutmut_67",
+      "reason": "**runtime equivalent**。pinned NumPy 接受並正規化不分大小寫的 sort kind；歷史 audit已對此具體行為做過驗證。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.operators.lidar_edges.x_lidar_depth_edges__mutmut_91",
+      "reason": "**unknown**。在 production 的正 absolute／relative thresholds下，equal-range pair的 jump是零且不 qualifying，所以 `nearer[qualifies]` 會濾掉 tie choice；同一 point參與另一 pair也會在該 pair獨立重算 nearer，不受前一 tie影響。函數目前未驗證 caller-supplied thresholds為正；若兩門檻允許零或負值，equal pair可 qualifying且 source identity會改變。文件只宣告固定 positive protocol defaults，沒有清楚宣告任意非正 override是否合法，因此本次不把它冒稱 gap或全契約等價。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_lidar_depth_edges__mutmut_115",
+      "reason": "**runtime equivalent**。NumPy reshape把任何單一 negative dimension當 inferred placeholder；歷史 audit已對 `-2` 行為實測，不是從 annotation推論。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_3",
+      "reason": "**runtime equivalent**。實際 float32 upstream支援沒有被排除：uv後續只經 finite比較、`floor`及int64 cast；對已量化的 float32 values，入口先提升與 NumPy逐操作處理得到相同 indices。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_5",
+      "reason": "**runtime equivalent**。同 `bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_3`。 完整依據：`bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_3` — **runtime equivalent**。實際 float32 upstream支援沒有被排除：uv後續只經 finite比較、`floor`及int64 cast；對已量化的 float32 values，入口先提升與 NumPy逐操作處理得到相同 indices。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_8",
+      "reason": "**runtime equivalent**。float32 depth是合法 upstream；它已失去的精度無法由 cast恢復，而 `np.minimum.at` 寫入預建 float64 canvas時會把同一 float32 values提升，結果與入口提升相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_10",
+      "reason": "**runtime equivalent**。同 `bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_8`。 完整依據：`bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_8` — **runtime equivalent**。float32 depth是合法 upstream；它已失去的精度無法由 cast恢復，而 `np.minimum.at` 寫入預建 float64 canvas時會把同一 float32 values提升，結果與入口提升相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_69",
+      "reason": "**runtime equivalent**。fill value `np.inf` 本身是 Python float，NumPy推導 float64；shape/value/dtype都相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_72",
+      "reason": "**runtime equivalent**。同 `bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_69`。 完整依據：`bevcalib.operators.rasterize.x_rasterize_min_depth__mutmut_69` — **runtime equivalent**。fill value `np.inf` 本身是 Python float，NumPy推導 float64；shape/value/dtype都相同。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_10",
+      "reason": "**合法輸入可觀察缺口**。`translation_norm_cm` 與 formal analysis contract 都明示 metres-to-centimetres factor 100；任何 nonzero 合法 `PoseErrors.translation_error_m` 會產生錯誤尺度。此變異把換算倍率 100 改為 101，非零合法輸入的公分結果會改變，因此不是等價。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_31",
+      "reason": "**合法輸入可觀察缺口**。`CalibrationResultV2` 合法 invalid non-time row可以有 `pose=None`；原碼輸出 null，mutant進入 else 並 dereference `pose`。這是模型明許的 missing measurement，不是假造輸入。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_34",
+      "reason": "**合法輸入可觀察缺口**。合法且可測量的 identity timing row可以保有 pose，但 timing 不屬於 6DoF recovery denominator；原碼強制 null，mutant會輸出 0/100 recovery。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_35",
+      "reason": "**合法輸入可觀察缺口**。同 `bevcalib.analysis.estimands.x_compact_frame__mutmut_34`；`fault_axis` schema 是 lowercase `\"time\"`。 完整依據：`bevcalib.analysis.estimands.x_compact_frame__mutmut_34` — **合法輸入可觀察缺口**。合法且可測量的 identity timing row可以保有 pose，但 timing 不屬於 6DoF recovery denominator；原碼強制 null，mutant會輸出 0/100 recovery。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_37",
+      "reason": "**合法輸入可觀察缺口**。對任何 recovered 合法 pose，原碼輸出 100 percent，mutant輸出 101，超出百分率契約；未恢復 case雖同為零，不使整體等價。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.perturbations.apply.x_se3_to_fault__mutmut_7",
+      "reason": "**unknown**。精確等於 tolerance boundary時接受/拒絕不同；但本次只讀證據無法證明由合法 normalized SE3 可精現該 floating equality，也無法證不可達。既有 89.9°/90° cases不等於這個 exact boundary witness。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.perturbations.schedule.x_sample_training_fault__mutmut_19",
+      "reason": "**current-runtime equivalent**。mutant新增第七個 digest draw，但 return 明確只取 `rotation[0:3]` 與 `translation[0:3]`（以逐項 tuple 表達）；前六個 chunk、draw、rotation及translation值不變，第七個值未進入回傳模型。不得為未使用的額外局部值新增鏡像 test。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.perturbations.schedule.x_sample_training_fault__mutmut_9",
+      "reason": "**current-runtime equivalent**。候選固定 Python 3.12，而 `int.from_bytes` 的 byteorder 預設是 `\"big\"`；相同四 bytes產生相同 draw。不得為預設參數的拼寫建立鏡像 test。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.perturbations.timing.x_select_lidar_for_timing_fault__mutmut_6",
+      "reason": "**contract-bound equivalent**。仍拋同類 `ValueError` 且保留 caller/tests 使用的 `timing candidates must be LiDAR readings` 語義片段；repository沒有宣告完整錯誤字串 byte identity。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.perturbations.timing.x_select_lidar_for_timing_fault__mutmut_11",
+      "reason": "**合法輸入可觀察缺口**。空 sweep 是函數明確處理的合法 availability case；`TimingSelection.valid` annotation 是 bool，consumer以其決定 invalid timing。dataclass不會自動拒絕 `None`，所以 mutant實際回傳可觀察的錯誤狀態而非等價 falsy sentinel。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.perturbations.timing.x_select_lidar_for_timing_fault__mutmut_29",
+      "reason": "**current-runtime equivalent**。被呼叫函數的 pinned default `DEFAULT_MAX_ERROR_MS` 是 25.0，schedule constant也是 25.0；其餘 arguments相同，所以目前支持的 fixed protocol結果一致。兩常數的跨模組一致性仍應由 protocol contract維持，而不是為省略顯式 default 的 mutant加鏡像 test。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_compact_frame__mutmut_71",
+      "reason": "**合法輸入缺口**。任何帶合法 pose 的 non-time row都有 rotation/translation component errors；mutant仍保留 bias，但把六個 `*_abs_*` values全部清空。`CompactFrame.values`直接进入 `scene_pairs`，指定 absolute metric时最终 `ScenePair.before/after` 变 null，改变 estimand与support。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_13",
+      "reason": "**contract equivalent**。仍为 `ValueError`，并保留完整有意义的 `paired frame inventory differs or is duplicated` 片段；未声明整句 byte identity。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_50",
+      "reason": "**contract equivalent**。同 `bevcalib.analysis.estimands.x_scene_pairs__mutmut_13`；异常类型及完整语义片段保留。 完整依據：`bevcalib.analysis.estimands.x_scene_pairs__mutmut_13` — **contract equivalent**。仍为 `ValueError`，并保留完整有意义的 `paired frame inventory differs or is duplicated` 片段；未声明整句 byte identity。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_59",
+      "reason": "**contract equivalent**。BEV metric domain固定为 `bev_frame_mean_m/<declared-range-bin>`，恰有一个 slash；两者返回同一 bin label，之后 bin filter、objects及最终 return不变。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_60",
+      "reason": "**contract equivalent**。固定单 slash grammar下相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_62",
+      "reason": "**contract equivalent**。固定单 slash grammar下 token list相同。不能用未声明的多 slash metric制造测试。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_64",
+      "reason": "**合法输入缺口**。objects按 token排序而非 range排序；合法场景可先出现非目标-bin token、后出现目标-bin token。原码略过前者后仍累计后者，mutant停止整个 object loop，使 `total_objects`、`objects`、selected mean、exclusions及最终 `ScenePair` 都少计。此判断追踪到 return，不把未使用尾端局部值误判为 gap。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_73",
+      "reason": "**runtime equivalent**。`typing.cast` 原样返回 contact；第一参数无副作用，`.error_m`、selected values、mean与 return完全相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_96",
+      "reason": "**runtime equivalent**。`labels`由 runs labels构造；non-BEV current从每个 label恰取一 frame value，BEV current是 axis mean（每个 selected row长度等于 labels）或 `[None] * len(labels)`。故两者在所有 return路径恒等长。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_99",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_scene_pairs__mutmut_96`；zip结果、exclusion counts及 return相同。 完整依據：`bevcalib.analysis.estimands.x_scene_pairs__mutmut_96` — **runtime equivalent**。`labels`由 runs labels构造；non-BEV current从每个 label恰取一 frame value，BEV current是 axis mean（每个 selected row长度等于 labels）或 `[None] * len(labels)`。故两者在所有 return路径恒等长。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_100",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_scene_pairs__mutmut_96`。 完整依據：`bevcalib.analysis.estimands.x_scene_pairs__mutmut_96` — **runtime equivalent**。`labels`由 runs labels构造；non-BEV current从每个 label恰取一 frame value，BEV current是 axis mean（每个 selected row长度等于 labels）或 `[None] * len(labels)`。故两者在所有 return路径恒等长。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_102",
+      "reason": "**合法輸入缺口**。同一 scene内可有多个合法 frames对同一 method/operator unavailable；原码累计每帧，mutant把计数锁为1。`dict(exclusions)`直接进入 `ScenePair.exclusions`，随后 `support_for` 汇总并公开，不是未使用局部状态。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_105",
+      "reason": "**合法輸入缺口**。scene内首个 frame unavailable、后续 frame valid是合法 operator-support pattern。原码只排除首帧并继续收集后续值；mutant终止该 scene的 frame loop，导致 `values`、frames、means及后续 exclusion counts全部少计，最终 `ScenePair` 可观察。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_1",
+      "reason": "**缺口**。省略 keyword 的公开路径从 observed formal validation变成 synthetic，并改变五份 document的 `FormalIdentity.evidence_type`。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_3",
+      "reason": "**contract equivalent**。仍抛 `FileExistsError` 并保留完整语义片段；无整句 byte-exact contract。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_8",
+      "reason": "**contract equivalent**。loader可能让 synthetic pair进入下一阶段，但 production `FormalIdentity.coherent()` 强制 `source_runs` 的 `(method, seed)` 集合精确等于 `FORMAL_RUNS` 且长度为五；不完整集合仍在任何 document validation/hash/write 前拒绝。仅拒绝位置改变。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_11",
+      "reason": "**contract equivalent**。loader默认 `False`，但同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_8` 的 downstream `FormalIdentity` guard 阻止不完整 formal output。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_8` — **contract equivalent**。loader可能让 synthetic pair进入下一阶段，但 production `FormalIdentity.coherent()` 强制 `source_runs` 的 `(method, seed)` 集合精确等于 `FORMAL_RUNS` 且长度为五；不完整集合仍在任何 document validation/hash/write 前拒绝。仅拒绝位置改变。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_12",
+      "reason": "**contract equivalent**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_8`；无不完整文档可到达 return/write。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_8` — **contract equivalent**。loader可能让 synthetic pair进入下一阶段，但 production `FormalIdentity.coherent()` 强制 `source_runs` 的 `(method, seed)` 集合精确等于 `FORMAL_RUNS` 且长度为五；不完整集合仍在任何 document validation/hash/write 前拒绝。仅拒绝位置改变。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_36",
+      "reason": "**缺口**。合法 observed aggregation在构造 Literal-bound `FormalIdentity` 时失败，否则也会污染所有 artifact identity。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_37",
+      "reason": "**缺口**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_36`；大小写属于 schema。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_36` — **缺口**。合法 observed aggregation在构造 Literal-bound `FormalIdentity` 时失败，否则也会污染所有 artifact identity。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_39",
+      "reason": "**model-domain equivalent**。完整 `EvaluationMeasurements` 是 strings、bool、ints、finite float/None及这些 primitives的 nested dict；Python/JSON representation与 digest相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_40",
+      "reason": "**verified-domain equivalent**。`load_run_set` 返回前要求每个 run measurements与首项相同；合法集合的完整 dump及 digest相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_41",
+      "reason": "**model-domain equivalent**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_39`；不能捏造不存在的 JSON-sensitive字段。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_39` — **model-domain equivalent**。完整 `EvaluationMeasurements` 是 strings、bool、ints、finite float/None及这些 primitives的 nested dict；Python/JSON representation与 digest相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_42",
+      "reason": "**model-domain equivalent**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_39`。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_39` — **model-domain equivalent**。完整 `EvaluationMeasurements` 是 strings、bool、ints、finite float/None及这些 primitives的 nested dict；Python/JSON representation与 digest相同。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_98",
+      "reason": "**缺口**。每个 `(run,label-condition)` 首 row前多1，之后仍累加每行 `projection_count`；错误值进入 exclusions payload、document validation/hash及输出 bytes。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_110",
+      "reason": "**runtime equivalent**。`current`两条构造路径恒为 `len(labels)`；dict、before/after means与 return相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_113",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_scene_pairs__mutmut_110`。 完整依據：`bevcalib.analysis.estimands.x_scene_pairs__mutmut_110` — **runtime equivalent**。`current`两条构造路径恒为 `len(labels)`；dict、before/after means与 return相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.estimands.x_scene_pairs__mutmut_114",
+      "reason": "**runtime equivalent**。同 `bevcalib.analysis.estimands.x_scene_pairs__mutmut_110`。 完整依據：`bevcalib.analysis.estimands.x_scene_pairs__mutmut_110` — **runtime equivalent**。`current`两条构造路径恒为 `len(labels)`；dict、before/after means与 return相同。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_126",
+      "reason": "**缺口**。每个 run-condition 多 row 时只留下最后一 row 长度，错误 count 进入 exclusions payload、document digest及最终五文档集合；schema只约束非负且不超过 projection count，不能恢复总和。正式 claims亦直接引用此字段。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_179",
+      "reason": "**缺口**。对 `HIGHER_BETTER={edge_score_px,recovery_rate_pct}`，None把 direction从 -1 改成 +1；有 measured support时 interval improvement反号。下游 `check_improvement` 用真实 metric重算方向，因此合法 aggregate会在 document validation失败，而非正常 return/write。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_281",
+      "reason": "**contract equivalent**。进入 default serializer 的 production Pydantic models最终字段仅为 JSON-native dict/list/string/bool/int/finite float/None；外层 `json.dumps`/loads又规范化容器。无 datetime、Decimal、Path、enum或bytes字段可产生模式差异，后续 schema/digest相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_282",
+      "reason": "**model-domain equivalent**。Pydantic非 `json` mode走 Python representation；在上述正式模型字段域与 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_281` 相同。不能捏造 schema 未声明的 JSON-sensitive值。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_281` — **contract equivalent**。进入 default serializer 的 production Pydantic models最终字段仅为 JSON-native dict/list/string/bool/int/finite float/None；外层 `json.dumps`/loads又规范化容器。无 datetime、Decimal、Path、enum或bytes字段可产生模式差异，后续 schema/digest相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_283",
+      "reason": "**model-domain equivalent**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_281`；大小写变化在当前正式字段域不改变 body、validation、digest或 return。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_281` — **contract equivalent**。进入 default serializer 的 production Pydantic models最终字段仅为 JSON-native dict/list/string/bool/int/finite float/None；外层 `json.dumps`/loads又规范化容器。无 datetime、Decimal、Path、enum或bytes字段可产生模式差异，后续 schema/digest相同。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_292",
+      "reason": "**缺口**。None是 falsy，与 `parents=False` 行为相同；当合法调用给定尚不存在的 nested output directory 时，原码建立父层后写五文件，mutant在 mkdir抛 `FileNotFoundError`，无法 return。没有 downstream guard补建目录。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_293",
+      "reason": "**缺口**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_292`；这里没有把 None 的 falsy变化误当不同语义，两 mutant是同一可观察缺失父目录行为。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_292` — **缺口**。None是 falsy，与 `parents=False` 行为相同；当合法调用给定尚不存在的 nested output directory 时，原码建立父层后写五文件，mutant在 mkdir抛 `FileNotFoundError`，无法 return。没有 downstream guard补建目录。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_301",
+      "reason": "**contract equivalent**。经 `DOCUMENT_TYPES[name].model_validate` 后的五种正式 document仍只含 JSON-native schema字段；`canonical_json_bytes`获得相同 mapping与 bytes，return的 `result`也在 dump前已构造。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_302",
+      "reason": "**model-domain equivalent**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_301`；无可合法注入的 JSON-sensitive field。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_301` — **contract equivalent**。经 `DOCUMENT_TYPES[name].model_validate` 后的五种正式 document仍只含 JSON-native schema字段；`canonical_json_bytes`获得相同 mapping与 bytes，return的 `result`也在 dump前已构造。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_303",
+      "reason": "**model-domain equivalent**。同 `bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_301`，写出 bytes与 return不变。 完整依據：`bevcalib.analysis.aggregate.x_aggregate_formal_results__mutmut_301` — **contract equivalent**。经 `DOCUMENT_TYPES[name].model_validate` 后的五种正式 document仍只含 JSON-native schema字段；`canonical_json_bytes`获得相同 mapping与 bytes，return的 `result`也在 dump前已构造。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.geometry.projection.x_validate_intrinsic__mutmut_3",
+      "reason": "**缺口**。虽 annotation写 `Float64Array`，repo明文及 `test_a_single_precision_intrinsic_is_promoted_before_inversion` 将 float32 intrinsic promotion列为入口契约；nuScenes/torch边界会提供 float32。mutant直接返回 float32，ground-contact inversion会在单精度执行，违反已声明数值精度并可改变最终 geometry。"
+    },
+    {
+      "classification": "gap",
+      "key": "bevcalib.geometry.projection.x_validate_intrinsic__mutmut_5",
+      "reason": "**缺口**。与 `bevcalib.geometry.projection.x_validate_intrinsic__mutmut_3` 完全相同的合法 float32入口及 return dtype/下游 inversion差异。 完整依據：`bevcalib.geometry.projection.x_validate_intrinsic__mutmut_3` — **缺口**。虽 annotation写 `Float64Array`，repo明文及 `test_a_single_precision_intrinsic_is_promoted_before_inversion` 将 float32 intrinsic promotion列为入口契约；nuScenes/torch边界会提供 float32。mutant直接返回 float32，ground-contact inversion会在单精度执行，违反已声明数值精度并可改变最终 geometry。"
+    },
+    {
+      "classification": "unknown",
+      "key": "bevcalib.geometry.quaternions.x_normalize_quaternion_wxyz__mutmut_25",
+      "reason": "**unknown**。只在 normalized component恰落 tolerance边界且其符号与后续首个 significant component冲突时改变 canonical tuple；合法输入是 finite四元数且norm达门槛，但仅静态阅读不足以证明 binary64归一化后该精确边界可达。不能凭代数实数构造或忽略浮点 guard判等价。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.geometry.quaternions.x_normalize_quaternion_wxyz__mutmut_27",
+      "reason": "**runtime equivalent**。`significant`定义保证被索引分量 `abs(unit) > 1e-12`，因此绝不为0；两分支判定、canonical tuple、所有 callers及 return相同。"
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_statistic__mutmut_3",
+      "reason": "**contract-domain equivalent**。`statistic` 的 production callers 全部先由 validated result models組成 Python `float` lists（pose components、pixel errors、edge score、ground-contact errors）；對此 documented model domain，NumPy預設即建立 float64 array，四個 summary values與 JSON輸出相同。沒有用契約外 float32 ndarray製造差異。Source refs: `src/bevcalib/metrics/summary.py:25,44-85`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.metrics.summary.x_statistic__mutmut_5",
+      "reason": "**contract-domain equivalent**。省略 dtype 與 `bevcalib.metrics.summary.x_statistic__mutmut_3` 的 `dtype=None` 在同一 production float-list domain完全相同。Source refs: `src/bevcalib/metrics/summary.py:25,44-85`. 完整依據：`bevcalib.metrics.summary.x_statistic__mutmut_3` — **contract-domain equivalent**。`statistic` 的 production callers 全部先由 validated result models組成 Python `float` lists（pose components、pixel errors、edge score、ground-contact errors）；對此 documented model domain，NumPy預設即建立 float64 array，四個 summary values與 JSON輸出相同。沒有用契約外 float32 ndarray製造差異。Source refs: `src/bevcalib/metrics/summary.py:25,44-85`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_9",
+      "reason": "**contract-domain equivalent**。參數公開 annotation 是 `Float64Array`；production field由 `ImageEdgeEvidence.distance_field: NDArray[np.float64]` 提供，或由 SciPy EDT 的 float64結果提供。因此 shape、sampled distances、sort/mean與 score不變。Source refs: `src/bevcalib/operators/lidar_edges.py:88-145`, `src/bevcalib/operators/image_edges.py:16-40`, `src/bevcalib/evaluation_measurements.py:90,134-136`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_11",
+      "reason": "**contract-domain equivalent**。與 `bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_9` 相同；省略 dtype 和 `dtype=None` 對既有 float64 ndarray均保留 dtype和值。Source refs: `src/bevcalib/operators/lidar_edges.py:114-145`. 完整依據：`bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_9` — **contract-domain equivalent**。參數公開 annotation 是 `Float64Array`；production field由 `ImageEdgeEvidence.distance_field: NDArray[np.float64]` 提供，或由 SciPy EDT 的 float64結果提供。因此 shape、sampled distances、sort/mean與 score不變。Source refs: `src/bevcalib/operators/lidar_edges.py:88-145`, `src/bevcalib/operators/image_edges.py:16-40`, `src/bevcalib/evaluation_measurements.py:90,134-136`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_18",
+      "reason": "**contract equivalent**。仍在相同 invalid shape上拋 `ValueError`，且保留完整語義片段 `distance field must be a nonempty two-dimensional array`；repository未宣告整句 byte identity。Source refs: `src/bevcalib/operators/lidar_edges.py:126-128`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_22",
+      "reason": "**contract-domain equivalent**。參數 annotation 是 `Float64Array`，production callers傳入 `project_camera` 的 float64 `uv`切片；對此合法域，conversion、floor/indexing、validation和 score相同。Source refs: `src/bevcalib/operators/lidar_edges.py:114-145`, `src/bevcalib/evaluation_measurements.py:90,134-136`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_24",
+      "reason": "**contract-domain equivalent**。與 `bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_22` 相同；省略 dtype 不改合法 float64 UV。Source refs: `src/bevcalib/operators/lidar_edges.py:129-145`. 完整依據：`bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_22` — **contract-domain equivalent**。參數 annotation 是 `Float64Array`，production callers傳入 `project_camera` 的 float64 `uv`切片；對此合法域，conversion、floor/indexing、validation和 score相同。Source refs: `src/bevcalib/operators/lidar_edges.py:114-145`, `src/bevcalib/evaluation_measurements.py:90,134-136`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_field_score__mutmut_74",
+      "reason": "**contract equivalent**。相同 nonfinite/negative sampled value仍拋 `ValueError`，完整語義片段 `sampled distance field values must be finite and nonnegative`仍存在；無整句 byte-exact contract。Source refs: `src/bevcalib/operators/lidar_edges.py:142-145`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_transform_score__mutmut_20",
+      "reason": "**runtime equivalent**。`scipy.ndimage.distance_transform_edt` 在此未提供 output buffer，回傳 float64 distances；`dtype=None`保持同一 dtype和值，callee又依 float64 contract接收。Source refs: `src/bevcalib/operators/lidar_edges.py:88-110`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.operators.lidar_edges.x_trimmed_distance_transform_score__mutmut_22",
+      "reason": "**runtime equivalent**。與 `bevcalib.operators.lidar_edges.x_trimmed_distance_transform_score__mutmut_20` 相同；省略 dtype和 `dtype=None` 對 EDT float64 output相同。Source refs: `src/bevcalib/operators/lidar_edges.py:88-110`. 完整依據：`bevcalib.operators.lidar_edges.x_trimmed_distance_transform_score__mutmut_20` — **runtime equivalent**。`scipy.ndimage.distance_transform_edt` 在此未提供 output buffer，回傳 float64 distances；`dtype=None`保持同一 dtype和值，callee又依 float64 contract接收。Source refs: `src/bevcalib/operators/lidar_edges.py:88-110`."
+    },
+    {
+      "classification": "equivalent",
+      "key": "bevcalib.perturbations.schedule.x_parse_perturbation_matrix__mutmut_27",
+      "reason": "**contract equivalent**。matrix比較、拒絕條件和 `ValueError` 類型不變，完整語義片段 `referenced perturbation matrix differs from supported compiled V1 values`仍存在；未宣告整句 byte identity。Source refs: `src/bevcalib/perturbations/schedule.py:79-100`."
+    }
+  ],
+  "raw_survivor_count": 183,
+  "schema_version": "bevcalib-mutation-survivor-review/v1",
+  "score_treatment": "All 183 entries remain raw survivors in the automatic mutation denominator; none is counted as killed.",
+  "source": {
+    "base_commit": "5e9ea40f37d62e7ce4c4c5c3f4ec83cb64dd90a3",
+    "patched_index_tree": "a45a79ff19223726fd7de15888e94831af0ceb45"
+  }
+}

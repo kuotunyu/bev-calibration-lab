@@ -28,8 +28,23 @@ def test_constant_image_is_explicitly_unmeasurable() -> None:
 
     evidence = image_edge_evidence(np.full((4, 6, 3), 128, dtype=np.uint8))
     assert not evidence.mask.any()
+    assert evidence.mask.shape == (4, 6)
+    assert evidence.mask.dtype == np.bool_
     assert evidence.threshold is None
     assert evidence.distance_field is None
+
+
+def test_edge_threshold_keeps_strong_contrast_and_rejects_weak_contrast() -> None:
+    from bevcalib.operators.image_edges import image_edge_evidence
+
+    rgb = np.zeros((6, 12, 3), dtype=np.uint8)
+    rgb[:, 4:8] = 10
+    rgb[:, 8:] = 255
+
+    evidence = image_edge_evidence(rgb, with_distance_field=False)
+
+    assert not evidence.mask[:, 3:5].any()
+    assert evidence.mask[:, 7:9].all()
 
 
 @pytest.mark.parametrize(

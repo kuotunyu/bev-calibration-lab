@@ -3,10 +3,88 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from tests.contract.test_formal_artifact_set import RUNS
 from tests.unit.metrics.test_summary import run_fixture
+
+
+class _StopAfterBoundary(Exception):
+    pass
+
+
+def test_aggregate_defaults_to_observed(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    import bevcalib.analysis.aggregate as aggregate_module
+
+    calls = []
+
+    def loader(path, *, synthetic_fixture, **_kwargs):
+        calls.append((path, synthetic_fixture))
+        raise _StopAfterBoundary
+
+    monkeypatch.setattr(aggregate_module, "load_run_set", loader)
+
+    with pytest.raises(_StopAfterBoundary):
+        aggregate_module.aggregate_formal_results(tmp_path / "input", tmp_path / "output")
+
+    assert calls == [(tmp_path / "input", False)]
+
+
+def test_aggregate_constructs_real_observed_identity_from_complete_run_inventory(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import bevcalib.analysis.aggregate as aggregate_module
+    from bevcalib.artifacts.documents import FormalIdentity
+
+    measurements = SimpleNamespace(model_dump=lambda **_kwargs: {"policy": "fixed"})
+    producer = SimpleNamespace(commit="a" * 40, lock_sha256="b" * 64)
+    specifications = (
+        ("identity", None, None),
+        ("classical", None, None),
+        ("learned", 17, "1" * 64),
+        ("learned", 42, "2" * 64),
+        ("learned", 73, "3" * 64),
+    )
+    runs = tuple(
+        SimpleNamespace(
+            label=method if seed is None else f"{method}-{seed}",
+            marker=SimpleNamespace(
+                identity=SimpleNamespace(
+                    method=method,
+                    seed=seed,
+                    checkpoint_sha256=checkpoint,
+                    run_id=f"{index + 4:x}" * 64,
+                    measurements=measurements,
+                    producer=producer,
+                )
+            ),
+            source_complete_sha256=f"{index + 9:x}" * 64,
+        )
+        for index, (method, seed, checkpoint) in enumerate(specifications)
+    )
+    manifest = SimpleNamespace(
+        protocol_hash="c" * 64,
+        manifest_sha256="d" * 64,
+        dataset_version="v1.0-trainval",
+        scenes=tuple(SimpleNamespace(sample_tokens=(str(index),)) for index in range(30)),
+    )
+    captured = []
+
+    def identity_boundary(**kwargs):
+        captured.append(FormalIdentity(**kwargs))
+        raise _StopAfterBoundary
+
+    monkeypatch.setattr(
+        aggregate_module, "load_run_set", lambda *_args, **_kwargs: (manifest, runs)
+    )
+    monkeypatch.setattr(aggregate_module, "FormalIdentity", identity_boundary)
+
+    with pytest.raises(_StopAfterBoundary):
+        aggregate_module.aggregate_formal_results(tmp_path / "input", tmp_path / "output")
+
+    assert captured[0].evidence_type == "observed"
 
 
 @pytest.fixture(scope="module")
@@ -18,6 +96,62 @@ def payloads(tmp_path_factory):
     return aggregate_formal_results(root, directory / "formal", synthetic_fixture=True).model_dump(
         mode="json"
     )
+
+
+def test_aggregate_exclusion_counts_sum_legal_fixture_rows(payloads) -> None:
+    exclusions = payloads["exclusions"]["runs"]["identity"]["x:0.1"]
+    assert exclusions["projection_input_points"] == 6
+    assert exclusions["within_row_pixel_error_count"] == 4
+
+
+def test_aggregate_writes_five_documents_beneath_missing_parent(tmp_path: Path) -> None:
+    from bevcalib.analysis.aggregate import aggregate_formal_results
+
+    root, _ = run_fixture(tmp_path, RUNS)
+    output_dir = tmp_path / "new-parent" / "formal"
+    aggregate_formal_results(root, output_dir, synthetic_fixture=True)
+
+    assert {path.name for path in output_dir.iterdir()} == {
+        "metrics.json",
+        "intervals.json",
+        "recovery.json",
+        "timing.json",
+        "exclusions.json",
+    }
+
+
+def test_aggregate_preserves_higher_is_better_improvement_direction(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import tests.unit.metrics.test_summary as fixture_module
+
+    from bevcalib.analysis.aggregate import aggregate_formal_results
+    from bevcalib.artifacts.results import CalibrationResultV2
+
+    original_rows_for = fixture_module.rows_for
+    calls = 0
+
+    def rows_with_better_classical_edges(manifest):
+        nonlocal calls
+        calls += 1
+        rows = original_rows_for(manifest)
+        if calls != 2:
+            return rows
+        return tuple(
+            CalibrationResultV2.model_validate(row.model_dump() | {"edge_alignment_score": -1.0})
+            if row.edge_alignment_score is not None
+            else row
+            for row in rows
+        )
+
+    monkeypatch.setattr(fixture_module, "rows_for", rows_with_better_classical_edges)
+    root, _ = run_fixture(tmp_path, RUNS)
+    documents = aggregate_formal_results(
+        root, tmp_path / "formal", synthetic_fixture=True
+    ).model_dump(mode="json")
+
+    comparison = documents["intervals"]["comparisons"]["identity->classical"]["x:0.1"]
+    assert comparison["edge_score_px"]["improvement"] > 0
 
 
 def rehash(body):

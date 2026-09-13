@@ -1,21 +1,91 @@
 # Mutation audit
 
-## Release refresh is pending
+## 2026 release refresh: terminal base run, 30 named amendments verified
 
-The scores below belong to the explicitly named historical commits. They do not
-validate the current formal-analysis or publication candidate. Before the next
-release, retain the five original target families and add the numerical reductions
-and pairing in `analysis/estimands.py` and `analysis/aggregate.py`. Record the actual
-Linux mutmut version, effective target inventory, pilot timings, and every mutant
-status against the final source revision. The configuration and refreshed run are
-not complete yet.
+The expanded campaign now includes the historical pure-core targets plus the
+numerical reductions and pairing in `analysis/estimands.py` and
+`analysis/aggregate.py`. Its terminal base measurement used mutmut 3.7.0 on
+commit `5e9ea40f37d62e7ce4c4c5c3f4ec83cb64dd90a3` with patched index tree
+`a45a79ff19223726fd7de15888e94831af0ceb45`. The single-worker CPU run completed
+in 4,733.12 seconds.
 
-The historical five-minute runtime below is not an estimate for that expanded
-scope. Limit worker count explicitly after resource admission; the inspected
-mutmut 3.7.0 implementation defaults to the machine's CPU count when no limit is
-provided. Reconfirm the CLI and configuration in the actual Linux environment
-before running it. Do not execute mutation in a shared working tree or omit the
-training dependency merely to reduce runtime.
+| Status | Count | Share of generated mutants |
+| --- | ---: | ---: |
+| Generated | 2,729 | |
+| **Killed by tests** | **2,546** | **93.29%** |
+| Survived | **183** | **6.71%** |
+| Timed out | 0 | 0.00% |
+| Exit-code 3 / suspicious | 0 | 0.00% |
+
+The release threshold is calculated from killed mutants alone. All 183 raw
+survivors remain in the denominator: review classified 133 as equivalent, 34 as
+observable test gaps and 16 as unknown, but none of those judgments is converted
+into a kill. The complete per-mutant terminal inventory is published in
+[`mutation-full-raw-inventory.json`](mutation-full-raw-inventory.json), and all
+183 survivor keys, classifications and reasons are in
+[`mutation-survivor-review.json`](mutation-survivor-review.json).
+
+This table remains the terminal base measurement, not a fresh full run of the
+final revision. Thirty distinct named survivors were rerun against test-only
+amendments: 28 were rejected in amendment02 and the remaining two were rejected
+in amendment03. See [`mutation-amendments.json`](mutation-amendments.json) for
+the guarded per-key exits and exact source/test/configuration identities. These
+named results do not change the 2,729-mutant denominator, 2,546 base kills, or
+93.29% base score; a fresh full final-revision campaign was not run.
+
+The final formatting gate subsequently reformatted two test files. Their
+parsed Python ASTs were identical before and after formatting. The amendment
+record retains both the measured hashes and final hashes rather than claiming
+that the formatted bytes were used in the earlier mutation measurements.
+
+Six named semantic policy probes are also separate evidence: whole-group range
+span, range-bin membership, the inclusive 80 m cutoff, common support across all
+labels, higher-is-better direction and the fixed three-seed mean. They cover
+module-level policy or deliberately named semantic changes which automatic
+mutation does not fully represent. Their results must never be added to the
+2,729 generated mutants, 2,546 kills or killed-only percentage. This campaign
+was CPU-only and does not establish GPU or CUDA-specific behaviour.
+
+### Reproducing the source state
+
+The base tree was not a clean commit tree: it was the named commit plus the
+two-file scope patch published as
+[`mutation-base-scope.patch`](mutation-base-scope.patch). Its SHA-256 is
+`09d5f3c2675b541128a562bfa66b92a301f9801d022a31664621e19aa3e646c9`.
+The raw inventory records before/after hashes for both files. Apply that patch
+and require `git write-tree` to equal `a45a79ff19223726fd7de15888e94831af0ceb45`
+before attempting to reproduce this base measurement.
+
+For the eventual final committed revision, run a new measurement in a clean,
+disposable Linux clone. The commit tree must equal the index tree:
+
+```bash
+set -euo pipefail
+expected_head="${1:?pass the full final commit}"
+expected_tree="$(git rev-parse "$expected_head^{tree}")"
+test "$(git rev-parse HEAD)" = "$expected_head"
+test "$(git write-tree)" = "$expected_tree"
+git diff --exit-code
+test -z "$(git status --porcelain)"
+
+export CUDA_VISIBLE_DEVICES=''
+export BEVCALIB_DEVICE=cpu
+export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMEXPR_NUM_THREADS=1
+unset PYTHONPATH NUSCENES_ROOT BEVCALIB_PRETRAINED_WEIGHTS
+
+uv lock --check
+uv sync --frozen --all-groups --all-extras --python 3.12.13
+uv run --frozen --all-groups --all-extras mutmut run --max-children 1
+uv run --frozen --all-groups --all-extras mutmut results --all true
+```
+
+That command produces a new measurement; it does not retroactively reproduce
+the patched base table. Archive the generated sources, `.meta` files, mutmut
+statistics and test/configuration files before applying further amendments.
+
+The remainder of this document records the earlier 1,703-mutant campaign and
+what its survivors taught. Those historical counts remain evidence for their
+named commits; they are not silently replaced by the expanded measurement.
 
 ## Historical scope and evidence
 

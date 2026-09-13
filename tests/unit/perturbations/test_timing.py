@@ -146,7 +146,7 @@ def test_asking_with_no_lidar_sweeps_records_missing_evidence() -> None:
     from bevcalib.perturbations.timing import select_lidar_for_timing_fault
 
     result = select_lidar_for_timing_fault((), REFERENCE_US, fault(time_ms=50))
-    assert not result.valid
+    assert result.valid is False
     assert result.reason == "no_available_lidar"
     assert result.requested_offset_ms == 50
     assert result.selected_sample_data_token is None

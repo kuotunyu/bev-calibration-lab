@@ -225,6 +225,16 @@ def test_each_new_stem_channel_is_the_mean_of_the_scaled_colour_channels() -> No
     )
 
 
+def test_stem_weight_returns_float64_for_the_float32_production_input() -> None:
+    from bevcalib.correctors.learned import five_channel_stem_weight
+
+    existing = np.ones((2, 3, 1, 1), dtype=np.float32)
+
+    adapted = five_channel_stem_weight(existing)
+
+    assert adapted.dtype == np.dtype(np.float64)
+
+
 def test_zero_output_kernels_remain_zero_without_nan() -> None:
     from bevcalib.correctors.learned import five_channel_stem_weight
 

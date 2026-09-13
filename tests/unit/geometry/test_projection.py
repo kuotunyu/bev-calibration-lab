@@ -386,11 +386,13 @@ def test_a_single_precision_intrinsic_is_promoted_before_inversion() -> None:
     particular input.
     """
 
-    from bevcalib.geometry.projection import project_camera
+    from bevcalib.geometry.projection import project_camera, validate_intrinsic
 
     points = np.array([[1.0, 0.5, 10.0]])
+    intrinsic = INTRINSIC.astype(np.float32)
 
-    single = project_camera(points, INTRINSIC.astype(np.float32), IMAGE_SIZE)
-    promoted = project_camera(points, INTRINSIC.astype(np.float32).astype(np.float64), IMAGE_SIZE)
+    single = project_camera(points, intrinsic, IMAGE_SIZE)
+    promoted = project_camera(points, intrinsic.astype(np.float64), IMAGE_SIZE)
 
+    assert validate_intrinsic(intrinsic).dtype == np.dtype(np.float64)
     np.testing.assert_array_equal(single.uv, promoted.uv)
