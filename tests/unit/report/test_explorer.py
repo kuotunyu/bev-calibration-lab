@@ -156,3 +156,47 @@ def test_figure_keeps_unavailable_reconstruction_explicit(monkeypatch: pytest.Mo
     figure = explorer_figure()
     assert figure["data"][3]["x"] == [None, None, None]
     assert "unavailable" in figure["layout"]["title"]["text"]
+
+
+def test_coincident_markers_are_distinguishable_without_moving_coordinates() -> None:
+    from bevcalib.report.explorer import explorer_figure
+
+    traces = explorer_figure()["data"]
+    for fixed, projected in ((traces[0], traces[1]), (traces[2], traces[3])):
+        assert fixed["x"] == projected["x"]
+        assert fixed["y"] == pytest.approx(projected["y"])
+        assert fixed["marker"]["symbol"] == "circle-open"
+        assert fixed["marker"]["size"] >= projected["marker"]["size"] + 8
+
+
+def test_explorer_controls_and_readout_are_outside_two_plot_containers() -> None:
+    from html.parser import HTMLParser
+
+    from bevcalib.report.explorer import build_explorer
+
+    class Elements(HTMLParser):
+        def __init__(self) -> None:
+            super().__init__()
+            self.ids: dict[str, tuple[str, dict[str, str | None]]] = {}
+
+        def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+            attributes = dict(attrs)
+            identity = attributes.get("id")
+            if identity:
+                self.ids[identity] = (tag, attributes)
+
+    html = build_explorer()
+    elements = Elements()
+    elements.feed(html)
+    for identity in ("camera-plot", "ground-plot", "explorer-summary", "point-values"):
+        assert identity in elements.ids
+    tag, attributes = elements.ids["fault-level"]
+    assert tag == "input" and attributes["type"] == "range"
+    assert elements.ids["reset-fault"][0] == "button"
+    assert elements.ids["show-fixed"][1]["type"] == "checkbox"
+    assert elements.ids["show-projected"][1]["type"] == "checkbox"
+    for point in range(3):
+        assert f"point-{point}-ground" in elements.ids
+    assert 'id="explorer-states" type="application/json"' in html
+    assert "切換軸會回到零故障" in html
+    assert "重合" in html

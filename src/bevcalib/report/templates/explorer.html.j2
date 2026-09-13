@@ -2,21 +2,106 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Calibration explorer · synthetic</title>
 <style>
-body{margin:0;background:#f4f8fa;color:#203852;font:16px/1.6 Arial,sans-serif}
-main{max-width:1200px;margin:auto;padding:24px}h1{font-size:32px;margin:0}
-p{max-width:900px}section{background:white;border:1px solid #cddce5;overflow:auto}
-footer{font-size:13px;margin-top:24px}
-</style></head><body><main>
-<h1>標定偏差如何改變投影？</h1><p>synthetic · 固定觀測、已知地面</p>
-<p>選擇一個軸，再移動離散 slider。切換軸會回到零故障。左圖比較固定像素與假設投影，
-右圖比較真實地面點與重建位置；滑鼠移到橘色點可看個別 BEV 誤差。</p>
-<section aria-label="Calibration geometry explorer">{{ plot | safe }}</section>
-<p>場景：平面 z=0；相機高度 1.5 m、朝向 +X；X 向前、Y 向左、Z 向上。
-故障在此合成場景的 global/source frame 注入（true ∘ fault）。三個觀測永遠不變。
-旋轉以 degrees、平移以 m 表示；不支援多軸插值或 timing。</p>
-<p>這是自建幾何示範，沒有使用 nuScenes 影像、點雲或模型權重。
-BEV 誤差不是偵測準確率，不代表 learned corrector 或實車安全表現。
-右圖座標範圍隨條件調整以顯示全部點；比較不同條件時請以公尺讀數為準。</p>
-<footer>Plotly.js is bundled for offline use. Its copyright and MIT license notice
-are retained in the embedded library. First-party synthetic geometry: bev-calibration-lab.</footer>
-</main></body></html>
+*{box-sizing:border-box}body{margin:0;background:#f4f8fa;color:#203852;font:16px/1.6 Arial,sans-serif}
+main{max-width:1200px;margin:auto;padding:24px}h1{font-size:clamp(24px,4vw,32px);line-height:1.3;margin:0 0 12px}
+h2{font-size:19px;line-height:1.4;margin:0}p{margin:8px 0 16px}button,input{font:inherit}
+button{min-height:44px;padding:8px 16px;border:1px solid #a8becb;background:white;color:#203852;cursor:pointer;border-radius:4px}
+button[aria-pressed=true]{background:#203852;color:white;border-color:#203852}button:focus-visible,input:focus-visible{outline:3px solid #087e8b;outline-offset:3px}
+.controls{padding:20px;background:white;border:1px solid #cddce5;display:grid;gap:20px;margin-top:24px}
+.axis-buttons{display:flex;flex-wrap:wrap;gap:8px}.level-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+#fault-level{display:block;width:100%;min-width:0;min-height:44px;accent-color:#087e8b}.endpoints{display:flex;justify-content:space-between;font-size:14px}
+#explorer-summary{display:block;overflow-wrap:anywhere;font-size:18px;font-weight:600}.legend{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.legend label{display:flex;align-items:center;gap:8px;min-height:44px}.legend input{width:18px;height:18px}.symbol{width:24px;height:24px;flex:none}
+.plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px;margin-top:24px}
+.plot-panel{min-width:0;background:white;border:1px solid #cddce5;padding:16px 8px 8px}.plot-panel h2,.plot-panel p{margin-left:8px;margin-right:8px}.plot-panel p{font-size:14px;color:#40586e}
+.plot{width:100%;height:400px;min-width:0}.point-readout{margin-top:24px}.point-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;margin-top:12px}.point-grid article{border-top:2px solid #a8becb;padding-top:8px;overflow-wrap:anywhere}.point-grid p{font-size:14px;margin:4px 0}
+details{margin-top:24px;border-top:1px solid #cddce5;padding-top:16px}summary{cursor:pointer;font-weight:bold;min-height:44px}footer{font-size:13px;margin-top:24px;color:#40586e}
+@media(max-width:520px){main{padding:16px}.controls{padding:16px}.plot{height:340px}}
+</style></head><body><main id="calibration-explorer">
+<h1>標定偏差如何改變投影？</h1><p><strong>synthetic · 固定觀測、已知地面</strong></p>
+<p>先選一個軸，再調整偏差。切換軸會回到零故障。兩圖分別比較相機投影與地面重建位置。</p>
+<section class="controls" aria-label="標定偏差控制">
+<div><p id="axis-label">1. 選擇偏差軸</p><div class="axis-buttons" role="group" aria-labelledby="axis-label">
+{% for axis in ('roll','pitch','yaw','x','y','z') %}<button type="button" data-axis="{{ axis }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ axis }}</button>{% endfor %}
+</div></div>
+<div><div class="level-row"><label for="fault-level">2. 偏差量：<output id="level-value"></output></label><button id="reset-fault" type="button">歸零</button></div>
+<input id="fault-level" type="range" min="0" max="0" step="1" value="0" aria-describedby="level-help">
+<div class="endpoints"><span id="level-min"></span><span id="level-max"></span></div>
+<p id="level-help">滑桿使用預先計算的離散條件；也可使用鍵盤方向鍵逐格調整。</p></div>
+<output id="explorer-summary" aria-live="polite"></output>
+<div><div class="legend" aria-label="圖層顯示">
+<label><input id="show-fixed" type="checkbox" checked><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#087e8b" stroke-width="2"/></svg>固定觀測／已知地面</label>
+<label><input id="show-projected" type="checkbox" checked><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8L16 16M16 8L8 16" stroke="#c34b27" stroke-width="3"/></svg>假設投影／重建位置</label>
+</div><p>空心圈較大、叉較小；重合表示座標相同或很接近。可暫時隱藏一層比較，點位不會為了排版而移動。</p></div>
+</section>
+<section class="plots" aria-label="Calibration geometry explorer">
+<article class="plot-panel"><h2>相機平面</h2><p>水平：Image u（px） · 垂直：Image v（px），向下增加</p><div id="camera-plot" class="plot"></div></article>
+<article class="plot-panel"><h2>地面重建</h2><p>水平：Lateral Y（m） · 垂直：Forward X（m）</p><div id="ground-plot" class="plot"></div></article>
+</section>
+<section class="point-readout" aria-labelledby="point-heading"><h2 id="point-heading">逐點比較</h2><p>讀數與圖使用同一份資料；地面位置依序為 Y、X（m）。</p><div id="point-values" class="point-grid">
+{% for point in range(3) %}<article><strong>點 {{ point + 1 }}</strong><p id="point-{{ point }}-fixed"></p><p id="point-{{ point }}-projected"></p><p id="point-{{ point }}-ground"></p><p id="point-{{ point }}-error"></p></article>{% endfor %}
+</div></section>
+<details><summary>場景設定與解讀限制</summary><p>場景：平面 z=0；相機高度 1.5 m、朝向 +X；X 向前、Y 向左、Z 向上。故障在此合成場景的 global/source frame 注入（true ∘ fault）。三個觀測永遠不變。旋轉以 degrees、平移以 m 表示；不支援多軸插值或 timing。</p>
+<p>這是自建幾何示範，沒有使用 nuScenes 影像、點雲或模型權重。BEV 誤差不是偵測準確率，不代表 learned corrector 或實車安全表現。地面圖座標範圍隨條件調整以顯示全部點；比較不同條件時請以公尺讀數為準。</p></details>
+<footer>Plotly.js is bundled for offline use. Its copyright and MIT license notice are retained in the embedded library. First-party synthetic geometry: bev-calibration-lab.</footer>
+<script>{{ plotly_js | safe }}</script>
+<script id="explorer-states" type="application/json">{{ figure | tojson }}</script>
+<script id="explorer-controls">
+(() => {
+  'use strict';
+  const model = JSON.parse(document.getElementById('explorer-states').textContent);
+  const axes = model.layout.updatemenus[0].buttons;
+  const slider = document.getElementById('fault-level');
+  const fixed = document.getElementById('show-fixed');
+  const projected = document.getElementById('show-projected');
+  const buttons = Array.from(document.querySelectorAll('[data-axis]'));
+  let selected = axes[0];
+  const number = value => value === null ? 'unavailable' : Number(value).toFixed(3);
+  function render() {
+    const step = selected.args[1].sliders[0].steps[Number(slider.value)];
+    const [data, layout] = step.args;
+    const unit = ['roll', 'pitch', 'yaw'].includes(selected.label) ? 'degrees' : 'm';
+    const label = `${selected.label} ${step.label} ${unit}`;
+    document.getElementById('level-value').textContent = `${step.label} ${unit}`;
+    slider.setAttribute('aria-valuetext', label);
+    document.getElementById('explorer-summary').textContent = layout.title.text;
+    for (let panel = 0; panel < 2; panel++) {
+      const offset = panel * 2;
+      const traces = model.data.slice(offset, offset + 2).map((trace, index) => ({
+        ...trace, xaxis: 'x', yaxis: 'y', x: data.x[offset + index],
+        y: data.y[offset + index], text: data.text[offset + index],
+        visible: index === 0 ? fixed.checked : projected.checked
+      }));
+      Plotly.react(panel === 0 ? 'camera-plot' : 'ground-plot', traces, {
+        autosize: true, margin: {l: 48, r: 16, t: 12, b: 40},
+        paper_bgcolor: '#ffffff', plot_bgcolor: '#eef4f7', showlegend: false,
+        font: {family: 'Arial, sans-serif', color: '#203852'},
+        xaxis: {range: panel === 0 ? [0, 800] : layout.xaxis2.range, fixedrange: true},
+        yaxis: {range: panel === 0 ? [480, 0] : layout.yaxis2.range, fixedrange: true}
+      }, {responsive: true, displayModeBar: false});
+    }
+    for (let i = 0; i < 3; i++) {
+      document.getElementById(`point-${i}-fixed`).textContent = `固定像素 (${number(data.x[0][i])}, ${number(data.y[0][i])})`;
+      document.getElementById(`point-${i}-projected`).textContent = `投影像素 (${number(data.x[1][i])}, ${number(data.y[1][i])})`;
+      document.getElementById(`point-${i}-ground`).textContent = `已知地面 (${number(data.x[2][i])}, ${number(data.y[2][i])})`;
+      document.getElementById(`point-${i}-error`).textContent = `重建 (${number(data.x[3][i])}, ${number(data.y[3][i])}) · ${data.text[3][i]}`;
+    }
+  }
+  function selectAxis(axis) {
+    selected = axes.find(item => item.label === axis);
+    const steps = selected.args[1].sliders[0];
+    slider.max = String(steps.steps.length - 1);
+    slider.value = String(steps.active);
+    document.getElementById('level-min').textContent = steps.steps[0].label;
+    document.getElementById('level-max').textContent = steps.steps[steps.steps.length - 1].label;
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.axis === axis)));
+    render();
+  }
+  buttons.forEach(button => button.addEventListener('click', () => selectAxis(button.dataset.axis)));
+  slider.addEventListener('input', render);
+  fixed.addEventListener('change', render);
+  projected.addEventListener('change', render);
+  document.getElementById('reset-fault').addEventListener('click', () => selectAxis(selected.label));
+  selectAxis(selected.label);
+})();
+</script></main></body></html>

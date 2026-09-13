@@ -138,7 +138,12 @@ def explorer_figure() -> dict[str, Any]:
                 "x": initial_data["x"][index],
                 "y": initial_data["y"][index],
                 "text": initial_data["text"][index],
-                "marker": {"color": color, "symbol": symbol, "size": 12, "line": {"width": 2}},
+                "marker": {
+                    "color": color,
+                    "symbol": symbol,
+                    "size": 20 if index % 2 == 0 else 10,
+                    "line": {"width": 2},
+                },
                 "xaxis": "x" if index < 2 else "x2",
                 "yaxis": "y" if index < 2 else "y2",
                 "hovertemplate": "%{text}<br>(%{x:.3f}, %{y:.3f})<extra>%{fullData.name}</extra>",
@@ -166,14 +171,9 @@ def explorer_figure() -> dict[str, Any]:
 def build_explorer() -> str:
     """Return one deterministic offline document with the bundled library notice."""
     from jinja2 import Environment, PackageLoader
-    from plotly.io import to_html
+    from plotly.offline import get_plotlyjs
 
-    plot = to_html(
-        explorer_figure(),
-        include_plotlyjs=True,
-        full_html=False,
-        div_id="calibration-explorer",
-        config={"responsive": True, "displaylogo": False},
-    )
     environment = Environment(loader=PackageLoader("bevcalib.report", "templates"), autoescape=True)
-    return environment.get_template("explorer.html.j2").render(plot=plot)
+    return environment.get_template("explorer.html.j2").render(
+        figure=explorer_figure(), plotly_js=get_plotlyjs()
+    )
