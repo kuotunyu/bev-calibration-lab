@@ -1,0 +1,118 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        shell: bash
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      MPLBACKEND: Agg
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install pinned Python and uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d
+        with:
+          version: 0.11.18
+          python-version: 3.12.13
+
+      - name: Check lock freshness
+        run: uv lock --check
+
+      - name: Sync the frozen environment
+        run: uv sync --frozen --all-groups --all-extras --python 3.12.13
+
+      - name: Verify the locked build backend
+        run: uv run --frozen python -m bevcalib.release backend --project pyproject.toml
+
+      - name: Run the full repository gate
+        run: uv run --frozen python -m bevcalib.dev verify
+
+      - name: Bind the build to the pushed tag
+        run: |
+          test "$GITHUB_REF_TYPE" = "tag"
+          test "$GITHUB_REF" = "refs/tags/$GITHUB_REF_NAME"
+          tag_commit="$(git rev-parse "$GITHUB_REF^{commit}")"
+          test "$(git rev-parse HEAD)" = "$tag_commit"
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct "$GITHUB_REF^{commit}")"
+          test -n "$SOURCE_DATE_EPOCH"
+          echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> "$GITHUB_ENV"
+
+      - name: Build the first distribution set
+        run: uv run --frozen python -m build --no-isolation --outdir dist-a
+
+      - name: Normalize the first source distribution
+        run: uv run --frozen python -m bevcalib.release normalize-sdist --dist-dir dist-a --epoch "$SOURCE_DATE_EPOCH"
+
+      - name: Verify the first distribution set
+        run: >-
+          uv run --frozen python -m bevcalib.release verify
+          --project pyproject.toml
+          --tag "$GITHUB_REF_NAME"
+          --dist-dir dist-a
+
+      - name: Build the second distribution set
+        run: uv run --frozen python -m build --no-isolation --outdir dist-b
+
+      - name: Normalize the second source distribution
+        run: uv run --frozen python -m bevcalib.release normalize-sdist --dist-dir dist-b --epoch "$SOURCE_DATE_EPOCH"
+
+      - name: Verify the second distribution set
+        run: >-
+          uv run --frozen python -m bevcalib.release verify
+          --project pyproject.toml
+          --tag "$GITHUB_REF_NAME"
+          --dist-dir dist-b
+
+      - name: Compare reproducible distribution manifests
+        run: cmp dist-a/SHA256SUMS dist-b/SHA256SUMS
+
+      - name: Rebuild the wheel from the verified sdist
+        run: |
+          mkdir -p "$RUNNER_TEMP/sdist-source" dist-from-sdist
+          tar --extract --gzip --file "$GITHUB_WORKSPACE/dist-a/bev_calibration_lab-1.0.0.tar.gz" --directory "$RUNNER_TEMP/sdist-source"
+          uv run --frozen python -m build --wheel --no-isolation --outdir dist-from-sdist "$RUNNER_TEMP/sdist-source/bev_calibration_lab-1.0.0"
+
+      - name: Compare the wheel rebuilt from the sdist
+        run: cmp dist-a/bev_calibration_lab-1.0.0-py3-none-any.whl dist-from-sdist/bev_calibration_lab-1.0.0-py3-none-any.whl
+
+      - name: Check the wheel from outside the checkout
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-install"
+          UV_PROJECT_ENVIRONMENT="$RUNNER_TEMP/wheel-install" uv sync --frozen --all-groups --all-extras --no-install-project --python "$RUNNER_TEMP/wheel-install/bin/python"
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-install/bin/python" -m pip install --no-deps "$GITHUB_WORKSPACE/dist-a/bev_calibration_lab-1.0.0-py3-none-any.whl"
+          "$RUNNER_TEMP/wheel-install/bin/python" -c 'import os; from importlib.metadata import version; import bevcalib; assert version("bev-calibration-lab") == bevcalib.__version__ == "1.0.0"; assert not os.path.realpath(bevcalib.__file__).startswith(os.path.realpath(os.environ["GITHUB_WORKSPACE"]) + os.sep)'
+          "$RUNNER_TEMP/wheel-install/bin/bev-calib" --help
+          "$RUNNER_TEMP/wheel-install/bin/python" -m pip check
+
+      - name: Create the verified GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --notes-file docs/release-notes/v1.0.0.md \
+            dist-a/bev_calibration_lab-1.0.0-py3-none-any.whl \
+            dist-a/bev_calibration_lab-1.0.0.tar.gz \
+            dist-a/SHA256SUMS

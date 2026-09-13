@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=80", "wheel>=0.45"]
+requires = ["setuptools==84.0.0", "wheel==0.45.1"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "bev-calibration-lab"
-version = "0.1.0"
+version = "1.0.0"
 description = "Calibration fault sensitivity and recovery for LiDAR-camera BEV perception"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -57,7 +57,9 @@ dev = [
     "pytest>=8.3,<10",
     "pytest-cov>=6,<8",
     "ruff>=0.11,<1",
+    "setuptools==84.0.0",
     "types-pyyaml>=6.0,<7",
+    "wheel==0.45.1",
 ]
 report = [
     "jinja2>=3.1,<4",
@@ -129,7 +131,7 @@ warn_unused_configs = true
 
 [tool.mutmut]
 # Release-gate mutation testing of the pure core only (plan task P2-18):
-# geometry, perturbations, operators, correctors and metrics. The nuScenes
+# geometry, perturbations, operators, correctors, metrics and formal pairing/reductions. The nuScenes
 # adapter, the CLI, the training glue and the artifact writers are held to the
 # same 100% branch gate but are not scored here, because their behaviour is
 # defined by the devkit and by file formats rather than by arithmetic this
@@ -141,6 +143,8 @@ only_mutate = [
     "src/bevcalib/operators/*",
     "src/bevcalib/correctors/*",
     "src/bevcalib/metrics/*",
+    "src/bevcalib/analysis/estimands.py",
+    "src/bevcalib/analysis/aggregate.py",
 ]
 also_copy = ["configs", "schemas", "docs"]
 # One test file is excluded because it READS first-party source rather than

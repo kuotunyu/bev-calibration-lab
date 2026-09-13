@@ -1,4 +1,4 @@
-name: ci
+name: CI
 
 on:
   push:
@@ -15,37 +15,106 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      CUDA_VISIBLE_DEVICES: ""
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MKL_NUM_THREADS: "1"
+      NUMEXPR_NUM_THREADS: "1"
+      MPLBACKEND: Agg
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # The private guard reads the Git index, and the docs-link stage walks
-          # the tree, so both need a real checkout rather than a shallow blobless one.
           fetch-depth: 1
+          persist-credentials: false
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           version: "0.11.18"
+          python-version: "3.12.13"
           enable-cache: true
 
-      - name: Install Python 3.12
-        run: uv python install 3.12
+      - name: Check lock freshness
+        run: uv lock --check
 
-      - name: Sync the locked environment
-        # The train extra is required, not optional: the learned corrector's stem
-        # adaptation and its loss are first-party code, so the 100% coverage gate
-        # cannot pass with their tests skipped for want of torch.
-        run: uv sync --frozen --all-groups --extra train
+      - name: Sync the frozen environment
+        run: uv sync --frozen --all-groups --all-extras --python 3.12.13
 
-      - name: Verify
-        # One command, eight stages, stops at the first failure. Anything that
-        # would fail here fails identically on a developer machine.
-        run: uv run python -m bevcalib.dev verify
+      - name: Verify the pinned release backend
+        run: uv run --frozen python -m bevcalib.release backend --project pyproject.toml
 
-      - name: Build and install the wheel in a clean environment
+      - name: Run the full development gate
+        run: uv run --frozen python -m bevcalib.dev verify
+
+      - name: Bind reproducible builds to the checked-out commit
         run: |
-          uv build
-          uv venv /tmp/clean
-          VIRTUAL_ENV=/tmp/clean uv pip install dist/*.whl
-          VIRTUAL_ENV=/tmp/clean uv run --no-project bev-calib --help
+          SOURCE_DATE_EPOCH="$(git log -1 --format=%ct HEAD)"
+          test -n "$SOURCE_DATE_EPOCH"
+          echo "SOURCE_DATE_EPOCH=$SOURCE_DATE_EPOCH" >> "$GITHUB_ENV"
+
+      - name: Build the first distribution set
+        run: uv run --frozen python -m build --no-isolation --outdir dist-a
+
+      - name: Normalize the first source distribution
+        run: uv run --frozen python -m bevcalib.release normalize-sdist --dist-dir dist-a --epoch "$SOURCE_DATE_EPOCH"
+
+      - name: Verify the first distribution set
+        run: >-
+          uv run --frozen python -m bevcalib.release verify
+          --project pyproject.toml
+          --tag "v1.0.0"
+          --dist-dir dist-a
+
+      - name: Build the second distribution set
+        run: uv run --frozen python -m build --no-isolation --outdir dist-b
+
+      - name: Normalize the second source distribution
+        run: uv run --frozen python -m bevcalib.release normalize-sdist --dist-dir dist-b --epoch "$SOURCE_DATE_EPOCH"
+
+      - name: Verify the second distribution set
+        run: >-
+          uv run --frozen python -m bevcalib.release verify
+          --project pyproject.toml
+          --tag "v1.0.0"
+          --dist-dir dist-b
+
+      - name: Compare reproducible distribution manifests
+        run: cmp dist-a/SHA256SUMS dist-b/SHA256SUMS
+
+      - name: Rebuild and compare the wheel from the verified sdist
+        run: |
+          mkdir -p .ci/sdist-source dist-from-sdist
+          uv run --frozen python -c 'import tarfile; tarfile.open("dist-a/bev_calibration_lab-1.0.0.tar.gz", "r:gz").extractall(".ci/sdist-source", filter="data")'
+          uv run --frozen python -m build --wheel --no-isolation --outdir dist-from-sdist .ci/sdist-source/bev_calibration_lab-1.0.0
+          cmp dist-a/bev_calibration_lab-1.0.0-py3-none-any.whl dist-from-sdist/bev_calibration_lab-1.0.0-py3-none-any.whl
+
+      - name: Install and inspect the wheel in a clean environment
+        run: |
+          native_env="$RUNNER_TEMP/wheel-install"
+          uv venv "$native_env" --python 3.12.13
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            shell_env="$(cygpath -u "$native_env")"
+            external_root="$(dirname "$shell_env")"
+            clean_python="$shell_env/Scripts/python.exe"
+            clean_cli="$shell_env/Scripts/bev-calib.exe"
+          else
+            external_root="$RUNNER_TEMP"
+            clean_python="$native_env/bin/python"
+            clean_cli="$native_env/bin/bev-calib"
+          fi
+          wheel_path="$GITHUB_WORKSPACE/dist-a/bev_calibration_lab-1.0.0-py3-none-any.whl"
+          VIRTUAL_ENV="$native_env" uv sync --active --frozen --all-groups --all-extras --no-install-project --python "$clean_python"
+          uv pip install --python "$clean_python" --no-deps "$wheel_path"
+          cd "$external_root"
+          "$clean_python" -c 'import os, sys; from importlib.metadata import version; from pathlib import Path; import bevcalib; location = Path(bevcalib.__file__).resolve(); clean = Path(sys.prefix).resolve(); checkout = Path(os.environ["GITHUB_WORKSPACE"]).resolve(); assert location.is_relative_to(clean); assert not location.is_relative_to(checkout); assert bevcalib.__version__ == version("bev-calibration-lab") == "1.0.0"'
+          "$clean_cli" --help
+          uv pip check --python "$clean_python"

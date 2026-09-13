@@ -38,6 +38,11 @@ The `v1.0.0` label records the intended release, not an existing public tag.
 
 ## Remaining acceptance
 
-The generated files must pass the final staged-tree gate. Human figure/explorer
-inspection, clean final package builds, Linux clean-clone checks and public
-release checks remain separate. No raw sensor files or model weights are included.
+The generated assets and their registry audit passed the eight-stage gate before
+publication-source commit `4d75808131884536e6b1705518ee84fc4d9f651c` was created.
+Both test rounds passed 1,362 tests, with four explicit mini-data skips; first-party
+statement and branch coverage were 100%. This is the publication-source gate,
+not verification of later release-engineering changes.
+Human figure/explorer inspection, clean final package builds, Linux clean-clone
+checks and public release checks remain separate. No raw sensor files or model
+weights are included.
