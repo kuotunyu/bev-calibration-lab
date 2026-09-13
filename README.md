@@ -13,6 +13,9 @@ LiDAR 與相機之間的外參標定只要偏一點點，代價有多大？又�
 三個固定 seed 的平均不是預測 ensemble；地面接觸點重建也不是物件偵測或實車安全表現。
 正式數值的單位、配對支持、缺值與信賴區間定義見[分析契約](docs/contracts/formal-analysis.md)。
 
+正式圖表與可稽核數值入口：[Recovery](docs/figures/recovery-by-fault-level.svg)、[BEV 誤差](docs/figures/bev-error-by-range.svg)、[完整 claims](docs/claims.yaml)。
+[報告與互通重現紀錄](docs/verification/publication-and-interchange.md)說明驗證範圍；圖表與 explorer 的人工檢視仍待完成。
+
 ## 座標契約
 
 這是這個問題裡最容易錯、而且錯了不會有人發現的地方，所以固定在一處，並由型別與測試強制。

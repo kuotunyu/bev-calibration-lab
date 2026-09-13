@@ -77,3 +77,7 @@ omitted first-party paths.
 
 MIT, see [LICENSE](LICENSE). nuScenes itself is distributed under its own terms by Motional
 and is not redistributed here.
+
+## Formal evidence views
+
+[Recovery](docs/figures/recovery-by-fault-level.svg), [BEV error](docs/figures/bev-error-by-range.svg), and the [complete claims registry](docs/claims.yaml) preserve the declared conditions and support. See [publication and interchange verification](docs/verification/publication-and-interchange.md) for the exact acceptance scope. Human figure and explorer inspection remains pending.

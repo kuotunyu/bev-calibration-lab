@@ -78,15 +78,22 @@ def write_artifact(root: Path, value: Any, **overrides: Any) -> None:
     (root / "artifacts" / "summary.json").write_text(json.dumps(document), encoding="utf-8")
 
 
-def test_the_committed_registry_uses_the_approved_vocabulary_and_claims_nothing_yet() -> None:
-    """No experiment has run, so any claim in this file today would be fabricated."""
+def test_the_committed_registry_uses_approved_vocabulary_and_audited_formal_claims() -> None:
+    """Published claims must remain bound to the completed formal evidence."""
 
-    from bevcalib.analysis.claims import load_registry
+    from bevcalib.analysis.claims import audit_claims, load_registry
 
     registry = load_registry(COMMITTED_CLAIMS)
 
     assert registry.allowed_evidence_types == ("observed", "derived", "synthetic", "illustrative")
-    assert registry.claims == ()
+    assert registry.claims
+    assert all(
+        item.status == "verified"
+        and item.evidence_type == "observed"
+        and item.report_binding is not None
+        for item in registry.claims
+    )
+    assert audit_claims(COMMITTED_CLAIMS, REPO_ROOT) == ()
 
 
 @pytest.mark.parametrize(
