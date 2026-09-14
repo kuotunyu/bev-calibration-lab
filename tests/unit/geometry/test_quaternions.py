@@ -388,6 +388,8 @@ def test_a_tie_between_the_second_and_third_diagonal_entries_takes_the_last_bran
     `values[1, 1] > values[2, 2]` is false and the final branch runs. Written
     `>=` the third branch would claim it instead. The two answers differ by one
     bit in each of the last two components, and swap which of them carries it.
+    Normalize the expected branch candidate on this runtime: BLAS norm rounding
+    can shift both final components by one ULP without changing the branch.
     """
 
     from bevcalib.geometry import quaternions as module
@@ -396,7 +398,12 @@ def test_a_tie_between_the_second_and_third_diagonal_entries_takes_the_last_bran
     matrix = module.quaternion_to_matrix((0.0, *axis))
 
     assert matrix[1, 1] == matrix[2, 2]
-    assert module.matrix_to_quaternion(matrix) == (0.0, 0.0, 0.7071067811865476, 0.7071067811865475)
+    scale = 2.0 * math.sqrt(1.0 - float(matrix[0, 0]))
+    expected = module.normalize_quaternion_wxyz(
+        (0.0, 0.0, float(matrix[1, 2] + matrix[2, 1]) / scale, scale / 4.0)
+    )
+    assert expected[2] != expected[3], "the fixture must distinguish the tied branches"
+    assert module.matrix_to_quaternion(matrix) == expected
 
 
 def test_the_finiteness_messages_name_what_they_reject() -> None:
