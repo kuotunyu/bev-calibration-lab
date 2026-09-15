@@ -1,5 +1,21 @@
 # Formal publication and interchange verification
 
+## Release closeout — 2026-09-15
+
+[v1.0.0](https://github.com/kuotunyu/bev-calibration-lab/releases/tag/v1.0.0)
+was published at `59dce9d46317a36b9e2346ea29d1ff980a2a829d`.
+[Release workflow](https://github.com/kuotunyu/bev-calibration-lab/actions/runs/34942783687)
+completed; downloaded distribution checksums and an independent installed
+import/version/CLI/dependency check passed. The hosted site was checked against
+its deployment artifact. Explorer axis selection, condition controls, layers
+and wide/narrow layouts were inspected. These checks establish release and
+presentation readiness, not calibration efficacy.
+
+The records below describe earlier, separately identified verification stages.
+Their source identities and scientific limitations remain unchanged.
+
+## Publication-source verification — 2026-09-13
+
 On 2026-09-13, validator/exporter commit
 `b4f6272ae0c2f7723dd4f30c42f58fa3e9447e97` passed the real-input validation
 entry point with the frozen protocol, independently recorded source identity,
@@ -19,7 +35,8 @@ Other descriptors remain available in the complete metrics evidence.
 
 The figures retain all methods, seeds, predefined conditions, support and missing
 values. Pointwise intervals are not simultaneous bands. Timing remains a separate
-identity-only stress test. Browser inspection remains pending.
+identity-only stress test. Browser inspection was pending at this stage and was
+completed for the release described above.
 
 ## Optional cross-project artifact
 
@@ -34,15 +51,16 @@ payload digest, artifact type and protocol hash for their expected reasons.
 This is the uncorrected identity condition: its yaw error is the injected value,
 not evidence of learned correction. Interchange acceptance does not demonstrate
 an AEB benefit or alter the consumer's formal experiment configurations.
-The `v1.0.0` label records the intended release, not an existing public tag.
+At export time, the `v1.0.0` label recorded the intended release. The subsequent
+public tag is identified above; it does not change the export's provenance.
 
-## Remaining acceptance
+## Historical publication-source gate
 
 The generated assets and their registry audit passed the eight-stage gate before
 publication-source commit `4d75808131884536e6b1705518ee84fc4d9f651c` was created.
 Both test rounds passed 1,362 tests, with four explicit mini-data skips; first-party
 statement and branch coverage were 100%. This is the publication-source gate,
 not verification of later release-engineering changes.
-Human figure/explorer inspection, clean final package builds, Linux clean-clone
-checks and public release checks remain separate. No raw sensor files or model
-weights are included.
+Figure/explorer inspection, clean final package builds, Linux clean-clone checks
+and public release checks were completed separately at release closeout. No raw
+sensor files or model weights are included.

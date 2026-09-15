@@ -2,9 +2,10 @@
 
 ## Offline synthetic calibration explorer
 
-The [explorer candidate](demo/calibration-explorer.html) embeds Plotly.js and
+The [explorer](demo/calibration-explorer.html) embeds Plotly.js and
 preserves its copyright and MIT notice. It needs no dataset, model, server, or
-network connection. Browser interaction acceptance is still pending.
+network connection. Browser interaction acceptance completed for the release;
+see [release verification](verification/publication-and-interchange.md).
 
 With the report extra installed, reproduce it in a new local output file:
 
