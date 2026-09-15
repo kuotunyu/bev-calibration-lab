@@ -1,7 +1,7 @@
 # Calibration error distribution interchange
 
 This optional artifact describes calibration errors; it does not establish an AEB
-benefit. The planned producer release is `v1.0.0`, **not yet published**. The
+benefit. The producer release [v1.0.0](https://github.com/kuotunyu/bev-calibration-lab/releases/tag/v1.0.0) is published. The
 exporter and an actual exported evidence artifact require separate commits so
 the envelope can identify the exporter commit without a self-reference.
 

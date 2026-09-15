@@ -6,8 +6,10 @@ checkpoint, or tune a correction from locked results. The formal artifacts remai
 those described in [analysis reproduction](analysis-reproduction.md).
 
 **Status:** source review, checkpoint metadata validation, and analytical probes
-are complete; 149 focused synthetic CPU regression tests passed. The full
-repository gate remains pending. This document is a working diagnosis, not a completed release acceptance.
+are complete; 149 focused synthetic CPU regression tests passed at the original
+diagnostic stage. The subsequent release passed the full repository gate and
+[release verification](publication-and-interchange.md). That engineering
+acceptance does not resolve the remaining scientific questions below.
 
 ## What was checked
 
@@ -76,6 +78,33 @@ in every scene.
 
 ## Locked outcomes and interpretation
 
+### Reading the zero-fault baseline
+
+The zero entries in each axis sweep repeat the same baseline within a method;
+they are not independent repetitions. Use `pitch:0` as a representative lookup
+in [recovery.json](../evidence/nuscenes_calibration_v1/recovery.json):
+`/runs/<method>/pitch:0/value`, with its adjacent `support` and interval fields.
+Retain identity, classical and every learned seed when making this comparison.
+
+In the released summaries, classical improves the mean edge proxy over identity
+at zero fault while worsening pose and recovery. Inspect
+`/runs/<method>/pitch:0/edge_score_px/value`, `rotation_geodesic_deg/value` and
+`translation_norm_cm/value` in
+[metrics.json](../evidence/nuscenes_calibration_v1/metrics.json).
+This confirms disagreement between the proxy and calibration outcomes on this
+cohort; it does not identify the frame-by-frame cause.
+
+All methods have the same complete recovery support at zero fault, so missing
+recovery observations do not explain that regression. This statement concerns
+the recovery operator; it does not imply complete pixel or BEV support.
+
+Identity can satisfy the recovery tolerances even with a small nonzero injected
+fault. Consequently, beating classical at a larger fault does not establish an
+improvement over leaving an already-in-tolerance calibration unchanged. Read the
+individual conditions and paired intervals rather than reporting a winner by
+averaging across the fault grid. Selecting a learned seed from these evaluation
+results would violate the frozen study design.
+
 All method/condition entries in [metrics.json](../evidence/nuscenes_calibration_v1/metrics.json)
 were read for signed bias, absolute error, recovery, and their support. The
 diagnostic inventory includes all extrinsic conditions for identity, classical,
@@ -105,8 +134,8 @@ the final results, even where the learned corrector exceeds classical.
   they do not prove real-data recovery or replace backend/inference checks.
   A further 38 synthetic CPU backend, checkpoint-boundary, and inference-device
   tests passed (exit 0). The new inference-mode regression and six existing tiny
-  training integration tests also passed (7 tests, exit 0). Complete the full gate
-  before committing this review.
+  training integration tests also passed (7 tests, exit 0). These historical
+  focused checks preceded the full release gate identified above.
 - No additional development-only real-checkpoint forward is scheduled: the bound
   metadata checks and synthetic loader/forward regressions address the identified
   implementation questions. A handful of finite predictions would not explain the

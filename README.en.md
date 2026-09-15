@@ -11,18 +11,39 @@ ConvNeXtV2-Tiny corrector. Original sensor contents stay unchanged. Timing separ
 selects a LiDAR sweep relative to a fixed camera exposure and remains identity-only
 stress evidence, not a seventh recoverable pose axis.
 
-**Status: formal training, inference and analysis are complete; presentation and release
-acceptance remain in progress.** The [five formal documents](docs/evidence/README.md)
+**Status: formal training, inference, analysis and presentation acceptance are complete;
+v1.0.0 is published.** See the [release](https://github.com/kuotunyu/bev-calibration-lab/releases/tag/v1.0.0)
+and [hosted presentation](https://kuotunyu.github.io/bev-calibration-lab/).
+The [five formal documents](docs/evidence/README.md)
 are preserved, with byte-identical results from two independent CPU analyses. The
 [reproduction record](docs/verification/analysis-reproduction.md) identifies their sources
-and limitations. This does not establish corrector efficacy, a published release, or
-completed interactive inspection.
+and limitations. Publication and engineering acceptance do not establish corrector efficacy.
 
 Retain every seed, predefined condition, identity and zero-fault reference when reading
 the results. A fixed-three-seed mean is not a prediction ensemble. Ground-contact
 reconstruction is neither object-detector performance nor real-vehicle safety evidence.
 The [analysis contract](docs/contracts/formal-analysis.md) defines units, paired support,
 unavailable estimates and intervals.
+
+## Reading the results
+
+Start with zero fault: identity preserves the calibration reference, while classical
+and each learned seed can degrade it. Then compare recovery and paired intervals
+across fault conditions, followed by BEV error, support and missing estimates.
+Weak recovery and zero-fault degradation remain results of the study; successful
+training or outperforming one baseline is insufficient evidence of reliable correction.
+
+- [Recovery](docs/figures/recovery-by-fault-level.svg) retains identity, classical,
+  individual learned seeds and predefined conditions. The seed mean is not an ensemble.
+- [BEV error](docs/figures/bev-error-by-range.svg) shows ground-contact reconstruction;
+  the ground-plane assumption itself can leave a nonzero residual.
+- [Bounded diagnostics](docs/verification/corrector-diagnostics.md) cover checkpoint
+  identity, inverse transforms and units. They neither explain every weak outcome
+  nor exclude every implementation defect.
+
+The [calibration explorer](docs/demo/calibration-explorer.html) explains perturbations
+using fixed synthetic geometry. It does not display formal learned-corrector performance;
+use the formal evidence for method comparisons.
 
 ## The coordinate contract
 
@@ -80,4 +101,4 @@ and is not redistributed here.
 
 ## Formal evidence views
 
-[Recovery](docs/figures/recovery-by-fault-level.svg), [BEV error](docs/figures/bev-error-by-range.svg), and the [complete claims registry](docs/claims.yaml) preserve the declared conditions and support. See [publication and interchange verification](docs/verification/publication-and-interchange.md) for the exact acceptance scope. Human figure and explorer inspection remains pending.
+[Recovery](docs/figures/recovery-by-fault-level.svg), [BEV error](docs/figures/bev-error-by-range.svg), and the [complete claims registry](docs/claims.yaml) preserve the declared conditions and support. See [publication and interchange verification](docs/verification/publication-and-interchange.md) for the completed presentation acceptance and release checks.
