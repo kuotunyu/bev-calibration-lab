@@ -41,3 +41,6 @@ predictions/
 runs/
 
 !docs/assets/
+
+# Local agent working agreement; kept on disk, not published.
+/AGENTS.md
