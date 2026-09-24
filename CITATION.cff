@@ -2,7 +2,10 @@ cff-version: 1.2.0
 title: bev-calibration-lab
 message: >-
   If you use this software or its published evidence, please cite it using the
-  metadata below, and cite nuScenes as listed under references.
+  metadata below, and cite nuScenes as listed under references. The code is
+  MIT-licensed; the nuScenes-derived evidence and figures are shared for
+  non-commercial research under the nuScenes terms of use (CC BY-NC-SA 4.0);
+  see NOTICE.
 type: software
 authors:
   - family-names: Kuo
