@@ -83,7 +83,17 @@ def test_figure_is_accessible_deterministic_and_carries_its_sources() -> None:
     assert "fault (m) · no break-even up to ±0.2 m" in text
     assert "fault (deg) · break-even ±2°" in text
     assert "metrics.json#/runs/learned-73/z:0.2/p50" in text
-    assert "the smallest fault from which the interval is above 0 at both signs" in text
+    # The legend states the whole definition that the note and the JSON use.
+    legend = [
+        element.text or ""
+        for element in root.iter(f"{SVG}text")
+        if (element.text or "").startswith("Dashed lines")
+    ]
+    assert legend == [
+        "Dashed lines: break-even, the smallest fault from which the interval is above 0 "
+        "at both signs and at every larger fault on the grid."
+    ]
+    assert "The mean is not an ensemble." in text
 
 
 def test_missing_values_break_lines_and_unavailable_intervals_are_marked() -> None:

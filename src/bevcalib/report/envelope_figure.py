@@ -39,7 +39,7 @@ def render_envelope_svg(document: Mapping[str, Any]) -> str:
     ]
     top_value = max(10.0, math.ceil(max(values, default=0.0) / 10) * 10)
     escape = html.escape
-    width, header, panel_width, panel_height = 960, 170, 320, 260
+    width, header, panel_width, panel_height = 960, 190, 320, 260
     plot_width, plot_height = 250, 160
     height = header + 2 * panel_height + 30
     title = "Derived — where a corrector beats leaving the calibration alone"
@@ -76,13 +76,14 @@ def render_envelope_svg(document: Mapping[str, Any]) -> str:
         '<text x="20" y="94">Squares: identity → learned-mean paired 95% interval above 0 '
         "(green, learned better), below 0 (red) or containing 0 (white).</text>",
         '<text x="20" y="114">Dashed lines: break-even, the smallest fault from which the '
-        "interval is above 0 at both signs. The mean is not an ensemble.</text>",
+        "interval is above 0 at both signs and at every larger fault on the grid.</text>",
+        '<text x="20" y="134">The mean is not an ensemble.</text>',
     ]
     for index, method in enumerate(_METHODS):
         legend = 20 + index * 150
         parts.append(
-            f'<line x1="{legend}" x2="{legend + 18}" y1="140" y2="140" stroke="{COLORS[method]}" '
-            f'stroke-width="2.5"/><text x="{legend + 24}" y="144">{escape(method)}</text>'
+            f'<line x1="{legend}" x2="{legend + 18}" y1="160" y2="160" stroke="{COLORS[method]}" '
+            f'stroke-width="2.5"/><text x="{legend + 24}" y="164">{escape(method)}</text>'
         )
     for index, axis in enumerate(_AXES):
         meaning = document["axes"][axis]
