@@ -139,7 +139,7 @@ def test_ci_rebuilds_and_installs_reproducible_packages_after_the_full_gate() ->
     assert "uv pip check" in install
 
 
-def test_pages_builds_the_site_only_after_the_same_source_gate() -> None:
+def test_pages_builds_the_site_from_the_frozen_lock_without_rerunning_the_gate() -> None:
     workflow = _workflow("pages.yml")
 
     assert workflow["on"] == {"push": {"branches": ["main"]}, "workflow_dispatch": ""}
@@ -149,16 +149,20 @@ def test_pages_builds_the_site_only_after_the_same_source_gate() -> None:
     _assert_reproducible_environment(build)
 
     runs = _runs(build)
+    # Pages does not wait for CI; CI runs the full gate on each push to main in a
+    # separate workflow. The site build audits every claim against the committed
+    # evidence before it writes anything, so a registry that does not match the
+    # evidence still stops the deploy.
+    assert not any("bevcalib.dev verify" in run for run in runs)
     sync_index = runs.index("uv sync --frozen --all-groups --all-extras --python 3.12.13")
     backend_index = runs.index(
         "uv run --frozen python -m bevcalib.release backend --project pyproject.toml"
     )
-    gate_index = runs.index("uv run --frozen python -m bevcalib.dev verify")
     site_index = runs.index(
         "uv run --frozen python -m bevcalib.report.site --claims docs/claims.yaml "
         "--artifacts-dir docs/evidence/nuscenes_calibration_v1 --output-dir site"
     )
-    assert sync_index < backend_index < gate_index < site_index
+    assert sync_index < backend_index < site_index
 
     upload = next(step for step in build["steps"] if step.get("uses") == UPLOAD_PAGES)
     assert upload["with"] == {"path": "site"}
