@@ -1,14 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-labelledby="title description">
 <title id="title">Derived — where a corrector beats leaving the calibration alone</title>
 <desc id="description">Scene mean of per-frame median reprojection shift (pixel P50) against each single-axis fault on 30 locked nuScenes validation scenes. Lower is better. Squares show the paired 95% interval of identity versus the fixed-three-seed learned mean; intervals are pointwise.</desc>
-<metadata>{&quot;document_sha256&quot;: &quot;cd5d902f83c93e0b3cd8bb3b10a0eecc60480f77c3aef0418a7049627111f4b8&quot;, &quot;evidence_type&quot;: &quot;derived&quot;, &quot;source_documents&quot;: {&quot;intervals&quot;: &quot;a69a95b255c203eb47b4d364dbaf831883227f9d5e2c1d79037b24aed4623c72&quot;, &quot;metrics&quot;: &quot;45c5754cb9d2611a63bb2b96c11c72c42829369c51f063a11d7021c8ba4a9088&quot;, &quot;recovery&quot;: &quot;648d8f33801745d08b3cad912432c5ef3aa08519930e4be6533ac986133987d7&quot;}}</metadata>
+<metadata>{&quot;document_sha256&quot;: &quot;8cd22c45dc4ebc82b3be2a61e8b20c00e53d30f57dbe209b5a25628ee9833c0b&quot;, &quot;evidence_type&quot;: &quot;derived&quot;, &quot;source_documents&quot;: {&quot;intervals&quot;: &quot;a69a95b255c203eb47b4d364dbaf831883227f9d5e2c1d79037b24aed4623c72&quot;, &quot;metrics&quot;: &quot;45c5754cb9d2611a63bb2b96c11c72c42829369c51f063a11d7021c8ba4a9088&quot;, &quot;recovery&quot;: &quot;648d8f33801745d08b3cad912432c5ef3aa08519930e4be6533ac986133987d7&quot;}}</metadata>
 <style>text{font-family:system-ui,sans-serif;fill:#172638;font-size:12px}.heading{font-size:19px;font-weight:650}.panel{font-size:13px;font-weight:600}.note{font-size:11px;fill:#40586e}.grid{stroke:#dce3eb;stroke-width:1}.axis{stroke:#8493a5;stroke-width:1}</style>
 <rect width="960" height="720" fill="#ffffff"/>
 <text x="20" y="30" class="heading">Derived — where a corrector beats leaving the calibration alone</text>
 <text x="20" y="54">Pixel P50: scene mean of the per-frame median reprojection shift, 30 locked nuScenes validation scenes. Lower is better.</text>
 <text x="20" y="74">Axes are CAM_FRONT optical-frame axes: roll = tilt, pitch = pan, yaw = in-plane rotation; x lateral, y vertical, z forward.</text>
 <text x="20" y="94">Squares: identity → learned-mean paired 95% interval above 0 (green, learned better), below 0 (red) or containing 0 (white).</text>
-<text x="20" y="114">Dashed lines: break-even, the smallest fault from which the learned mean is better at both signs. The mean is not an ensemble.</text>
+<text x="20" y="114">Dashed lines: break-even, the smallest fault from which the interval is above 0 at both signs. The mean is not an ensemble.</text>
 <line x1="20" x2="38" y1="140" y2="140" stroke="#64748b" stroke-width="2.5"/><text x="44" y="144">identity</text>
 <line x1="170" x2="188" y1="140" y2="140" stroke="#007f7f" stroke-width="2.5"/><text x="194" y="144">classical</text>
 <line x1="320" x2="338" y1="140" y2="140" stroke="#2563eb" stroke-width="2.5"/><text x="344" y="144">learned-17</text>

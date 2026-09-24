@@ -110,6 +110,53 @@ def test_residual_floor_pan_residual_and_boundary_are_copied_from_their_sources(
     )
 
 
+def test_grid_lists_the_zero_fault_condition_once_per_axis(envelope) -> None:  # type: ignore[no-untyped-def]
+    assert envelope["grid"] == {
+        "conditions": 60,
+        "injected_fault_conditions": 54,
+        "zero_fault_conditions": ["roll:0", "pitch:0", "yaw:0", "x:0", "y:0", "z:0"],
+        "zero_fault_identical": True,
+    }
+    definitions = envelope["definitions"]
+    assert "listed once per axis" in definitions["interval_counts"]
+    assert "zero_fault_identical" in definitions["grid"]
+
+
+def test_zero_fault_copies_that_differ_are_reported(released) -> None:  # type: ignore[no-untyped-def]
+    from bevcalib.analysis.operating_envelope import analyse
+
+    runs = {method: dict(conditions) for method, conditions in released.metrics.runs.items()}
+    runs["classical"]["x:0"] = runs["classical"]["x:0.2"]
+    changed = released.model_copy(
+        update={"metrics": released.metrics.model_copy(update={"runs": runs})}
+    )
+
+    assert analyse(changed, PATHS)["grid"]["zero_fault_identical"] is False
+
+
+def test_break_even_is_defined_by_the_paired_interval(envelope) -> None:  # type: ignore[no-untyped-def]
+    definition = envelope["definitions"]["break_even"]
+    assert "paired 95% interval" in definition and "above zero" in definition
+
+
+def test_bev_range_spans_every_method_and_extrinsic_condition(envelope, released) -> None:  # type: ignore[no-untyped-def]
+    from bevcalib.analysis.operating_envelope import METHODS, _conditions
+
+    runs = released.metrics.runs
+    bev = envelope["bev_range"]
+    assert list(bev) == ["0-10", "10-20", "20-40", "40-80", "80+"]
+    for range_bin in ("0-10", "10-20"):
+        metric = f"bev_frame_mean_m/{range_bin}"
+        values = [
+            runs[method][key][metric].value for method in METHODS for _, _, key in _conditions()
+        ]
+        assert (bev[range_bin]["min"], bev[range_bin]["max"]) == (min(values), max(values))
+        method, _, condition = bev[range_bin]["max_condition"].partition("/")
+        assert runs[method][condition][metric].value == bev[range_bin]["max"]
+    assert bev["80+"]["max"] is None
+    assert "bev_frame_mean_m" in envelope["definitions"]["bev_range"]
+
+
 def test_evidence_other_than_the_declared_documents_is_refused(released) -> None:  # type: ignore[no-untyped-def]
     from bevcalib.analysis.operating_envelope import V1_SOURCE_SHA256, analyse
 

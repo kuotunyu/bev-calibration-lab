@@ -76,7 +76,7 @@ def render_envelope_svg(document: Mapping[str, Any]) -> str:
         '<text x="20" y="94">Squares: identity → learned-mean paired 95% interval above 0 '
         "(green, learned better), below 0 (red) or containing 0 (white).</text>",
         '<text x="20" y="114">Dashed lines: break-even, the smallest fault from which the '
-        "learned mean is better at both signs. The mean is not an ensemble.</text>",
+        "interval is above 0 at both signs. The mean is not an ensemble.</text>",
     ]
     for index, method in enumerate(_METHODS):
         legend = 20 + index * 150

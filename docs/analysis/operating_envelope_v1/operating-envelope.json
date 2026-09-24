@@ -31,6 +31,38 @@
       "unit": "metre"
     }
   },
+  "bev_range": {
+    "0-10": {
+      "max": 3.000353316470415,
+      "max_condition": "identity/roll:2",
+      "min": 0.9938357206742426,
+      "min_condition": "identity/roll:-1"
+    },
+    "10-20": {
+      "max": 2069.72286724657,
+      "max_condition": "learned-42/roll:-0.5",
+      "min": 3.5165750602713555,
+      "min_condition": "identity/roll:-1"
+    },
+    "20-40": {
+      "max": 6533.5828363530845,
+      "max_condition": "learned-17/roll:0.1",
+      "min": 11.988930925780304,
+      "min_condition": "identity/roll:-2"
+    },
+    "40-80": {
+      "max": 6813.333009132186,
+      "max_condition": "learned-73/yaw:-0.25",
+      "min": 26.420632097354588,
+      "min_condition": "identity/roll:-2"
+    },
+    "80+": {
+      "max": null,
+      "max_condition": null,
+      "min": null,
+      "min_condition": null
+    }
+  },
   "break_even": {
     "identity->classical": {
       "pitch": {
@@ -86,15 +118,30 @@
     }
   },
   "definitions": {
-    "break_even": "per axis, the smallest grid magnitude at which the after method is better on pixel_frame_p50_px at both signs and at every larger grid magnitude; null when the largest magnitude does not qualify",
-    "interval_counts": "per comparison and estimand, the number of the sixty extrinsic conditions whose paired 95% scene-bootstrap interval of the improvement lies entirely above zero (after method better), entirely below zero (before method better), contains zero, or is unavailable; improvement directions are those of the source documents",
+    "bev_range": "per ground-contact range bin, the minimum and maximum over the five methods and the sixty extrinsic conditions of the scene-mean bev_frame_mean_m, with the method/condition at which each occurs",
+    "break_even": "per axis, the smallest grid magnitude from which the paired 95% interval of the pixel_frame_p50_px improvement lies above zero (after method better) at both signs and at every larger grid magnitude; null when the largest magnitude does not qualify",
+    "grid": "the number of extrinsic conditions, how many inject a non-zero fault, the per-axis keys of the zero-fault condition, and zero_fault_identical: whether those keys hold identical entries in every run and comparison of every source document",
+    "interval_counts": "per comparison and estimand, the number of the sixty extrinsic conditions whose paired 95% scene-bootstrap interval of the improvement lies entirely above zero (after method better), entirely below zero (before method better), contains zero, or is unavailable; improvement directions are those of the source documents; the zero-fault condition is listed once per axis, so every count includes it six times",
     "pan_residual": "each method's rotation_abs_pitch_deg at every pitch (pan) condition",
     "recovery_boundary": "identity at rotation grid levels equal to the recovery threshold: its geodesic error, its recovery rate, and how many identity->* recovery intervals lie above zero",
     "residual": "minimum and maximum over the sixty extrinsic conditions of each method's scene-mean rotation_geodesic_deg and translation_norm_cm",
     "series": "pixel_frame_p50_px per method and condition, and the identity->learned-fixed-three-seed-mean interval verdict per condition, for the figure"
   },
-  "document_sha256": "cd5d902f83c93e0b3cd8bb3b10a0eecc60480f77c3aef0418a7049627111f4b8",
+  "document_sha256": "8cd22c45dc4ebc82b3be2a61e8b20c00e53d30f57dbe209b5a25628ee9833c0b",
   "evidence_type": "derived",
+  "grid": {
+    "conditions": 60,
+    "injected_fault_conditions": 54,
+    "zero_fault_conditions": [
+      "roll:0",
+      "pitch:0",
+      "yaw:0",
+      "x:0",
+      "y:0",
+      "z:0"
+    ],
+    "zero_fault_identical": true
+  },
   "interval_counts": {
     "classical->learned-fixed-three-seed-mean": {
       "edge_score_px": {

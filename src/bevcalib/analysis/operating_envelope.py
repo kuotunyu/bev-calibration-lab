@@ -21,6 +21,7 @@ from bevcalib.analysis.formal_claims import load_publication, pointer_token
 from bevcalib.artifacts.documents import FormalArtifactSet
 from bevcalib.artifacts.result_documents import condition_inventory, digest
 from bevcalib.metrics.calibration import RECOVERY_ROTATION_THRESHOLD_DEG
+from bevcalib.metrics.reprojection import RANGE_BINS
 from bevcalib.metrics.summary import condition_key
 
 SCHEMA_VERSION = "bev-calibration-operating-envelope/v1"
@@ -67,12 +68,13 @@ DEFINITIONS = {
         "per comparison and estimand, the number of the sixty extrinsic conditions whose "
         "paired 95% scene-bootstrap interval of the improvement lies entirely above zero "
         "(after method better), entirely below zero (before method better), contains zero, "
-        "or is unavailable; improvement directions are those of the source documents"
+        "or is unavailable; improvement directions are those of the source documents; the "
+        "zero-fault condition is listed once per axis, so every count includes it six times"
     ),
     "break_even": (
-        "per axis, the smallest grid magnitude at which the after method is better on "
-        "pixel_frame_p50_px at both signs and at every larger grid magnitude; null when "
-        "the largest magnitude does not qualify"
+        "per axis, the smallest grid magnitude from which the paired 95% interval of the "
+        "pixel_frame_p50_px improvement lies above zero (after method better) at both signs "
+        "and at every larger grid magnitude; null when the largest magnitude does not qualify"
     ),
     "residual": (
         "minimum and maximum over the sixty extrinsic conditions of each method's "
@@ -82,6 +84,16 @@ DEFINITIONS = {
     "recovery_boundary": (
         "identity at rotation grid levels equal to the recovery threshold: its geodesic "
         "error, its recovery rate, and how many identity->* recovery intervals lie above zero"
+    ),
+    "grid": (
+        "the number of extrinsic conditions, how many inject a non-zero fault, the per-axis "
+        "keys of the zero-fault condition, and zero_fault_identical: whether those keys hold "
+        "identical entries in every run and comparison of every source document"
+    ),
+    "bev_range": (
+        "per ground-contact range bin, the minimum and maximum over the five methods and the "
+        "sixty extrinsic conditions of the scene-mean bev_frame_mean_m, with the "
+        "method/condition at which each occurs"
     ),
     "series": "pixel_frame_p50_px per method and condition, and the identity->"
     "learned-fixed-three-seed-mean interval verdict per condition, for the figure",
@@ -166,6 +178,13 @@ def analyse(
     comparisons = artifacts.intervals.comparisons
     recovery = artifacts.recovery.comparisons
     conditions = _conditions()
+    zero = [key for _, level, key in conditions if level == 0.0]
+    listings = (
+        *runs.values(),
+        *comparisons.values(),
+        *artifacts.recovery.runs.values(),
+        *recovery.values(),
+    )
 
     def paired(comparison: str, metric: str) -> dict[str, Any]:
         if metric == "recovery_rate_pct":
@@ -203,6 +222,14 @@ def analyse(
             axis: {"physical": physical, "frame_axis": frame_axis, "unit": unit}
             for axis, (physical, frame_axis, unit) in AXES.items()
         },
+        "grid": {
+            "conditions": len(conditions),
+            "injected_fault_conditions": len(conditions) - len(zero),
+            "zero_fault_conditions": zero,
+            "zero_fault_identical": all(
+                listing[key] == listing[zero[0]] for listing in listings for key in zero
+            ),
+        },
         "interval_counts": {
             comparison: {metric: _counts(paired(comparison, metric)) for metric in metrics}
             for comparison, metrics in COUNTED.items()
@@ -217,6 +244,16 @@ def analyse(
                 for metric in ("rotation_geodesic_deg", "translation_norm_cm")
             }
             for method in ("classical", *LEARNED)
+        },
+        "bev_range": {
+            range_bin: _extreme(
+                {
+                    f"{method}/{key}": runs[method][key][f"bev_frame_mean_m/{range_bin}"].value
+                    for method in METHODS
+                    for _, _, key in conditions
+                }
+            )
+            for range_bin in RANGE_BINS
         },
         "pan_residual": {
             method: {

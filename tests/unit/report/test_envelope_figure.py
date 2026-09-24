@@ -83,6 +83,7 @@ def test_figure_is_accessible_deterministic_and_carries_its_sources() -> None:
     assert "fault (m) · no break-even up to ±0.2 m" in text
     assert "fault (deg) · break-even ±2°" in text
     assert "metrics.json#/runs/learned-73/z:0.2/p50" in text
+    assert "the smallest fault from which the interval is above 0 at both signs" in text
 
 
 def test_missing_values_break_lines_and_unavailable_intervals_are_marked() -> None:
