@@ -94,10 +94,23 @@ first failure: the private-file guard, format check, lint, type check, the full 
 links. Coverage exemptions are not used; there are no `pragma: no cover` comments and no
 omitted first-party paths.
 
-## Licence
+## Data, model and third-party licences
 
-MIT, see [LICENSE](LICENSE). nuScenes itself is distributed under its own terms by Motional
-and is not redistributed here.
+- **Source code:** MIT, see [LICENSE](LICENSE).
+- **Evidence and figures:** `docs/evidence/`, `docs/figures/`, `docs/analysis/` and the
+  tables on the website are aggregate measurements derived from nuScenes v1.0-trainval.
+  They contain no images, point clouds, sample tokens or scene names, and they are shared
+  for non-commercial research under the nuScenes terms of use (CC BY-NC-SA 4.0). nuScenes
+  itself is distributed by Motional and is not redistributed here. If you use these
+  results, cite nuScenes (Caesar et al., CVPR 2020); the reference is in [NOTICE](NOTICE).
+- **Pretrained weights:** the corrector was initialized from timm
+  `convnextv2_tiny.fcmae_ft_in1k`, whose model card declares CC BY-NC 4.0. No trained
+  checkpoint is distributed.
+- **Explorer page:** it embeds Plotly.js (MIT), which bundles MapLibre GL JS
+  (BSD-3-Clause); both notices are kept in the page.
+
+[NOTICE](NOTICE) lists these terms, and [CITATION.cff](CITATION.cff) gives the citation
+for this repository.
 
 ## Formal evidence views
 

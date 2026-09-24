@@ -59,6 +59,11 @@ uv run bev-calib --help
 
 `uv run python -m bevcalib.dev verify` 以固定順序執行所有關卡，遇到第一個失敗就停止：私有檔案防護、格式檢查、lint、型別檢查、完整測試、第一方程式碼 100% 陳述與分支覆蓋、schema 契約、文件連結。不使用任何覆蓋率豁免，沒有 `pragma: no cover`，也沒有排除的第一方路徑。
 
-## 授權
+## 資料、模型與第三方授權
 
-MIT，見 [LICENSE](LICENSE)。nuScenes 本身由 Motional 依其自身條款散布，不在此轉散布。
+- **原始碼：** MIT，見 [LICENSE](LICENSE)。
+- **Evidence 與圖表：** `docs/evidence/`、`docs/figures/`、`docs/analysis/` 與網站上的表格，都是由 nuScenes v1.0-trainval 衍生的彙總量測。它們不含影像、點雲、sample token 或場景名稱，依 nuScenes 使用條款（CC BY-NC-SA 4.0）供非商業研究使用。nuScenes 本身由 Motional 散布，不在此轉散布。使用這些結果時請引用 nuScenes（Caesar et al., CVPR 2020），引用資訊見 [NOTICE](NOTICE)。
+- **預訓練權重：** 修正器從 timm 的 `convnextv2_tiny.fcmae_ft_in1k` 初始化，其模型卡宣告 CC BY-NC 4.0 授權。不散布任何訓練後的 checkpoint。
+- **Explorer 頁面：** 內嵌 Plotly.js（MIT），其中包含 MapLibre GL JS（BSD-3-Clause）；兩者的授權聲明都保留在頁面中。
+
+[NOTICE](NOTICE) 列出上述條款，[CITATION.cff](CITATION.cff) 提供本 repository 的引用資訊。

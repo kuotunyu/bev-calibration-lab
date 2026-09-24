@@ -25,7 +25,7 @@
 - 輸入權重 SHA-256：`fdfb4edfa5abb3b4ea29ab17e6fae5c117dc6cc32ecfb1d0726a156f40a4c1a5`。
 - Training producer：`aeb3f28265c2ee3c0f7556417f9c8bf8a550acb7`。
 
-這個 profile 名稱與 SHA 是 provenance 身份，不是隨執行時間變動的下載要求。Adapter 只接受明確指定且 hash 相符的本機權重，不自行下載。Repository 的 MIT 授權不取代 nuScenes 或模型權重各自的授權，這裡不散布任何 checkpoint。
+這個 profile 名稱與 SHA 是 provenance 身份，不是隨執行時間變動的下載要求。Adapter 只接受明確指定且 hash 相符的本機權重，不自行下載。Repository 的 MIT 授權不取代 nuScenes 或模型權重各自的授權；timm 上這個 profile 的模型卡宣告 CC BY-NC 4.0（見 [NOTICE](../NOTICE)）。這裡不散布任何 checkpoint。
 
 固定設定為 seeds 17、42、73，AdamW、warmup/cosine schedule、normalized Huber loss；精確參數見[設定檔](../configs/correctors/convnextv2_tiny_v1.yaml)。Development 用於參數學習，calibration 用於 checkpoint 選擇，evaluation 保持隔離。三個 seed 的模型不合併為 ensemble。
 

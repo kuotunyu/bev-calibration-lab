@@ -1,0 +1,58 @@
+bev-calibration-lab
+Copyright (c) 2026 Kuo Tun-Yu
+
+This file lists the terms that apply to the different parts of this repository and
+of its website (https://kuotunyu.github.io/bev-calibration-lab/).
+
+Source code
+-----------
+The source code, tests, configuration and schemas are licensed under the MIT
+License; see LICENSE.
+
+nuScenes-derived results
+------------------------
+The evidence documents (docs/evidence/), the figures (docs/figures/), the derived
+analyses (docs/analysis/) and the result tables on the website are aggregate
+measurements computed from the nuScenes v1.0-trainval dataset. They contain no
+camera images, LiDAR point clouds, sample or box tokens, or scene names.
+
+nuScenes is provided by Motional under the nuScenes terms of use
+(https://www.nuscenes.org/terms-of-use), which allow non-commercial use under the
+Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International licence
+(CC BY-NC-SA 4.0). These aggregate results are shared for non-commercial research
+under the same terms. The dataset itself is not redistributed here; obtain it from
+its original distribution and follow its terms.
+
+If you use these results, please cite nuScenes:
+
+  @inproceedings{caesar2020nuscenes,
+    title     = {nuScenes: A Multimodal Dataset for Autonomous Driving},
+    author    = {Caesar, Holger and Bankiti, Varun and Lang, Alex H. and
+                 Vora, Sourabh and Liong, Venice Erin and Xu, Qiang and
+                 Krishnan, Anush and Pan, Yu and Baldan, Giancarlo and
+                 Beijbom, Oscar},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision
+                 and Pattern Recognition (CVPR)},
+    year      = {2020}
+  }
+
+Pretrained initialization weights
+---------------------------------
+The learned corrector was initialized from the timm profile
+convnextv2_tiny.fcmae_ft_in1k. Its model card
+(https://huggingface.co/timm/convnextv2_tiny.fcmae_ft_in1k) declares the
+CC BY-NC 4.0 licence. The weights come from ConvNeXt V2 (Woo et al., "ConvNeXt V2:
+Co-designing and Scaling ConvNets with Masked Autoencoders", CVPR 2023). Neither the
+pretrained weights nor any trained checkpoint is distributed here.
+
+Embedded JavaScript
+-------------------
+docs/demo/calibration-explorer.html, and its copy on the website, embeds the
+Plotly.js bundle (MIT License). The bundle includes MapLibre GL JS (BSD 3-Clause
+License) and other components; their copyright and licence notices are kept in the
+embedded code.
+
+Python dependencies
+-------------------
+Dependencies are installed from package indexes under their own licences and are
+not redistributed in this repository.
