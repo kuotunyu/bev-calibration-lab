@@ -1,5 +1,7 @@
 # 模型卡：ConvNeXtV2-Tiny 外參修正器
 
+[English](model-card.en.md)
+
 ## 用途與界線
 
 這是 nuScenes `CAM_FRONT`–`LIDAR_TOP` 外參故障研究的學習式基線，用來估計已注入 rigid transform 的逆修正。它不做物件偵測、不預測煞車、不估計 timing correction，也不是已驗證可部署於車輛的標定系統。應同時閱讀[研究卡](experiment-card.md)及全部 seed、zero-fault 與 baseline 結果。
@@ -35,4 +37,4 @@
 
 [正式五檔](evidence/README.md)保存 locked-cohort 的 pose、pixel、edge、BEV、recovery、timing 與 exclusions；[重現紀錄](verification/analysis-reproduction.md)說明分析身份與數值配對修復。精確效能數字應從相同 artifact/claim binding 呈現，不能以模型完成訓練代替結果。
 
-模型的輸入解析度、感測器、資料分布、投影與地面假設均固定。尚未證明跨相機、跨資料集或實車場景的泛化能力。所有預定故障條件與零故障退步都必須保留；弱恢復的全部原因仍未確定。Random-weight 的 synthetic 測試只驗證 adapter 行為，不能當成正式模型的效能或預訓練 eligibility 證據。
+模型的輸入解析度、感測器、資料分布、投影與地面假設均固定。尚未證明跨相機、跨資料集或實車場景的泛化能力。所有預定故障條件與零故障退步都必須保留；弱恢復的全部原因仍未確定。Seed 42 不修正偏擺（正式 `pitch`）。Random-weight 的 synthetic 測試只驗證 adapter 行為，不能當成正式模型的效能或預訓練 eligibility 證據。

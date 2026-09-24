@@ -1,6 +1,6 @@
 # 文件入口
 
-[正體中文首頁](../README.md) · [English overview](../README.en.md)
+[正體中文首頁](../README.md) · [English overview](../README.en.md) · [English documentation index](README.en.md)
 
 先讀[研究卡](experiment-card.md)理解比較問題與結果界線，再讀[模型卡](model-card.md)理解輸入、輸出與權重來源。引用 ±0.25° 的 recovery、timing 壓力測試或遠距 BEV 誤差之前，請先讀 [v1.0.0 已知問題](errata.zh-TW.md)。
 

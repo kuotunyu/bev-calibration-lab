@@ -1,5 +1,7 @@
 # 研究卡：外參故障的敏感度與恢復
 
+[English](experiment-card.en.md)
+
 ## 研究問題
 
 在固定的 nuScenes 感測器觀測上，LiDAR–相機外參偏差如何影響幾何誤差？identity、傳統最佳化與學習式修正能恢復多少？本研究衡量幾何與校正行為，不把地面接觸點重建當成 detector 準確率，也沒有閉迴路 AEB 或實車安全驗證。
