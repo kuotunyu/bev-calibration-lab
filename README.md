@@ -37,7 +37,7 @@ ConvNeXtV2-Tiny 修正器（三個 seed 的平均）在故障矩陣的全部 60 
 
 ![各相機軸的 pixel P50 對注入故障大小，包含 identity、classical 與三個 learned seed，並標出與不修正相比的損益平衡點](docs/analysis/operating_envelope_v1/operating-envelope.svg)
 
-上圖與上述計數是對已發布 evidence 的衍生分析（derived），有自己的來源身份，見 [operating envelope](docs/analysis/operating-envelope.md)。正式的 [Recovery 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)與 [BEV 誤差圖](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)保留每個方法、seed 與條件，在圖上停留即可看到精確數值與來源。引用 ±0.25° 的 identity recovery、timing 壓力測試或遠距 BEV 誤差之前，請先讀[已知問題](docs/errata.zh-TW.md)。
+上圖與上述計數是對已發布 evidence 的衍生分析（derived），有自己的來源身份，見 [operating envelope](docs/analysis/operating-envelope.md)。正式的 [Recovery 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)與 [BEV 誤差圖](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)保留每個方法、seed 與條件，在圖上停留即可看到精確數值與來源。引用 ±0.25° 的 identity recovery、timing 壓力測試或 10 m 以外的 BEV 誤差之前，請先讀[已知問題](docs/errata.zh-TW.md)。
 
 ## 對自駕車的意義
 
@@ -132,7 +132,7 @@ uv run --frozen python -m bevcalib.dev verify
 - 只有三個固定的訓練 seed，分別回報；它們的平均不是 ensemble，區間也不涵蓋訓練隨機性。Seed 42 不修正偏擺。
 - identity 在 ±0.25° 的 recovery 是浮點數邊界假象（[已知問題](docs/errata.zh-TW.md)）。
 - v1 的 timing 壓力測試沒有提供資訊（[已知問題](docs/errata.zh-TW.md)）。
-- BEV 誤差依賴平面地面假設，在零故障就留下殘差，而且遠距 bin 由接近水平的射線主導；只解讀 0-10 m 與 10-20 m（[已知問題](docs/errata.zh-TW.md)）。
+- BEV 誤差依賴平面地面假設，在零故障就留下殘差，而且 10 m 以外的 bin 由條件很差的射線主導；只解讀 0-10 m（[已知問題](docs/errata.zh-TW.md)）。
 - 區間是各條件的逐點區間，不是同時區間。
 - 弱恢復的原因尚未完全確定；[有界診斷](docs/verification/corrector-diagnostics.md)排除了部分實作問題，但不是全部。
 - 這裡量測的是標定幾何，不是偵測器表現、閉迴路行為或實車安全。

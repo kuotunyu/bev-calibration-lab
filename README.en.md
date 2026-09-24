@@ -48,7 +48,7 @@ The formal [recovery](https://kuotunyu.github.io/bev-calibration-lab/figures/rec
 and [BEV error](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)
 figures keep every method, seed and condition, with exact values and sources on hover.
 Read the [known issues](docs/errata.md) before citing identity recovery at ±0.25°, the
-timing stress test or far-range BEV error.
+timing stress test or BEV error beyond 10 m.
 
 ## Why it matters for autonomous driving
 
@@ -204,8 +204,8 @@ Native data, training and evaluation commands are in
   ([known issues](docs/errata.md)).
 - The v1 timing stress test carries no information ([known issues](docs/errata.md)).
 - BEV error rests on a flat-ground assumption that leaves a residual at zero fault, and
-  its far range bins are dominated by grazing rays; read only the 0-10 m and 10-20 m
-  bins ([known issues](docs/errata.md)).
+  its bins beyond 10 m are dominated by badly conditioned rays; read only the 0-10 m
+  bin ([known issues](docs/errata.md)).
 - Intervals are pointwise for each condition, not simultaneous.
 - The causes of weak recovery are not fully established; the
   [bounded diagnostics](docs/verification/corrector-diagnostics.md) exclude some

@@ -4,8 +4,8 @@
 
 Start with the [experiment card](experiment-card.en.md) for the question and the limits
 of the results, then the [model card](model-card.en.md) for inputs, outputs and weight
-provenance. Read the [v1.0.0 known issues](errata.md) before citing recovery at ±0.25°,
-the timing stress test or far-range BEV error.
+provenance. Read the [v1.0.0 known issues](errata.md) before citing identity recovery at
+±0.25°, the timing stress test or BEV error beyond 10 m.
 
 | To check | Document |
 | --- | --- |

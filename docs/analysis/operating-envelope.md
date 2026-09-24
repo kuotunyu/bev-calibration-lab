@@ -109,6 +109,13 @@ consistent with a seed that rarely moves the pan angle:
 12.07% for seed 42 against 2.89% for seed 17 and 2.39% for seed 73. <!-- bind: 12.07 = recovery#/runs/learned-42/pitch:0/value ; 2.89 = recovery#/runs/learned-17/pitch:0/value ; 2.39 = recovery#/runs/learned-73/pitch:0/value -->
 Seeds are fixed by the protocol and are never selected on these results.
 
+## BEV range bins
+
+The document also records, for each ground-contact BEV range bin, the smallest and largest scene-mean BEV error over the five methods and the 60 conditions. <!-- bind: 60 = envelope#/grid/conditions -->
+Only the 0-10 m bin stays bounded, from 0.99 to 3.00 m; the 10-20 m bin already reaches 2069.72 m. <!-- bind: 0.99 = envelope#/bev_range/0-10/min ; 3.00 = envelope#/bev_range/0-10/max ; 2069.72 = envelope#/bev_range/10-20/max -->
+The [known issues](../errata.md#3-bev-means-beyond-10-m-are-dominated-by-badly-conditioned-rays) explain why the means beyond
+10 m do not measure calibration sensitivity.
+
 ## What this does not show
 
 These counts describe the 30 locked scenes and the three fixed seeds. <!-- bind: 30 = metrics#/runs/identity/roll:1/pixel_frame_p50_px/support/scenes -->

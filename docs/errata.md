@@ -63,7 +63,7 @@ depends on the sweep.
 LiDAR-camera time offsets. A timing study needs non-keyframe sweeps staged for every
 scene.
 
-## 3. Far-range BEV means are dominated by grazing rays
+## 3. BEV means beyond 10 m are dominated by badly conditioned rays
 
 The BEV estimand reconstructs each box's ground contact by intersecting the camera ray
 through the box bottom with a flat ground plane at the ego origin's height
@@ -71,14 +71,14 @@ through the box bottom with a flat ground plane at the ego origin's height
 the ray meets the plane at a shallow angle, a small angle or height difference moves
 the intersection far along the ground: for a camera at height h and a contact at
 distance d, an angular error δ moves it by roughly d²·δ/h. A few near-horizon rays
-therefore dominate the mean of the far range bins.
+therefore dominate the mean of every bin beyond 10 m.
 
 - Identity at zero fault, where the plane model is the only error, already has mean errors of 1.18, 8.16, 54.50 and 781.05 m in the 0-10, 10-20, 20-40 and 40-80 m bins. <!-- bind: 1.18 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~10-10/value ; 8.16 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~110-20/value ; 54.50 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~120-40/value ; 781.05 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~140-80/value -->
-- A -2° tilt fault (formal `roll`) gives 1.19, 3.68, 11.99 and 26.42 m in the same bins: the fault lowers the far-bin means. <!-- bind: 1.19 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~10-10/value ; 3.68 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~110-20/value ; 11.99 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~120-40/value ; 26.42 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~140-80/value -->
-- The largest 40-80 m mean in the evidence is 6813.33 m (learned-73 at `yaw:-0.25`). <!-- bind: 6813.33 = metrics#/runs/learned-73/yaw:-0.25/bev_frame_mean_m~140-80/value -->
+- A -2° tilt fault (formal `roll`) gives 1.19, 3.68, 11.99 and 26.42 m in the same bins: the fault lowers every mean beyond 10 m. <!-- bind: 1.19 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~10-10/value ; 3.68 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~110-20/value ; 11.99 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~120-40/value ; 26.42 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~140-80/value -->
+- The largest 40-80 m mean over the five methods and the 60 conditions is 6813.33 m (learned-73 at `yaw:-0.25`). <!-- bind: 60 = envelope#/grid/conditions ; 6813.33 = envelope#/bev_range/40-80/max ; 6813.33 = metrics#/runs/learned-73/yaw:-0.25/bev_frame_mean_m~140-80/value -->
 
-**Correct reading.** Interpret BEV error only in the 0-10 m and 10-20 m bins. The
-far-bin means reflect how well the ray-plane intersection is conditioned, not
-calibration sensitivity. The published
+**Correct reading.** Interpret BEV error only in the 0-10 m bin, where every method stays between 0.99 and 3.00 m in all 60 conditions. <!-- bind: 0.99 = envelope#/bev_range/0-10/min ; 3.00 = envelope#/bev_range/0-10/max ; 60 = envelope#/grid/conditions -->
+From 10 m outward a few badly conditioned ray-plane intersections dominate the means, which therefore do not measure calibration sensitivity: the 10-20 m bin already reaches 2069.72 m (learned-42 at `roll:-0.5`). <!-- bind: 2069.72 = envelope#/bev_range/10-20/max ; 2069.72 = metrics#/runs/learned-42/roll:-0.5/bev_frame_mean_m~110-20/value -->
+The published
 [BEV figure](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)
 shares one vertical scale across bins, so its scale is set by the far bins.

@@ -34,12 +34,14 @@ Pixel 與 BEV 誤差比較的是同一組點與框在真實標定與假設標定
 
 **正確讀法。** v1 的 timing 壓力測試既不能說明對 LiDAR-相機時間偏移的穩健性，也不能說明敏感度。要做 timing 研究，必須為每個場景準備非 keyframe 的 sweep。
 
-## 3. 遠距 BEV 平均值由接近水平的射線主導
+## 3. 10 m 以外的 BEV 平均值由條件很差的射線主導
 
-BEV 指標把相機穿過框底部的射線與位於 ego 原點高度的平面地面相交，重建每個框的接地位置（[座標契約](coordinate-contract.md#oracle-controlled-ipm-baseline)）。射線與地面夾角很小時，一點點角度或高度差就會讓交點沿地面移動很遠：相機高度為 h、接地點距離為 d 時，角度誤差 δ 大約造成 d²·δ/h 的位移。因此遠距 bin 的平均值由少數接近水平的射線主導。
+BEV 指標把相機穿過框底部的射線與位於 ego 原點高度的平面地面相交，重建每個框的接地位置（[座標契約](coordinate-contract.md#oracle-controlled-ipm-baseline)）。射線與地面夾角很小時，一點點角度或高度差就會讓交點沿地面移動很遠：相機高度為 h、接地點距離為 d 時，角度誤差 δ 大約造成 d²·δ/h 的位移。因此 10 m 以外每個 bin 的平均值都由少數接近水平的射線主導。
 
 - 在零故障下只有平面模型本身的誤差，identity 在 0-10、10-20、20-40、40-80 m 四個 bin 的平均誤差已經是 1.18、8.16、54.50、781.05 m。 <!-- bind: 1.18 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~10-10/value ; 8.16 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~110-20/value ; 54.50 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~120-40/value ; 781.05 = metrics#/runs/identity/pitch:0/bev_frame_mean_m~140-80/value -->
-- 加入 -2° 的俯仰（tilt，正式 `roll`）故障後，同樣四個 bin 是 1.19、3.68、11.99、26.42 m：故障反而讓遠距平均值變小。 <!-- bind: 1.19 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~10-10/value ; 3.68 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~110-20/value ; 11.99 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~120-40/value ; 26.42 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~140-80/value -->
-- evidence 中最大的 40-80 m 平均誤差是 6813.33 m（learned-73 在 `yaw:-0.25`）。 <!-- bind: 6813.33 = metrics#/runs/learned-73/yaw:-0.25/bev_frame_mean_m~140-80/value -->
+- 加入 -2° 的俯仰（tilt，正式 `roll`）故障後，同樣四個 bin 是 1.19、3.68、11.99、26.42 m：故障反而讓 10 m 以外的平均值都變小。 <!-- bind: 1.19 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~10-10/value ; 3.68 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~110-20/value ; 11.99 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~120-40/value ; 26.42 = metrics#/runs/identity/roll:-2/bev_frame_mean_m~140-80/value -->
+- 五個方法在 60 個條件中最大的 40-80 m 平均誤差是 6813.33 m（learned-73 在 `yaw:-0.25`）。 <!-- bind: 60 = envelope#/grid/conditions ; 6813.33 = envelope#/bev_range/40-80/max ; 6813.33 = metrics#/runs/learned-73/yaw:-0.25/bev_frame_mean_m~140-80/value -->
 
-**正確讀法。** BEV 誤差只解讀 0-10 m 與 10-20 m 兩個 bin。遠距 bin 的平均值反映的是射線與平面相交的條件好壞，而不是對標定的敏感度。已發布的 [BEV 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)各 bin 共用同一個縱軸，因此縱軸刻度由遠距 bin 決定。
+**正確讀法。** BEV 誤差只解讀 0-10 m bin：在全部 60 個條件中，每個方法都介於 0.99 與 3.00 m 之間。 <!-- bind: 0.99 = envelope#/bev_range/0-10/min ; 3.00 = envelope#/bev_range/0-10/max ; 60 = envelope#/grid/conditions -->
+從 10 m 起，平均值由少數條件很差的射線與平面交點主導，因此不能當成對標定的敏感度；10-20 m bin 已出現 2069.72 m（learned-42 在 `roll:-0.5`）。 <!-- bind: 2069.72 = envelope#/bev_range/10-20/max ; 2069.72 = metrics#/runs/learned-42/roll:-0.5/bev_frame_mean_m~110-20/value -->
+已發布的 [BEV 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)各 bin 共用同一個縱軸，因此縱軸刻度由遠距 bin 決定。

@@ -103,7 +103,7 @@ hypotheses, and never tune directly on the locked evaluation already seen or swa
 better-looking seed.
 
 Three reading notes found after the release, on identity recovery at ±0.25°, the
-uninformative timing stress and far-range BEV error, are in
+uninformative timing stress and BEV error beyond 10 m, are in
 [v1.0.0 known issues](errata.md). A derived analysis of where correction helps is in the
 [operating envelope](analysis/operating-envelope.md).
 

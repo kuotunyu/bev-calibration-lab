@@ -49,6 +49,6 @@
 
 地面平面假設在真實 box bottom 不落在該平面時，可在零故障留下非零重建誤差。弱恢復與退步的全部原因尚未確定，不能宣稱已證明不存在實作問題。後續診斷應保留失敗，區分程式修復與新的研究假說；不得用已看過的 locked evaluation 直接調參或替換較漂亮的 seed。
 
-發布後找到三項閱讀注意事項：±0.25° 的 identity recovery 是浮點數邊界假象、timing 壓力測試沒有提供資訊，以及遠距 BEV 平均值由接近水平的射線主導，見 [v1.0.0 已知問題](errata.zh-TW.md)。修正在哪些範圍有幫助的衍生分析見 [operating envelope](analysis/operating-envelope.md)。
+發布後找到三項閱讀注意事項：±0.25° 的 identity recovery 是浮點數邊界假象、timing 壓力測試沒有提供資訊，以及 10 m 以外的 BEV 平均值由條件很差的射線主導，見 [v1.0.0 已知問題](errata.zh-TW.md)。修正在哪些範圍有幫助的衍生分析見 [operating envelope](analysis/operating-envelope.md)。
 
 正式報告、互動展示與 v1.0.0 發布已完成驗收，詳見[發布核對](verification/publication-and-interchange.md)。工程驗收不改變上述研究限制。任何新的分析或實驗都需獨立來源身份，不能回寫這份凍結結果。
