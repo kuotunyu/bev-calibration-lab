@@ -66,6 +66,15 @@ def test_ci_runs_the_full_gate_on_linux_and_windows_from_the_frozen_lock() -> No
     assert sync_index < backend_index < gate_index
 
 
+def test_ci_cancels_superseded_runs_only_for_pull_requests() -> None:
+    # A second push to main must not cancel the first push's run and leave that
+    # commit without a completed result; a newer pull-request push may.
+    assert _workflow("ci.yml")["concurrency"] == {
+        "group": "ci-${{ github.ref }}",
+        "cancel-in-progress": "${{ github.event_name == 'pull_request' }}",
+    }
+
+
 def test_ci_rebuilds_and_installs_reproducible_packages_after_the_full_gate() -> None:
     runs = _runs(_workflow("ci.yml")["jobs"]["verify"])
 
