@@ -146,7 +146,19 @@ only_mutate = [
     "src/bevcalib/analysis/estimands.py",
     "src/bevcalib/analysis/aggregate.py",
 ]
-also_copy = ["configs", "schemas", "docs", ".agents", ".github"]
+# Contract tests also read the READMEs, NOTICE and CITATION.cff from the repository
+# root, so those single files are copied into the sandbox as well.
+also_copy = [
+    "configs",
+    "schemas",
+    "docs",
+    ".agents",
+    ".github",
+    "README.md",
+    "README.en.md",
+    "NOTICE",
+    "CITATION.cff",
+]
 # One test file is excluded because it READS first-party source rather than
 # running it: the envelope conformance check scans `src/` for any mention of
 # driving-risk-metrics' package, and mutmut rewrites `src/` to create mutants, so inside the

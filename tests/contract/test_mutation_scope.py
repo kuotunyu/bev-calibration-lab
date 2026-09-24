@@ -30,6 +30,10 @@ def test_mutation_sandbox_copies_non_source_inputs_consumed_by_contract_tests() 
         Path(".github/workflows/ci.yml"),
         Path(".github/workflows/pages.yml"),
         Path(".github/workflows/release.yml"),
+        Path("README.md"),
+        Path("README.en.md"),
+        Path("NOTICE"),
+        Path("CITATION.cff"),
     )
 
     assert all((root / path).is_file() for path in consumed)
