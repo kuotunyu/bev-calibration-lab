@@ -231,10 +231,13 @@ presentation acceptance and release checks, and the
 
 ## Data, model and third-party licences
 
-- **Source code:** MIT, see [LICENSE](LICENSE).
+- **Source code:** MIT, see [LICENSE](LICENSE), apart from the nuScenes-derived values
+  it restates, which the next item covers.
 - **Evidence and figures:** `docs/evidence/`, the claims registry `docs/claims.yaml`,
-  `docs/figures/`, `docs/analysis/`, and their copies and tables on the website are
-  aggregate measurements derived from nuScenes v1.0-trainval.
+  `docs/figures/`, `docs/analysis/`, their copies and tables on the website, and the
+  values restated from them elsewhere in this repository (such as this README's result
+  tables, the known issues, the experiment cards, the coordinate contract and test
+  fixtures) are aggregate measurements derived from nuScenes v1.0-trainval.
   They contain no images, point clouds, sample tokens or scene names, and they are shared
   for non-commercial research under the nuScenes terms of use (CC BY-NC-SA 4.0). nuScenes
   itself is distributed by Motional and is not redistributed here. If you use these

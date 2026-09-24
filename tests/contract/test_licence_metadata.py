@@ -11,9 +11,15 @@ import datetime as dt
 import tomllib
 from pathlib import Path
 
+import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
+RESTATED = "the values restated from them elsewhere in this repository"
+
+
+def _words(text: str) -> str:
+    return " ".join(text.split())
 
 
 def test_citation_describes_the_released_package_and_cites_nuscenes() -> None:
@@ -34,7 +40,7 @@ def test_citation_describes_the_released_package_and_cites_nuscenes() -> None:
 
 
 def test_notice_scopes_code_data_weights_and_embedded_javascript() -> None:
-    notice = (ROOT / "NOTICE").read_text(encoding="utf-8")
+    notice = _words((ROOT / "NOTICE").read_text(encoding="utf-8"))
 
     for phrase in (
         "MIT License",
@@ -47,3 +53,30 @@ def test_notice_scopes_code_data_weights_and_embedded_javascript() -> None:
         "BSD 3-Clause",
     ):
         assert phrase in notice, phrase
+
+
+def test_notice_covers_values_restated_outside_the_result_files() -> None:
+    """READMEs, cards, known issues and test fixtures repeat evidence values."""
+
+    notice = _words((ROOT / "NOTICE").read_text(encoding="utf-8"))
+    derived = notice.split("nuScenes-derived results", 1)[1].split("Pretrained", 1)[0]
+
+    assert RESTATED in derived
+    assert "fixture and example values in src/ and tests/" in derived
+    assert "apart from the nuScenes-derived values they restate" in notice
+
+
+@pytest.mark.parametrize(
+    ("readme", "heading", "phrase"),
+    [
+        ("README.en.md", "## Data, model and third-party licences", RESTATED),
+        ("README.md", "## 資料、模型與第三方授權", "以及在本 repository 其他地方轉述的這些數值"),
+    ],
+)
+def test_readme_licence_sections_cover_the_restated_values(
+    readme: str, heading: str, phrase: str
+) -> None:
+    text = (ROOT / readme).read_text(encoding="utf-8")
+    section = text.split(heading, 1)[1].split("\n## ", 1)[0]
+
+    assert phrase in _words(section)

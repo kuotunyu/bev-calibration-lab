@@ -7,15 +7,20 @@ of its website (https://kuotunyu.github.io/bev-calibration-lab/).
 Source code
 -----------
 The source code, tests, configuration and schemas are licensed under the MIT
-License; see LICENSE.
+License, apart from the nuScenes-derived values they restate, which the next
+section covers; see LICENSE.
 
 nuScenes-derived results
 ------------------------
 The evidence documents (docs/evidence/), the claims registry that restates their
 values (docs/claims.yaml), the figures (docs/figures/), the derived analyses
-(docs/analysis/), and their copies and result tables on the website are aggregate
-measurements computed from the nuScenes v1.0-trainval dataset. They contain no
-camera images, LiDAR point clouds, sample or box tokens, or scene names.
+(docs/analysis/), their copies and result tables on the website, and the values
+restated from them elsewhere in this repository are aggregate measurements computed
+from the nuScenes v1.0-trainval dataset. The restated values include the result
+tables and numbers in README.md, README.en.md and docs/ (for example the known
+issues, the experiment cards and the coordinate contract) and the fixture and
+example values in src/ and tests/. They contain no camera images, LiDAR point
+clouds, sample or box tokens, or scene names.
 
 nuScenes is provided by Motional under the nuScenes terms of use
 (https://www.nuscenes.org/terms-of-use), which allow non-commercial use under the
