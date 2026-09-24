@@ -33,7 +33,7 @@ involve identity; identity at every other condition.
 
 **Correct reading.** At ±0.25° identity is inside the declared tolerance, so all of
 its frames should count as recovered, and every identity→* recovery difference at
-those conditions would be negative: a corrector can only move frames out of
+those conditions would be zero or negative: a corrector can only move frames out of
 tolerance. Do not cite identity→* recovery at ±0.25° as a result.
 
 **Remedy for a future protocol.** Compare with an explicit numerical tolerance (for

@@ -17,7 +17,7 @@ Recovery 的定義是：geodesic 旋轉誤差不超過 0.25°、平移誤差不�
 
 **不受影響。** Pose、pixel、edge 與 BEV 指標；所有不涉及 identity 的比較；identity 在其他條件的結果。
 
-**正確讀法。** identity 在 ±0.25° 其實落在宣告的容許範圍內，每個 frame 都應算作已恢復；這些條件下每個 identity→* 的 recovery 差值都應為負，因為修正器只可能把原本合格的 frame 移出容許範圍。不要把 ±0.25° 的 identity→* recovery 當成結果引用。
+**正確讀法。** identity 在 ±0.25° 其實落在宣告的容許範圍內，每個 frame 都應算作已恢復；這些條件下每個 identity→* 的 recovery 差值都應為零或負，因為修正器只可能把原本合格的 frame 移出容許範圍。不要把 ±0.25° 的 identity→* recovery 當成結果引用。
 
 **未來 protocol 的修正方式。** 比較時使用明確的數值容差（例如 `error <= threshold + 1e-9`），或讓門檻不要與故障等級重合。v1 evidence 維持發布時的樣子。
 
