@@ -10,6 +10,19 @@
 
 分派依 location 分層與 token SHA-256 排序，不能依結果換 cohort。固定設定見[protocol](../configs/protocols/nuscenes_calibration_v1.yaml)、[故障矩陣](../configs/perturbations/formal_v1.yaml)與[cohort 契約](cohort-contract.md)。旋轉和平移逐軸施加；timing 是獨立的 identity-only sweep selection 壓力測試，沒有學習式 timing recovery，而且在 v1 沒有提供資訊（見[已知問題](errata.zh-TW.md)）。
 
+### 故障軸
+
+故障組合在 CAM_FRONT 外參的相機端，所以正式的軸名稱指的是相機光學座標系（x 向右、y 向下、z 向前），不是車體座標。正式的 `yaw` 是繞光軸的旋轉，不是航向誤差。identity 欄是尚未修正時，1° 或 0.1 m 的故障讓投影 LiDAR 點移動的距離。
+
+| 正式名稱 | 光學座標系中的軸 | 物理效果 | identity 在 1° 或 0.1 m 的 pixel P50 |
+| --- | --- | --- | ---: |
+| `roll` | x（向右） | 俯仰（tilt） | 22.44 px <!-- bind: 22.44 = metrics#/runs/identity/roll:1/pixel_frame_p50_px/value --> |
+| `pitch` | y（向下） | 偏擺（pan） | 23.95 px <!-- bind: 23.95 = metrics#/runs/identity/pitch:1/pixel_frame_p50_px/value --> |
+| `yaw` | z（光軸） | 影像平面內旋轉 | 7.74 px <!-- bind: 7.74 = metrics#/runs/identity/yaw:1/pixel_frame_p50_px/value --> |
+| `x` | x（向右） | 橫向偏移 | 10.92 px <!-- bind: 10.92 = metrics#/runs/identity/x:0.1/pixel_frame_p50_px/value --> |
+| `y` | y（向下） | 垂直偏移 | 10.98 px <!-- bind: 10.98 = metrics#/runs/identity/y:0.1/pixel_frame_p50_px/value --> |
+| `z` | z（光軸） | 前向偏移 | 3.57 px <!-- bind: 3.57 = metrics#/runs/identity/z:0.1/pixel_frame_p50_px/value --> |
+
 學習式模型使用 seeds 17、42、73，各自保留 checkpoint 與結果。依相同 calibration corruption policy，選擇最早達到最低 calibration loss 的 checkpoint；locked evaluation 不參與選模、超參數或圖表條件選擇。[訓練設定](../configs/correctors/convnextv2_tiny_v1.yaml)與[訓練契約](training-contract.md)記錄完整規則。
 
 ## 比較與統計解讀

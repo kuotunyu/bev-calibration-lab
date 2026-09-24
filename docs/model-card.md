@@ -12,10 +12,10 @@
 | 輸入 | 448 × 800，依序 RGB、assumed-calibration projected depth、validity mask |
 | RGB | 除以 255，使用 ImageNet mean/std；Pillow bilinear half-pixel resize 同步修改 intrinsics |
 | Depth | min-depth rasterization；`log1p(d)/log1p(80)`，clip 至 `[0,1]`；mask 明確區分缺深度 |
-| 輸出 | roll/pitch/yaw（degrees），x/y/z（metres） |
+| 輸出 | roll/pitch/yaw（degrees），x/y/z（metres），皆為 CAM_FRONT 光學座標系的軸 |
 | Target | 注入 source-side rigid transform 的完整逆；inverse translation 要旋轉，不是逐分量取負 |
 
-五通道 stem 由 RGB weights 擴充，新增兩通道取 mean-RGB kernel，並依權重能量縮放；這不表示影像、深度與 mask 的輸入分布相同。推論輸出保持物理單位，不能再套一次 training loss normalization。完整公式與邊界見[訓練契約](training-contract.md)與[座標契約](coordinate-contract.md)。
+五通道 stem 由 RGB weights 擴充，新增兩通道取 mean-RGB kernel，並依權重能量縮放；這不表示影像、深度與 mask 的輸入分布相同。推論輸出保持物理單位，不能再套一次 training loss normalization。完整公式與邊界見[訓練契約](training-contract.md)與[座標契約](coordinate-contract.md)。輸出的 roll 是俯仰（tilt）、pitch 是偏擺（pan）、yaw 是影像平面內旋轉，對照表見[研究卡](experiment-card.md#故障軸)。
 
 ## 權重與訓練身份
 

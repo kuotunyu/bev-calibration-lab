@@ -10,7 +10,7 @@
 | 發布後找到的閱讀注意事項 | [v1.0.0 已知問題](errata.zh-TW.md)（[English](errata.md)） |
 | 統計單位、配對、bootstrap 與缺值 | [正式分析契約](contracts/formal-analysis.md) |
 | 資料用途與排除界線 | [資料卡](dataset-card.md)、[cohort 契約](cohort-contract.md) |
-| 座標方向與不同感測器時間 | [座標契約](coordinate-contract.md) |
+| 座標方向、故障軸與不同感測器時間 | [座標契約](coordinate-contract.md) |
 | 前處理、目標、選模與 provenance | [訓練契約](training-contract.md) |
 | 校正器效果偏弱的有界診斷 | [診斷證據與未解問題](verification/corrector-diagnostics.md) |
 | 安裝後可執行的命令 | [命令與報告](commands-and-report.md) |
