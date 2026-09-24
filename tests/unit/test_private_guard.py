@@ -102,6 +102,88 @@ def test_a_tracked_credential_is_a_violation_whatever_the_file_is_called(tmp_pat
     assert check_repository(repo) == ("notebook.py: possible credential",)
 
 
+# Every fake token is assembled from split literals so that this tracked file does
+# not itself contain a string the guard would flag.
+@pytest.mark.parametrize(
+    "token",
+    [
+        "AI" + "za" + "A1_-" * 8 + "A1_",
+        "sk-" + "Ab1Cd2" * 6,
+        "sk-" + "proj-" + "Ab1_Cd2-" * 6,
+        "sk-" + "svcacct-" + "Ab1_Cd2-" * 6,
+        "sk-" + "admin-" + "Ab1_Cd2-" * 6,
+        "sk-" + "ant-" + "api03-" + "Ab1_Cd2-" * 6,
+        "hf" + "_" + "Ab1Cd2" * 6,
+        "gh" + "p_" + "A1" * 18,
+        "github" + "_pat_" + "A1_" * 27 + "A",
+        "gh" + "o_" + "A1" * 18,
+        "gh" + "u_" + "A1" * 18,
+        "gh" + "s_" + "A1" * 18,
+        "gh" + "r_" + "A1" * 18,
+        "AK" + "IA" + "ABCDEFGH23456789",
+        "-----BEGIN " + "PRIVATE KEY-----",
+        "-----BEGIN " + "RSA PRIVATE KEY-----",
+        "-----BEGIN " + "OPENSSH PRIVATE KEY-----",
+        "-----BEGIN " + "ENCRYPTED PRIVATE KEY-----",
+        "-----BEGIN " + "PGP PRIVATE KEY BLOCK-----",
+    ],
+    ids=[
+        "google-api-key",
+        "openai-legacy",
+        "openai-project",
+        "openai-service-account",
+        "openai-admin",
+        "anthropic",
+        "hugging-face",
+        "github-classic-pat",
+        "github-fine-grained-pat",
+        "github-oauth",
+        "github-user-to-server",
+        "github-server-to-server",
+        "github-refresh",
+        "aws-access-key-id",
+        "pem-pkcs8",
+        "pem-rsa",
+        "pem-openssh",
+        "pem-encrypted",
+        "pgp",
+    ],
+)
+def test_every_known_token_and_private_key_format_is_a_credential(token: str) -> None:
+    """Each shape the guard knows is pinned, so dropping one fails a named case.
+
+    Google, OpenAI, Anthropic and Hugging Face keys, every GitHub token type, AWS access
+    key IDs, and PEM or PGP private key headers.
+    """
+
+    from bevcalib.private_guard import find_forbidden_tracked_files
+
+    text = {"settings.py": f'value = "{token}"\n'}
+
+    assert find_forbidden_tracked_files(("settings.py",), text) == (
+        "settings.py: possible credential",
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "-----BEGIN " + "PUBLIC KEY-----",
+        "-----BEGIN " + "CERTIFICATE-----",
+        "sk-" + "ant-" + "api03-" + "short",
+        "gh" + "o_" + "short",
+        "AK" + "IA" + "lowercase0123456",
+    ],
+    ids=["pem-public-key", "pem-certificate", "short-anthropic", "short-github", "aws-lowercase"],
+)
+def test_near_misses_of_credential_formats_are_not_flagged(text: str) -> None:
+    """Public keys, certificates and short prefixes are routine; flagging them would cry wolf."""
+
+    from bevcalib.private_guard import find_forbidden_tracked_files
+
+    assert find_forbidden_tracked_files(("notes.md",), {"notes.md": text}) == ()
+
+
 def test_every_violation_is_reported_once_in_a_stable_order(tmp_path: Path) -> None:
     """Fixing one leak per run, in an order that shifts, is how the second one ships."""
 

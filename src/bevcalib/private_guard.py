@@ -12,12 +12,21 @@ from pathlib import Path, PurePosixPath
 # Split so that this file, which is itself tracked, does not contain the literal
 # it searches for and cannot trip its own guard.
 _PRIVATE_MARKER = "PRIVATE HANDOFF" + " - DO NOT COMMIT"
+
+# Token shapes have a distinctive prefix and a minimum length, so hashes and base64
+# fixtures do not match; private keys are matched by their PEM or PGP header line.
+# Scoped OpenAI keys and Anthropic keys put a hyphenated segment after `sk-`, which
+# the legacy OpenAI shape cannot reach.
 _CREDENTIAL_PATTERNS = (
     re.compile(r"AIza[0-9A-Za-z_-]{35}"),
     re.compile(r"sk-[A-Za-z0-9]{32,}"),
+    re.compile(r"sk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{32,}"),
+    re.compile(r"sk-ant-[A-Za-z0-9_-]{32,}"),
     re.compile(r"hf_[A-Za-z0-9]{34,}"),
-    re.compile(r"ghp_[A-Za-z0-9]{36}"),
+    re.compile(r"gh[oprsu]_[A-Za-z0-9]{36}"),
     re.compile(r"github_pat_[A-Za-z0-9_]{82}"),
+    re.compile(r"AKIA[0-9A-Z]{16}"),
+    re.compile(r"-----BEGIN (?:[A-Z]+ )*PRIVATE KEY(?: BLOCK)?-----"),
 )
 _FORBIDDEN_ARTIFACT_SUFFIXES = (".npz", ".onnx", ".pt", ".pth", ".tar.gz", ".tgz", ".zip")
 
