@@ -224,7 +224,7 @@ links the explorer, the full report, the repository, the release and the known i
 The complete formal report is `evidence/index.html`, next to the five source
 documents it copies; `claims.yaml`, `figures/`, `analysis/` and `demo/` keep fixed
 paths, and `site-inventory.json` lists every file with its SHA-256. The Pages workflow
-runs this command after the repository gate.
+runs this command to build the published site.
 
 ## Validate a complete set of study inputs
 
