@@ -114,6 +114,8 @@ def test_landing_page_leads_with_bound_results_and_links_the_evidence(released, 
         "https://github.com/kuotunyu/bev-calibration-lab/blob/main/docs/errata.md",
     } <= set(page.links)
     assert "nuScenes" in html and "Kuo Tun-Yu" in html
+    # The two bound values are those at +1°; the -1° shifts differ in the last decimal.
+    assert "a +1° tilt or pan error in the CAM_FRONT&ndash;LIDAR_TOP extrinsic" in html
     assert "22.44</span>&ndash;" in html and "23.95</span> px" in html
     assert (
         "in 60 of 60 grid conditions (54 single-axis faults plus the zero-fault condition, "

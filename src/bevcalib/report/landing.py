@@ -137,7 +137,7 @@ def build_landing(
     pixel = "pixel_frame_p50_px"
     tldr = (
         f"On {observed('metrics', f'/runs/identity/roll:1/{pixel}/support/scenes', 0)} locked "
-        "nuScenes validation scenes, a 1° tilt or pan error in the CAM_FRONT&ndash;LIDAR_TOP "
+        "nuScenes validation scenes, a +1° tilt or pan error in the CAM_FRONT&ndash;LIDAR_TOP "
         "extrinsic shifts projected LiDAR points by "
         f"{observed('metrics', f'/runs/identity/roll:1/{pixel}/value', 2)}&ndash;"
         f"{observed('metrics', f'/runs/identity/pitch:1/{pixel}/value', 2)} px "
