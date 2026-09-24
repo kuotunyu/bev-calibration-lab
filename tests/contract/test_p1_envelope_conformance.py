@@ -2,10 +2,9 @@
 
 `tests/fixtures/portfolio_artifact_envelope_v1.json` holds the exact bytes of the
 canonical envelope produced by `driving-risk-metrics`. They were copied in, not
-imported: this repository must never depend on driving-risk-metrics at runtime, and a
-shared package
-would turn three independent implementations into one implementation with three
-call sites, which proves nothing.
+imported: this repository must never depend on driving-risk-metrics at runtime,
+and a shared package would turn three independent implementations into one
+implementation with three call sites, which proves nothing.
 
 If a future change to the envelope specification breaks these tests, the fix is to
 change all three repositories and recopy the fixture, not to relax the test.
