@@ -147,7 +147,7 @@ measured that way and was discarded.
 
 One test file is excluded from the sandbox, for a structural reason rather than
 for convenience: `tests/contract/test_p1_envelope_conformance.py` SCANS `src/`
-for any mention of P1's package, and mutmut rewrites `src/` to build mutants,
+for any mention of the driving-risk-metrics package, and mutmut rewrites `src/` to build mutants,
 so inside the sandbox that test describes the sandbox rather than the project.
 It exercises no mutable code path, so the exclusion costs no killing power.
 

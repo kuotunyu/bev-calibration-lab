@@ -75,7 +75,10 @@ def _scene_mean(poses: Sequence[PoseErrors]) -> tuple[list[float], list[float]]:
     if any(abs(value) > MAX_ROTATION_DEG for value in mean[:3]) or any(
         abs(value) > MAX_TRANSLATION_M for value in mean[3:]
     ):
-        raise ValueError("scene mean exceeds the P3 interchange bound; no clipping is permitted")
+        raise ValueError(
+            "scene mean exceeds the interchange bound shared with perception-error-to-aeb; "
+            "no clipping is permitted"
+        )
     return mean[:3], mean[3:]
 
 

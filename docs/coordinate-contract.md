@@ -283,8 +283,9 @@ its timing conditions have no pose-recovery summary.
 Public summary export contains aggregate numbers and provenance hashes, excluding
 scene, log, sample and sensor tokens. A report consumes safe aggregate JSON and its
 claims registry without requiring the private manifest, row files, data or checkpoints.
-Formal paired scene bootstrap and the final five-document study artifact set remain
-Task J; these descriptive summaries do not substitute for those statistical results.
+The formal paired scene bootstrap and the final five-document study artifact set are
+produced separately, under the [formal analysis contract](contracts/formal-analysis.md);
+these descriptive summaries do not substitute for those statistical results.
 
 ## Dataset readiness verification
 

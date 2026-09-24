@@ -1,9 +1,8 @@
 """Contracts for turning nuScenes records into frame-safe transforms.
 
 Everything here runs on synthetic records shaped like the devkit's tables. No
-nuScenes file is read: the dataset is gated until P1 is released, and more
-importantly, logic that only works when the real data is present is logic that
-nobody can test.
+nuScenes file is read, because logic that only works when the real data is present
+is logic that nobody can test.
 
 The chain being built is LiDAR sensor to LiDAR-time ego to global to camera-time
 ego to camera sensor. Two ego poses, from two timestamps.

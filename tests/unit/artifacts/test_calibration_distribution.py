@@ -148,6 +148,18 @@ def test_export_refuses_unusable_distribution_before_output(
     assert not (tmp_path / "distribution.json").exists()
 
 
+def test_bound_refusal_names_the_consumer_repository(export_inputs, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
+    """The error is read by people outside this project, so it names the consumer, not a label."""
+    module, rows, _ = export_inputs
+    rows["private-scene-a"][0].pose.rotation_rpy_error_deg = (100, 0, 0)
+    with pytest.raises(
+        ValueError,
+        match=r"^scene mean exceeds the interchange bound shared with perception-error-to-aeb; "
+        r"no clipping is permitted$",
+    ):
+        export(module, tmp_path)
+
+
 def test_export_preserves_unsupported_scene_and_frame_counts(export_inputs, tmp_path: Path) -> None:  # type: ignore[no-untyped-def]
     module, rows, _ = export_inputs
     rows["private-scene-b"][0].pose = None

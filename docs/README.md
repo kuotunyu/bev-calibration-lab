@@ -23,4 +23,4 @@
 
 v1.0.0 已完成發布與展示驗收。公開數值必須綁定相同 evidence 與 claims；工程測試也不能取代模型效能或實車安全證據。
 
-正式圖表、完整 claims、實際 P2/P3 互通結果與發布後核對見[報告與互通重現紀錄](verification/publication-and-interchange.md)。描述性互通沒有驗證模型效果對 AEB 的因果影響。
+正式圖表、完整 claims、與 perception-error-to-aeb 的實際互通結果及發布後核對見[報告與互通重現紀錄](verification/publication-and-interchange.md)。描述性互通沒有驗證模型效果對 AEB 的因果影響。

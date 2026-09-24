@@ -10,8 +10,8 @@ from functools import lru_cache
 import numpy as np
 import numpy.typing as npt
 
-# The same constants P1 used, so an interval from either project means the same
-# thing and the two are comparable side by side.
+# The same constants driving-risk-metrics used, so an interval from either project
+# means the same thing and the two are comparable side by side.
 DEFAULT_RESAMPLES = 5000
 DEFAULT_SEED = 20260831
 DEFAULT_CONFIDENCE = 0.95

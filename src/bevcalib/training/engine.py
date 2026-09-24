@@ -169,10 +169,11 @@ def train_learned_corrector(
     because a checkpoint chosen on it makes every later number a report on a
     decision rather than a measurement.
 
-    P1 removed the choice entirely, keeping only the final step, because it had no
-    cohort to spend on selection: its calibration split was already committed to
-    temperature fitting. P2 has twenty distinct-log scenes reserved for exactly
-    this, so the choice is kept and made where it is free.
+    The companion project driving-risk-metrics removed the choice entirely, keeping
+    only the final step, because it had no cohort to spend on selection: its
+    calibration split was already committed to temperature fitting. This project has
+    twenty distinct-log scenes reserved for exactly this, so the choice is kept and
+    made where it is free.
     """
 
     config_path = Path(config)
