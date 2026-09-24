@@ -1,8 +1,9 @@
 """Every new commit must carry the maintainer's noreply identity and no co-author.
 
-The CI job below enforces that on the pushed or pull-request range. These tests pin
-its configuration and then execute its actual shell script against throwaway
-repositories, so the rules are checked by running them rather than by reading them.
+The commit-identity job in ci.yml enforces that on the pushed or pull-request range.
+These tests pin its configuration and then execute its actual shell script against
+throwaway repositories, so the rules are checked by running them rather than by
+reading them.
 """
 
 from __future__ import annotations
