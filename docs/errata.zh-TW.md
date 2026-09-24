@@ -2,28 +2,28 @@
 
 [English](errata.md)
 
-這份說明是 v1.0.0 發布後重新檢查凍結 evidence 時寫下的。它不修改任何已發布的數值、圖表、claim、設定或 tag，只補充發布文件沒有解釋的三個部分該怎麼讀。下文每個數字都綁定已發布的 evidence，並由測試檢查。
+這份說明是 v1.0.0 發布後重新檢查凍結 evidence 時寫下的。它不修改任何已發布的數值、圖表、claim、設定或 tag，只補充發布文件沒有解釋的三個部分該怎麼讀。下文每個結果數字都綁定已發布的 evidence 或衍生的 [operating envelope](analysis/operating-envelope.md)，並由測試檢查。
 
 ## 1. identity 在 ±0.25° 的 recovery 是浮點數邊界假象
 
 Recovery 的定義是：geodesic 旋轉誤差不超過 0.25°、平移誤差不超過 5 cm，邊界值也算恢復（[`recovered()`](../src/bevcalib/metrics/calibration.py)）。故障矩陣的每個旋轉軸也都包含 ±0.25°（[故障矩陣](../configs/perturbations/formal_v1.yaml)）。identity 不修正注入的故障，所以它的誤差理應正好等於門檻。
-旋轉轉換中的浮點數捨入，讓記錄下來的誤差變成 0.2500000000006049°，比門檻大一點點，因此 identity 在這些條件下的 recovery 是 0%，而不是 100%。 <!-- bind: 0.2500000000006049 = metrics#/runs/identity/roll:0.25/rotation_geodesic_deg/value ; 0 = recovery#/runs/identity/roll:0.25/value -->
+旋轉轉換中的浮點數捨入，讓記錄下來的誤差變成 0.2500000000006049°，比門檻大一點點，因此 identity 在這些條件下的 recovery 是 0%，但依包含邊界的定義，它的每個 frame 都應算作已恢復。 <!-- bind: 0.2500000000006049 = metrics#/runs/identity/roll:0.25/rotation_geodesic_deg/value ; 0 = recovery#/runs/identity/roll:0.25/value -->
 同樣的捨入在 ±0.1° 得到 0.10000000000072487°，仍明顯在門檻內，recovery 是 100%。 <!-- bind: 0.10000000000072487 = metrics#/runs/identity/roll:0.1/rotation_geodesic_deg/value ; 100 = recovery#/runs/identity/roll:0.1/value -->
 
 **受影響範圍。** 六個條件：`roll:±0.25`、`pitch:±0.25`、`yaw:±0.25`。兩類欄位：identity 在這些條件的 recovery（[recovery.json](evidence/nuscenes_calibration_v1/recovery.json) 的 `/runs/identity/<condition>`，以及 metrics.json 的 `recovery_rate_pct`），以及同樣條件下 identity→* 的 recovery 比較（recovery.json 的 `/comparisons/identity->*/<condition>`）。
 這 30 個比較中有 24 個的 95% 區間完全大於零，看起來像是相對 identity 的顯著改善，實際上不是。 <!-- bind: 30 = envelope#/recovery_boundary/identity_comparisons ; 24 = envelope#/recovery_boundary/identity_comparisons_above_zero -->
 例如 identity → learned-42 在 `roll:0.25` 從 0% 變成 11.25%，區間為 5.63 到 17.40 個百分點。 <!-- bind: 0 = recovery#/comparisons/identity->learned-42/roll:0.25/before ; 11.25 = recovery#/comparisons/identity->learned-42/roll:0.25/after ; 5.63 = recovery#/comparisons/identity->learned-42/roll:0.25/interval/low ; 17.40 = recovery#/comparisons/identity->learned-42/roll:0.25/interval/high -->
-[Recovery 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)中 identity 從 ±0.1° 的 100% 掉到 ±0.25° 的 0%，也是同一個假象。
+[Recovery 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)中 identity 從 ±0.1° 的 100% 掉到 ±0.25° 的 0%，也是同一個假象。 <!-- bind: 100 = recovery#/runs/identity/roll:0.1/value ; 0 = recovery#/runs/identity/roll:0.25/value -->
 
 **不受影響。** Pose、pixel、edge 與 BEV 指標；所有不涉及 identity 的比較；identity 在其他條件的結果。
 
-**正確讀法。** identity 在 ±0.25° 其實落在宣告的容許範圍內，recovery 應為 100%；這些條件下每個 identity→* 的 recovery 差值都應為負，因為修正器只可能把原本合格的 frame 移出容許範圍。不要把 ±0.25° 的 identity→* recovery 當成結果引用。
+**正確讀法。** identity 在 ±0.25° 其實落在宣告的容許範圍內，每個 frame 都應算作已恢復；這些條件下每個 identity→* 的 recovery 差值都應為負，因為修正器只可能把原本合格的 frame 移出容許範圍。不要把 ±0.25° 的 identity→* recovery 當成結果引用。
 
 **未來 protocol 的修正方式。** 比較時使用明確的數值容差（例如 `error <= threshold + 1e-9`），或讓門檻不要與故障等級重合。v1 evidence 維持發布時的樣子。
 
 ## 2. v1 的 timing 壓力測試沒有提供資訊
 
-Timing 壓力測試固定相機曝光時間，選擇最接近「相機時間加上指定偏移」的 LIDAR_TOP 封包，誤差 25 ms 以內才有效。鎖定 cohort 是從 trainval keyframe 壓縮檔建立的，裡面只有 keyframe sweep（[nuScenes preflight](verification/nuscenes-preflight.md)）；只有一個場景的磁碟上有其他 sweep。因此不論指定哪個偏移，最近的封包幾乎都是距離相機曝光約 36 ms 的 keyframe sweep。
+Timing 壓力測試固定相機曝光時間，選擇最接近「相機時間加上指定偏移」的 LIDAR_TOP 封包，誤差 25 ms 以內才有效。鎖定 cohort 是從 trainval keyframe 壓縮檔建立的，裡面只有 keyframe sweep（[nuScenes preflight](verification/nuscenes-preflight.md)）；只有一個場景的磁碟上有其他 sweep。因此不論指定哪個偏移，最近的封包幾乎都是距離相機曝光約 36 ms 的 keyframe sweep。 <!-- bind: 36 = timing#/offsets/0/realized_offset_ms/median -->
 
 - 七個指定偏移的實際偏移中位數都在 35.81 到 36.09 ms 之間。 <!-- bind: 35.81 = timing#/offsets/-200/realized_offset_ms/median ; 36.09 = timing#/offsets/100/realized_offset_ms/median -->
 - 在 +50 ms，keyframe sweep 落在容許範圍內（絕對誤差中位數 14.02 ms），所以 1207 個 frame 中 1207 個有效。 <!-- bind: 14.02 = timing#/offsets/50/absolute_error_ms/median ; 1207 = timing#/offsets/50/total ; 1207 = timing#/offsets/50/valid -->

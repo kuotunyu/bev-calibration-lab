@@ -19,8 +19,9 @@ abstract: >-
   seeds beats the classical optimizer on geodesic rotation error, translation-norm
   error, pixel error and recovery in every condition of the fault grid but keeps a
   residual error floor, so it improves on leaving the calibration alone only for
-  larger faults. Every published number is bound to
-  the committed evidence by a machine-checked claims registry.
+  larger faults. The README's result numbers are checked against the committed
+  evidence: formal values through a machine-checked claims registry, derived counts
+  through a derived document whose source digests are verified.
 keywords:
   - autonomous-driving
   - sensor-fusion

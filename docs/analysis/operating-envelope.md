@@ -16,8 +16,8 @@ source identity, separate from the formal evidence, as the
   It refuses source documents whose digest differs from the released ones, and a
   contract test rebuilds both files from the evidence and compares their bytes.
 
-Every number on this page is bound to the derived document or to a verified claim of
-the formal evidence, and the test suite checks each one.
+Every result number on this page is bound to the derived document or to a verified
+claim of the formal evidence, and the test suite checks each one.
 
 ## Definitions
 

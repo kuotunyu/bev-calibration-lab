@@ -144,13 +144,16 @@ uv sync --frozen
 uv run --frozen bev-calib audit-claims --claims docs/claims.yaml
 ```
 
-Every published scalar is bound to a machine-checked registry of 90,126 claims, each
-naming its evidence document, JSON pointer, value and document digest (see the
-[evidence index](docs/evidence/README.md)). The audit re-reads the five evidence
-documents, validates their schemas, digests and cross-document consistency, and
-confirms that every claim still equals its evidence. The test suite applies the same
-binding to every number in this README. To rebuild the registry, the report with its
-figures and the derived operating envelope from the evidence:
+Every scalar the formal report displays is bound to a machine-checked registry of
+90,126 claims, each naming its evidence document, JSON pointer, value and document
+digest (see the [evidence index](docs/evidence/README.md)). The audit re-reads the five
+evidence documents, validates their schemas, digests and cross-document consistency,
+and confirms that every claim still equals its evidence. Every result number in this
+README's TL;DR, key findings and axis table also carries a hidden binding that the test
+suite checks: formal values against verified claims in that registry, and derived
+counts and ranges against the operating-envelope document, whose own digest and source
+digests it verifies. To rebuild the registry, the report with its figures and the
+derived operating envelope from the evidence:
 
 ```bash
 uv run --frozen bev-calib generate-claims --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output artifacts/check/claims.yaml

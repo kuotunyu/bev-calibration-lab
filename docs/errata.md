@@ -5,7 +5,8 @@
 These notes were written after the v1.0.0 release, by re-reading the frozen evidence.
 They change no released number, figure, claim, configuration or tag. They say how to
 read three parts of the evidence that the release documents did not explain. Each
-number below is bound to the released evidence and checked by the test suite.
+result number below carries a binding to the released evidence, or to the derived
+[operating envelope](analysis/operating-envelope.md), that the test suite checks.
 
 ## 1. Identity recovery at ±0.25° is a floating-point boundary artifact
 
@@ -14,7 +15,7 @@ Recovery counts a frame as recovered when its geodesic rotation error is at most
 ([`recovered()`](../src/bevcalib/metrics/calibration.py)). The fault grid also
 contains ±0.25° on every rotation axis ([fault matrix](../configs/perturbations/formal_v1.yaml)).
 Identity leaves the injected fault in place, so its error should equal the threshold
-exactly. Floating-point rounding in the rotation conversions makes the recorded error 0.2500000000006049°, just above the threshold, so identity scores 0% recovery at these conditions instead of 100%. <!-- bind: 0.2500000000006049 = metrics#/runs/identity/roll:0.25/rotation_geodesic_deg/value ; 0 = recovery#/runs/identity/roll:0.25/value -->
+exactly. Floating-point rounding in the rotation conversions makes the recorded error 0.2500000000006049°, just above the threshold, so identity scores 0% recovery at these conditions, although under the inclusive definition all of its frames should count as recovered. <!-- bind: 0.2500000000006049 = metrics#/runs/identity/roll:0.25/rotation_geodesic_deg/value ; 0 = recovery#/runs/identity/roll:0.25/value -->
 The same rounding at ±0.1° gives 0.10000000000072487°, which is well inside the threshold, and 100% recovery. <!-- bind: 0.10000000000072487 = metrics#/runs/identity/roll:0.1/rotation_geodesic_deg/value ; 100 = recovery#/runs/identity/roll:0.1/value -->
 
 **Affected.** Six conditions: `roll:±0.25`, `pitch:±0.25` and `yaw:±0.25`. Two
@@ -25,15 +26,15 @@ same conditions (`/comparisons/identity->*/<condition>` in recovery.json).
 In 24 of these 30 comparisons the 95% interval lies above zero, which reads as a significant improvement over identity. It is not one. <!-- bind: 24 = envelope#/recovery_boundary/identity_comparisons_above_zero ; 30 = envelope#/recovery_boundary/identity_comparisons -->
 For example, identity → learned-42 at `roll:0.25` goes from 0% to 11.25% with an interval of 5.63 to 17.40 percentage points. <!-- bind: 0 = recovery#/comparisons/identity->learned-42/roll:0.25/before ; 11.25 = recovery#/comparisons/identity->learned-42/roll:0.25/after ; 5.63 = recovery#/comparisons/identity->learned-42/roll:0.25/interval/low ; 17.40 = recovery#/comparisons/identity->learned-42/roll:0.25/interval/high -->
 The [recovery figure](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)
-shows the same artifact as identity dropping from 100% at ±0.1° to 0% at ±0.25°.
+shows the same artifact as identity dropping from 100% at ±0.1° to 0% at ±0.25°. <!-- bind: 100 = recovery#/runs/identity/roll:0.1/value ; 0 = recovery#/runs/identity/roll:0.25/value -->
 
 **Not affected.** Pose, pixel, edge and BEV estimands; every comparison that does not
 involve identity; identity at every other condition.
 
-**Correct reading.** At ±0.25° identity is inside the declared tolerance, so its
-recovery should be 100% and every identity→* recovery difference at those conditions
-would be negative: a corrector can only move frames out of tolerance. Do not cite
-identity→* recovery at ±0.25° as a result.
+**Correct reading.** At ±0.25° identity is inside the declared tolerance, so all of
+its frames should count as recovered, and every identity→* recovery difference at
+those conditions would be negative: a corrector can only move frames out of
+tolerance. Do not cite identity→* recovery at ±0.25° as a result.
 
 **Remedy for a future protocol.** Compare with an explicit numerical tolerance (for
 example `error <= threshold + 1e-9`), or choose thresholds that are not grid levels.
@@ -45,8 +46,8 @@ The timing stress keeps the camera exposure fixed and selects the LIDAR_TOP pack
 nearest to the camera time plus the requested offset, valid within 25 ms. The locked
 cohort was staged from the trainval keyframe archives, which contain only keyframe
 sweeps ([nuScenes preflight](verification/nuscenes-preflight.md)); other sweep
-payloads were on disk for a single scene. The nearest packet is therefore almost always
-the keyframe sweep, about 36 ms from the camera exposure, whatever offset is requested.
+payloads were on disk for a single scene.
+The nearest packet is therefore almost always the keyframe sweep, about 36 ms from the camera exposure, whatever offset is requested. <!-- bind: 36 = timing#/offsets/0/realized_offset_ms/median -->
 
 - The realised offset median is 35.81 to 36.09 ms at all seven requested offsets. <!-- bind: 35.81 = timing#/offsets/-200/realized_offset_ms/median ; 36.09 = timing#/offsets/100/realized_offset_ms/median -->
 - At +50 ms the keyframe sweep is within tolerance (median absolute error 14.02 ms), so 1207 of 1207 frames are valid. <!-- bind: 14.02 = timing#/offsets/50/absolute_error_ms/median ; 1207 = timing#/offsets/50/valid ; 1207 = timing#/offsets/50/total -->

@@ -95,7 +95,7 @@ uv sync --frozen
 uv run --frozen bev-calib audit-claims --claims docs/claims.yaml
 ```
 
-每個已發布的數值都綁定在一份由機器檢查的 registry 中，共 90,126 筆 claim，每筆記錄 evidence 文件、JSON pointer、數值與文件摘要（見 [evidence 索引](docs/evidence/README.md)）。稽核會重新讀取五份 evidence 文件，檢查 schema、摘要與文件之間的一致性，並確認每筆 claim 仍等於 evidence。測試也用同樣的綁定檢查這份 README 裡的每個數字。要從 evidence 重建 registry、含圖的報告與衍生的 operating envelope：
+正式報告顯示的每個數值都綁定在一份由機器檢查的 registry 中，共 90,126 筆 claim，每筆記錄 evidence 文件、JSON pointer、數值與文件摘要（見 [evidence 索引](docs/evidence/README.md)）。稽核會重新讀取五份 evidence 文件，檢查 schema、摘要與文件之間的一致性，並確認每筆 claim 仍等於 evidence。這份 README 的重點摘要、主要發現與故障軸表中的每個結果數字，也都帶有測試會檢查的隱藏綁定：正式數值對照 registry 中已驗證的 claim，衍生的計數與範圍對照 operating envelope 文件，並驗證該文件自身與來源文件的摘要。要從 evidence 重建 registry、含圖的報告與衍生的 operating envelope：
 
 ```bash
 uv run --frozen bev-calib generate-claims --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output artifacts/check/claims.yaml
