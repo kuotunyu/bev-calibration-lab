@@ -33,16 +33,25 @@ def _stage_commands() -> dict[str, tuple[str, ...]]:
         "format_check": (python, "-m", "ruff", "format", "--check", "."),
         "lint": (python, "-m", "ruff", "check", "."),
         "typecheck": (python, "-m", "mypy", "src", "tests"),
-        "unit_and_integration_tests": (python, "-m", "pytest", "--no-cov"),
-        "branch_coverage_100": (
+        # The suite runs once and records branch coverage. The next stage applies
+        # the 100% threshold to that same data, so a shortfall still fails under
+        # its own stage name instead of as a test failure.
+        "unit_and_integration_tests": (
             python,
             "-m",
             "pytest",
             "--cov=bevcalib",
             "--cov-branch",
-            "--cov-report=term-missing",
             "--cov-report=json:coverage.json",
-            "--cov-fail-under=100",
+            "--cov-fail-under=0",
+        ),
+        "branch_coverage_100": (
+            python,
+            "-m",
+            "coverage",
+            "report",
+            "--show-missing",
+            "--fail-under=100",
         ),
         "schema_contracts": (python, "-m", "bevcalib.dev", "schema-contracts"),
         "docs_links": (python, "-m", "bevcalib.dev", "docs-links"),

@@ -105,6 +105,35 @@ def test_the_verifier_returns_zero_only_after_every_stage_ran() -> None:
     assert attempted == list(dev.VERIFY_STAGES)
 
 
+def test_the_suite_runs_once_and_the_coverage_stage_reports_on_that_run() -> None:
+    """A second full run doubled the longest stage and measured a different run."""
+
+    from bevcalib import dev
+
+    commands: dict[str, tuple[str, ...]] = {}
+
+    def runner(stage: str, command: Sequence[str], cwd: Path) -> int:
+        commands[stage] = tuple(command)
+        return 0
+
+    assert dev.verify_repository(REPO_ROOT, runner=runner) == 0
+
+    pytest_stages = [stage for stage, command in commands.items() if "pytest" in command]
+    assert pytest_stages == ["unit_and_integration_tests"]
+    tests = commands["unit_and_integration_tests"]
+    assert {"--cov=bevcalib", "--cov-branch", "--cov-report=json:coverage.json"} <= set(tests)
+    # pytest-cov would otherwise apply the configured threshold and report a
+    # coverage shortfall as a test failure; the threshold belongs to the next stage.
+    assert "--cov-fail-under=0" in tests
+    assert commands["branch_coverage_100"][1:] == (
+        "-m",
+        "coverage",
+        "report",
+        "--show-missing",
+        "--fail-under=100",
+    )
+
+
 def test_malformed_schema_files_are_reported_by_path(tmp_path: Path) -> None:
     """A schema that does not parse cannot gate anything, and it fails quietly."""
 
