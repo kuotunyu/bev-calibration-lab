@@ -8,7 +8,7 @@
 
 使用 `CAM_FRONT` 與 `LIDAR_TOP`。官方 train 的 100 個 development scenes 用於訓練；官方 train 的 20 個 calibration scenes 來自不同 logs，用於固定校準目標與 checkpoint 選擇；官方 val 的 30 個 scenes 留作 locked evaluation。角色之間檢查 log、scene、sample 與 sensor identifiers 不重疊。mini 只供開發與整合測試。
 
-分派依 location 分層與 token SHA-256 排序，不能依結果換 cohort。固定設定見[protocol](../configs/protocols/nuscenes_calibration_v1.yaml)、[故障矩陣](../configs/perturbations/formal_v1.yaml)與[cohort 契約](cohort-contract.md)。旋轉和平移逐軸施加；timing 是獨立的 identity-only sweep selection 壓力測試，沒有學習式 timing recovery。
+分派依 location 分層與 token SHA-256 排序，不能依結果換 cohort。固定設定見[protocol](../configs/protocols/nuscenes_calibration_v1.yaml)、[故障矩陣](../configs/perturbations/formal_v1.yaml)與[cohort 契約](cohort-contract.md)。旋轉和平移逐軸施加；timing 是獨立的 identity-only sweep selection 壓力測試，沒有學習式 timing recovery，而且在 v1 沒有提供資訊（見[已知問題](errata.zh-TW.md)）。
 
 學習式模型使用 seeds 17、42、73，各自保留 checkpoint 與結果。依相同 calibration corruption policy，選擇最早達到最低 calibration loss 的 checkpoint；locked evaluation 不參與選模、超參數或圖表條件選擇。[訓練設定](../configs/correctors/convnextv2_tiny_v1.yaml)與[訓練契約](training-contract.md)記錄完整規則。
 
@@ -33,5 +33,7 @@
 校正器會改動原本正確的標定，因此零故障表現也是必要結果。Classical edge objective 改善不保證真實 pose 或 BEV 改善；learned training completion 也不是效果保證。現有結果不能據以宣稱已取得通用、可靠的校正模型。
 
 地面平面假設在真實 box bottom 不落在該平面時，可在零故障留下非零重建誤差。弱恢復與退步的全部原因尚未確定，不能宣稱已證明不存在實作問題。後續診斷應保留失敗，區分程式修復與新的研究假說；不得用已看過的 locked evaluation 直接調參或替換較漂亮的 seed。
+
+發布後找到三項閱讀注意事項：±0.25° 的 identity recovery 是浮點數邊界假象、timing 壓力測試沒有提供資訊，以及遠距 BEV 平均值由接近水平的射線主導，見 [v1.0.0 已知問題](errata.zh-TW.md)。
 
 正式報告、互動展示與 v1.0.0 發布已完成驗收，詳見[發布核對](verification/publication-and-interchange.md)。工程驗收不改變上述研究限制。任何新的分析或實驗都需獨立來源身份，不能回寫這份凍結結果。

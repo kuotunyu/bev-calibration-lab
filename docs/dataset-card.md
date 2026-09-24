@@ -17,7 +17,9 @@ Only front-camera images and top-LiDAR keyframes are required for this study.
 Unselected camera/radar channels and absent sweeps are not silently synthesized.
 Timing stress fixes the camera exposure and selects an available LiDAR packet under
 the declared timestamp tolerance. Coverage depends on actual on-disk packets;
-missing or out-of-tolerance selections remain invalid with explicit reasons.
+missing or out-of-tolerance selections remain invalid with explicit reasons. The
+staged keyframe archives hold no intermediate sweeps, so the v1 timing stress
+carries no information; see the [v1.0.0 known issues](errata.md).
 
 The existing mini installation is preserved for independent official-devkit geometry
 parity. It is not a substitute for the trainval installation or a source of formal

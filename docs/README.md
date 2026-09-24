@@ -2,11 +2,12 @@
 
 [正體中文首頁](../README.md) · [English overview](../README.en.md)
 
-先讀[研究卡](experiment-card.md)理解比較問題與結果界線，再讀[模型卡](model-card.md)理解輸入、輸出與權重來源。
+先讀[研究卡](experiment-card.md)理解比較問題與結果界線，再讀[模型卡](model-card.md)理解輸入、輸出與權重來源。引用 ±0.25° 的 recovery、timing 壓力測試或遠距 BEV 誤差之前，請先讀 [v1.0.0 已知問題](errata.zh-TW.md)。
 
 | 要確認的事情 | 文件 |
 | --- | --- |
 | 正式統計與來源 | [五份 evidence](evidence/README.md)、[兩次分析重現](verification/analysis-reproduction.md) |
+| 發布後找到的閱讀注意事項 | [v1.0.0 已知問題](errata.zh-TW.md)（[English](errata.md)） |
 | 統計單位、配對、bootstrap 與缺值 | [正式分析契約](contracts/formal-analysis.md) |
 | 資料用途與排除界線 | [資料卡](dataset-card.md)、[cohort 契約](cohort-contract.md) |
 | 座標方向與不同感測器時間 | [座標契約](coordinate-contract.md) |
