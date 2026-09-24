@@ -99,11 +99,10 @@ recovery observations do not explain that regression. This statement concerns
 the recovery operator; it does not imply complete pixel or BEV support.
 
 Identity can satisfy the recovery tolerances even with a small nonzero injected
-fault. At ±0.25° its recorded error lies a floating-point rounding above the
-threshold, so its recovery there reads 0% instead of 100%; see the
-[v1.0.0 known issues](../errata.md). Consequently, beating classical at a larger fault does not establish an
-improvement over leaving an already-in-tolerance calibration unchanged. Read the
-individual conditions and paired intervals rather than reporting a winner by
+fault. Consequently, beating classical at a larger fault does not establish an
+improvement over leaving an already-in-tolerance calibration unchanged.
+At ±0.25° identity's recorded error lies a floating-point rounding above the threshold, so it scores 0% recovery there, although all of its frames should count as recovered; see the [v1.0.0 known issues](../errata.md). <!-- bind: 0 = recovery#/runs/identity/roll:0.25/value -->
+Read the individual conditions and paired intervals rather than reporting a winner by
 averaging across the fault grid. Selecting a learned seed from these evaluation
 results would violate the frozen study design.
 
