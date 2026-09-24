@@ -141,7 +141,7 @@ def test_html_is_byte_reproducible_and_self_contained() -> None:
 
     first = build_explorer()
     assert first == build_explorer()
-    assert '<html lang="zh-Hant">' in first
+    assert '<html lang="en">' in first
     assert "<script src=" not in first
     assert 'id="calibration-explorer"' in first
     assert "synthetic" in first
@@ -200,3 +200,70 @@ def test_explorer_controls_and_readout_are_outside_two_plot_containers() -> None
     assert 'id="explorer-states" type="application/json"' in html
     assert "切換軸會回到零故障" in html
     assert "重合" in html
+
+
+def test_page_is_english_first_with_chinese_labels_and_states_the_axis_mapping() -> None:
+    """The formal study names camera optical-frame axes; this explorer names vehicle axes."""
+    from bevcalib.report.explorer import build_explorer
+
+    html = build_explorer()
+    note = html.split('<aside class="axis-note"', 1)[1].split("</aside>", 1)[0]
+    for mapping in (
+        "Formal roll (tilt) \u2248 explorer pitch",
+        "formal pitch (pan) = explorer yaw",
+        "formal yaw (in-plane rotation) \u2248 explorer roll with the opposite sign",
+        "Formal x (lateral) = explorer y",
+        "formal y (vertical) = explorer z",
+        "formal z (forward) = explorer x with the opposite sign",
+    ):
+        assert mapping in note
+    assert 'lang="zh-Hant"' in note
+    for axis, meaning in (
+        ("roll", "in-plane"),
+        ("pitch", "tilt"),
+        ("yaw", "pan"),
+        ("x", "forward"),
+        ("y", "lateral"),
+        ("z", "vertical"),
+    ):
+        assert f'data-axis="{axis}"' in html
+        assert f">{axis} \u00b7 {meaning}</button>" in html
+
+
+@pytest.mark.parametrize(
+    ("formal", "explorer", "sign", "tolerance_px"),
+    [
+        ("pitch", "yaw", 1, 1e-9),
+        ("x", "y", 1, 1e-9),
+        ("y", "z", 1, 1e-9),
+        ("z", "x", -1, 1e-9),
+        ("roll", "pitch", 1, 1.0),
+        ("yaw", "roll", -1, 5.0),
+    ],
+)
+def test_axis_note_matches_a_formal_camera_side_fault(
+    formal: str, explorer: str, sign: int, tolerance_px: float
+) -> None:
+    """A formal fault composed on the camera side lands where the note says it does."""
+    import numpy as np
+
+    from bevcalib.artifacts.result_documents import fault_for_condition
+    from bevcalib.geometry.projection import project_camera
+    from bevcalib.geometry.quaternions import matrix_to_quaternion
+    from bevcalib.geometry.se3 import SE3, inverse, transform_points
+    from bevcalib.perturbations.apply import apply_metadata_fault
+
+    level = 2.0 if formal in ("roll", "pitch", "yaw") else 0.2
+    points = np.array([[10.0, -2.0, 0.0], [20.0, 0.0, 0.0], [40.0, 2.0, 0.0]])
+    intrinsic = np.array([[800.0, 0.0, 400.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]])
+    camera_from_global = SE3(
+        matrix_to_quaternion(np.array([[0.0, -1.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0]])),
+        (0.0, 1.5, 0.0),
+    )
+    assumed = apply_metadata_fault(inverse(camera_from_global), fault_for_condition(formal, level))
+    formal_uv = project_camera(transform_points(inverse(assumed), points), intrinsic, (800, 480)).uv
+    explorer_uv = np.array(explorer_state(explorer, sign * level)["overlay_uv"])
+
+    assert np.abs(explorer_uv - formal_uv).max() <= tolerance_px
+    other = np.array(explorer_state(explorer, -sign * level)["overlay_uv"])
+    assert np.abs(other - formal_uv).max() > 5.0

@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">
+<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Calibration explorer · synthetic</title>
 <style>
@@ -15,35 +15,41 @@ button[aria-pressed=true]{background:#203852;color:white;border-color:#203852}bu
 .plots{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px;margin-top:24px}
 .plot-panel{min-width:0;background:white;border:1px solid #cddce5;padding:16px 8px 8px}.plot-panel h2,.plot-panel p{margin-left:8px;margin-right:8px}.plot-panel p{font-size:14px;color:#40586e}
 .plot{width:100%;height:400px;min-width:0}.point-readout{margin-top:24px}.point-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px;margin-top:12px}.point-grid article{border-top:2px solid #a8becb;padding-top:8px;overflow-wrap:anywhere}.point-grid p{font-size:14px;margin:4px 0}
+.zh{display:block;color:#40586e}.axis-note{margin-top:20px;padding:12px 16px;background:#fff8e6;border:1px solid #e0c27a}.axis-note p{margin:6px 0}
 details{margin-top:24px;border-top:1px solid #cddce5;padding-top:16px}summary{cursor:pointer;font-weight:bold;min-height:44px}footer{font-size:13px;margin-top:24px;color:#40586e}
 @media(max-width:520px){main{padding:16px}.controls{padding:16px}.plot{height:340px}}
 </style></head><body><main id="calibration-explorer">
-<h1>標定偏差如何改變投影？</h1><p><strong>synthetic · 固定觀測、已知地面</strong></p>
-<p>先選一個軸，再調整偏差。切換軸會回到零故障。兩圖分別比較相機投影與地面重建位置。</p>
-<section class="controls" aria-label="標定偏差控制">
-<div><p id="axis-label">1. 選擇偏差軸</p><div class="axis-buttons" role="group" aria-labelledby="axis-label">
-{% for axis in ('roll','pitch','yaw','x','y','z') %}<button type="button" data-axis="{{ axis }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ axis }}</button>{% endfor %}
+<h1>How does a calibration error move the projection? <span class="zh" lang="zh-Hant">標定偏差如何改變投影？</span></h1><p><strong>synthetic · fixed observations, known ground plane</strong> <span lang="zh-Hant">· 固定觀測、已知地面</span></p>
+<p>Choose an axis, then change the fault. Switching axes returns to zero fault. The two plots compare the camera projection and the reconstructed ground position. <span class="zh" lang="zh-Hant">先選一個軸，再調整偏差。切換軸會回到零故障。兩圖分別比較相機投影與地面重建位置。</span></p>
+<aside class="axis-note" id="axis-note" aria-labelledby="axis-note-title"><p id="axis-note-title"><strong>These axis names differ from the formal study.</strong> <span lang="zh-Hant">這裡的軸名稱與正式研究不同。</span></p>
+<p>This explorer names its axes in a vehicle frame (X forward, Y left, Z up) and injects the fault on the global side. The formal nuScenes study uses CAM_FRONT optical-frame axes (x right, y down, z forward). Formal roll (tilt) ≈ explorer pitch; formal pitch (pan) = explorer yaw; formal yaw (in-plane rotation) ≈ explorer roll with the opposite sign. Formal x (lateral) = explorer y; formal y (vertical) = explorer z; formal z (forward) = explorer x with the opposite sign. “≈” marks rotations whose effect differs slightly, because this explorer rotates about the global origin rather than the camera centre.</p>
+<p lang="zh-Hant">本 explorer 以車體座標命名軸（X 向前、Y 向左、Z 向上），並在 global 端注入故障；正式的 nuScenes 研究使用 CAM_FRONT 光學座標軸（x 向右、y 向下、z 向前）。正式 roll（俯仰 tilt）≈ explorer pitch；正式 pitch（偏擺 pan）= explorer yaw；正式 yaw（影像平面內旋轉）≈ 符號相反的 explorer roll。正式 x（橫向）= explorer y；正式 y（垂直）= explorer z；正式 z（前向）= 符號相反的 explorer x。「≈」表示本 explorer 繞 global 原點而非相機中心旋轉，效果略有差異。</p></aside>
+<section class="controls" aria-label="Calibration fault controls · 標定偏差控制">
+<div><p id="axis-label">1. Choose a fault axis <span lang="zh-Hant">· 選擇偏差軸</span></p><div class="axis-buttons" role="group" aria-labelledby="axis-label">
+{% for axis, meaning in (('roll','in-plane'),('pitch','tilt'),('yaw','pan'),('x','forward'),('y','lateral'),('z','vertical')) %}<button type="button" data-axis="{{ axis }}" aria-pressed="{{ 'true' if loop.first else 'false' }}">{{ axis }} · {{ meaning }}</button>{% endfor %}
 </div></div>
-<div><div class="level-row"><label for="fault-level">2. 偏差量：<output id="level-value"></output></label><button id="reset-fault" type="button">歸零</button></div>
+<div><div class="level-row"><label for="fault-level">2. Fault level <span lang="zh-Hant">· 偏差量</span>: <output id="level-value"></output></label><button id="reset-fault" type="button">Reset <span lang="zh-Hant">· 歸零</span></button></div>
 <input id="fault-level" type="range" min="0" max="0" step="1" value="0" aria-describedby="level-help">
 <div class="endpoints"><span id="level-min"></span><span id="level-max"></span></div>
-<p id="level-help">滑桿使用預先計算的離散條件；也可使用鍵盤方向鍵逐格調整。</p></div>
+<p id="level-help">The slider steps through precomputed discrete conditions; arrow keys move one step. <span class="zh" lang="zh-Hant">滑桿使用預先計算的離散條件；也可使用鍵盤方向鍵逐格調整。</span></p></div>
 <output id="explorer-summary" aria-live="polite"></output>
-<div><div class="legend" aria-label="圖層顯示">
-<label><input id="show-fixed" type="checkbox" checked><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#087e8b" stroke-width="2"/></svg>固定觀測／已知地面</label>
-<label><input id="show-projected" type="checkbox" checked><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8L16 16M16 8L8 16" stroke="#c34b27" stroke-width="3"/></svg>假設投影／重建位置</label>
-</div><p>空心圈較大、叉較小；重合表示座標相同或很接近。可暫時隱藏一層比較，點位不會為了排版而移動。</p></div>
+<div><div class="legend" aria-label="Layers · 圖層顯示">
+<label><input id="show-fixed" type="checkbox" checked><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#087e8b" stroke-width="2"/></svg>Fixed observation / known ground <span lang="zh-Hant">· 固定觀測／已知地面</span></label>
+<label><input id="show-projected" type="checkbox" checked><svg class="symbol" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8L16 16M16 8L8 16" stroke="#c34b27" stroke-width="3"/></svg>Assumed projection / reconstruction <span lang="zh-Hant">· 假設投影／重建位置</span></label>
+</div><p>Open circles are larger than crosses; overlapping marks have equal or very close coordinates. Hide one layer to compare; points never move for layout. <span class="zh" lang="zh-Hant">空心圈較大、叉較小；重合表示座標相同或很接近。可暫時隱藏一層比較，點位不會為了排版而移動。</span></p></div>
 </section>
 <section class="plots" aria-label="Calibration geometry explorer">
-<article class="plot-panel"><h2>相機平面</h2><p>水平：Image u（px） · 垂直：Image v（px），向下增加</p><div id="camera-plot" class="plot"></div></article>
-<article class="plot-panel"><h2>地面重建</h2><p>水平：Lateral Y（m） · 垂直：Forward X（m）</p><div id="ground-plot" class="plot"></div></article>
+<article class="plot-panel"><h2>Camera image plane <span lang="zh-Hant">· 相機平面</span></h2><p>Horizontal: image u (px) · vertical: image v (px), increasing downward <span class="zh" lang="zh-Hant">水平：Image u（px） · 垂直：Image v（px），向下增加</span></p><div id="camera-plot" class="plot"></div></article>
+<article class="plot-panel"><h2>Ground reconstruction <span lang="zh-Hant">· 地面重建</span></h2><p>Horizontal: lateral Y (m) · vertical: forward X (m) <span class="zh" lang="zh-Hant">水平：Lateral Y（m） · 垂直：Forward X（m）</span></p><div id="ground-plot" class="plot"></div></article>
 </section>
-<section class="point-readout" aria-labelledby="point-heading"><h2 id="point-heading">逐點比較</h2><p>讀數與圖使用同一份資料；地面位置依序為 Y、X（m）。</p><div id="point-values" class="point-grid">
-{% for point in range(3) %}<article><strong>點 {{ point + 1 }}</strong><p id="point-{{ point }}-fixed"></p><p id="point-{{ point }}-projected"></p><p id="point-{{ point }}-ground"></p><p id="point-{{ point }}-error"></p></article>{% endfor %}
+<section class="point-readout" aria-labelledby="point-heading"><h2 id="point-heading">Per-point readout <span lang="zh-Hant">· 逐點比較</span></h2><p>The readout and the plots use the same data; ground positions are listed as Y, X (m). <span class="zh" lang="zh-Hant">讀數與圖使用同一份資料；地面位置依序為 Y、X（m）。</span></p><div id="point-values" class="point-grid">
+{% for point in range(3) %}<article><strong>Point {{ point + 1 }} <span lang="zh-Hant">· 點 {{ point + 1 }}</span></strong><p id="point-{{ point }}-fixed"></p><p id="point-{{ point }}-projected"></p><p id="point-{{ point }}-ground"></p><p id="point-{{ point }}-error"></p></article>{% endfor %}
 </div></section>
-<details><summary>場景設定與解讀限制</summary><p>場景：平面 z=0；相機高度 1.5 m、朝向 +X；X 向前、Y 向左、Z 向上。故障在此合成場景的 global/source frame 注入（true ∘ fault）。三個觀測永遠不變。旋轉以 degrees、平移以 m 表示；不支援多軸插值或 timing。</p>
-<p>這是自建幾何示範，沒有使用 nuScenes 影像、點雲或模型權重。BEV 誤差不是偵測準確率，不代表 learned corrector 或實車安全表現。地面圖座標範圍隨條件調整以顯示全部點；比較不同條件時請以公尺讀數為準。</p></details>
-<footer>Plotly.js is bundled for offline use. Its copyright and MIT license notice are retained in the embedded library. First-party synthetic geometry: bev-calibration-lab.</footer>
+<details><summary>Scene setup and limits <span lang="zh-Hant">· 場景設定與解讀限制</span></summary><p>Scene: the plane z=0; the camera is 1.5 m high and looks along +X; X forward, Y left, Z up. The fault is injected on the global/source side of this synthetic scene (true ∘ fault). The three observations never change. Rotations are in degrees and translations in metres; multi-axis interpolation and timing are not supported.</p>
+<p>This is first-party synthetic geometry and uses no nuScenes image, point cloud or model weight. The BEV error here is not detection accuracy and says nothing about the learned corrector or real-vehicle safety. The ground plot range adapts to show every point; compare conditions by the metre readouts.</p>
+<p lang="zh-Hant">場景：平面 z=0；相機高度 1.5 m、朝向 +X；X 向前、Y 向左、Z 向上。故障在此合成場景的 global/source frame 注入（true ∘ fault）。三個觀測永遠不變。旋轉以 degrees、平移以 m 表示；不支援多軸插值或 timing。</p>
+<p lang="zh-Hant">這是自建幾何示範，沒有使用 nuScenes 影像、點雲或模型權重。BEV 誤差不是偵測準確率，不代表 learned corrector 或實車安全表現。地面圖座標範圍隨條件調整以顯示全部點；比較不同條件時請以公尺讀數為準。</p></details>
+<footer>Plotly.js is bundled for offline use. Its copyright and MIT license notice, and the BSD-3-Clause notice of the MapLibre GL JS code it includes, are retained in the embedded library. First-party synthetic geometry: bev-calibration-lab.</footer>
 <script>{{ plotly_js | safe }}</script>
 <script id="explorer-states" type="application/json">{{ figure | tojson }}</script>
 <script id="explorer-controls">
@@ -81,10 +87,10 @@ details{margin-top:24px;border-top:1px solid #cddce5;padding-top:16px}summary{cu
       }, {responsive: true, displayModeBar: false});
     }
     for (let i = 0; i < 3; i++) {
-      document.getElementById(`point-${i}-fixed`).textContent = `固定像素 (${number(data.x[0][i])}, ${number(data.y[0][i])})`;
-      document.getElementById(`point-${i}-projected`).textContent = `投影像素 (${number(data.x[1][i])}, ${number(data.y[1][i])})`;
-      document.getElementById(`point-${i}-ground`).textContent = `已知地面 (${number(data.x[2][i])}, ${number(data.y[2][i])})`;
-      document.getElementById(`point-${i}-error`).textContent = `重建 (${number(data.x[3][i])}, ${number(data.y[3][i])}) · ${data.text[3][i]}`;
+      document.getElementById(`point-${i}-fixed`).textContent = `Fixed pixel · 固定像素 (${number(data.x[0][i])}, ${number(data.y[0][i])})`;
+      document.getElementById(`point-${i}-projected`).textContent = `Projected pixel · 投影像素 (${number(data.x[1][i])}, ${number(data.y[1][i])})`;
+      document.getElementById(`point-${i}-ground`).textContent = `Known ground · 已知地面 (${number(data.x[2][i])}, ${number(data.y[2][i])})`;
+      document.getElementById(`point-${i}-error`).textContent = `Reconstructed · 重建 (${number(data.x[3][i])}, ${number(data.y[3][i])}) · ${data.text[3][i]}`;
     }
   }
   function selectAxis(axis) {
