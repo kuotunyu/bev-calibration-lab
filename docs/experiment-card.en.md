@@ -104,7 +104,8 @@ better-looking seed.
 
 Three reading notes found after the release, on identity recovery at ±0.25°, the
 uninformative timing stress and far-range BEV error, are in
-[v1.0.0 known issues](errata.md).
+[v1.0.0 known issues](errata.md). A derived analysis of where correction helps is in the
+[operating envelope](analysis/operating-envelope.md).
 
 The formal report, the interactive demo and the v1.0.0 release passed acceptance; see
 the [publication record](verification/publication-and-interchange.md). Engineering

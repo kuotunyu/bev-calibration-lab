@@ -10,6 +10,7 @@ the timing stress test or far-range BEV error.
 | To check | Document |
 | --- | --- |
 | Formal results and their sources | [Five evidence documents](evidence/README.md), [two-analysis reproduction](verification/analysis-reproduction.md) |
+| Where correction helps (derived) | [Operating envelope](analysis/operating-envelope.md) |
 | Reading notes found after the release | [v1.0.0 known issues](errata.md) |
 | Statistical units, pairing, bootstrap and missing values | [Formal analysis contract](contracts/formal-analysis.md) |
 | Data use and exclusions | [Dataset card](dataset-card.md), [cohort contract](cohort-contract.md) |

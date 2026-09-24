@@ -20,7 +20,13 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE = REPO_ROOT / "docs" / "evidence" / "nuscenes_calibration_v1"
 ENVELOPE = REPO_ROOT / "docs" / "analysis" / "operating_envelope_v1" / "operating-envelope.json"
 # Documents whose numbers are the point of the document; each must carry bindings.
-REQUIRED = ("docs/errata.md", "docs/errata.zh-TW.md")
+REQUIRED = (
+    "README.md",
+    "README.en.md",
+    "docs/analysis/operating-envelope.md",
+    "docs/errata.md",
+    "docs/errata.zh-TW.md",
+)
 
 
 @pytest.fixture(scope="module")
@@ -96,3 +102,11 @@ def test_a_drifted_number_or_an_unclaimed_source_is_caught(evidence) -> None:  #
     assert "does not match" in violations[0]
     assert "unclaimed displayed formal scalar" in violations[1]
     assert "unknown evidence document" in violations[2]
+
+
+def test_both_readmes_state_the_size_of_the_claims_registry(evidence) -> None:  # type: ignore[no-untyped-def]
+    """The verification section quotes the registry size; it must be the real count."""
+
+    _, registered = evidence
+    for name in ("README.md", "README.en.md"):
+        assert f"{registered:,}" in (REPO_ROOT / name).read_text(encoding="utf-8"), name

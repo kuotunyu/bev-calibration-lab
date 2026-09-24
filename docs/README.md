@@ -7,6 +7,7 @@
 | 要確認的事情 | 文件 |
 | --- | --- |
 | 正式統計與來源 | [五份 evidence](evidence/README.md)、[兩次分析重現](verification/analysis-reproduction.md) |
+| 修正在哪些範圍有幫助（衍生分析） | [operating envelope](analysis/operating-envelope.md) |
 | 發布後找到的閱讀注意事項 | [v1.0.0 已知問題](errata.zh-TW.md)（[English](errata.md)） |
 | 統計單位、配對、bootstrap 與缺值 | [正式分析契約](contracts/formal-analysis.md) |
 | 資料用途與排除界線 | [資料卡](dataset-card.md)、[cohort 契約](cohort-contract.md) |
@@ -16,7 +17,7 @@
 | 安裝後可執行的命令 | [命令與報告](commands-and-report.md) |
 | 獨立預期身份、原始產物與 claims 核對 | [study 輸入驗證契約](contracts/fault-study-expectations.md)（真實輸入已核對；範圍見重現紀錄） |
 | 可選的描述性標定分布交換 | [calibration distribution 契約](contracts/calibration-distribution.md)（實際匯出與互通已驗證） |
-| 固定合成場景的標定敏感度 | [離線 calibration explorer](demo/calibration-explorer.html)（互動驗收完成） |
+| 固定合成場景的標定敏感度 | [離線 calibration explorer](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html)（互動驗收完成） |
 | mutation 的歷史證據與更新範圍 | [mutation audit](verification/mutation-audit.md)（保留 base campaign 與具名修補驗證的界線） |
 | 已發布範圍與驗證 | [v1.0.0 說明](release-notes/v1.0.0.md) |
 
