@@ -67,8 +67,8 @@ def test_ci_runs_the_full_gate_on_linux_and_windows_from_the_frozen_lock() -> No
 
 
 def test_ci_cancels_superseded_runs_only_for_pull_requests() -> None:
-    # A second push to main must not cancel the first push's run and leave that
-    # commit without a completed result; a newer pull-request push may.
+    # A newer push to main must not cancel a run that has already started for an
+    # earlier push; a newer pull-request push may.
     assert _workflow("ci.yml")["concurrency"] == {
         "group": "ci-${{ github.ref }}",
         "cancel-in-progress": "${{ github.event_name == 'pull_request' }}",
