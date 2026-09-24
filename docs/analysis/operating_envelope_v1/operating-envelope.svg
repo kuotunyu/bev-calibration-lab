@@ -1,0 +1,556 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720" role="img" aria-labelledby="title description">
+<title id="title">Derived — where a corrector beats leaving the calibration alone</title>
+<desc id="description">Scene mean of per-frame median reprojection shift (pixel P50) against each single-axis fault on 30 locked nuScenes validation scenes. Lower is better. Squares show the paired 95% interval of identity versus the fixed-three-seed learned mean; intervals are pointwise.</desc>
+<metadata>{&quot;document_sha256&quot;: &quot;cd5d902f83c93e0b3cd8bb3b10a0eecc60480f77c3aef0418a7049627111f4b8&quot;, &quot;evidence_type&quot;: &quot;derived&quot;, &quot;source_documents&quot;: {&quot;intervals&quot;: &quot;a69a95b255c203eb47b4d364dbaf831883227f9d5e2c1d79037b24aed4623c72&quot;, &quot;metrics&quot;: &quot;45c5754cb9d2611a63bb2b96c11c72c42829369c51f063a11d7021c8ba4a9088&quot;, &quot;recovery&quot;: &quot;648d8f33801745d08b3cad912432c5ef3aa08519930e4be6533ac986133987d7&quot;}}</metadata>
+<style>text{font-family:system-ui,sans-serif;fill:#172638;font-size:12px}.heading{font-size:19px;font-weight:650}.panel{font-size:13px;font-weight:600}.note{font-size:11px;fill:#40586e}.grid{stroke:#dce3eb;stroke-width:1}.axis{stroke:#8493a5;stroke-width:1}</style>
+<rect width="960" height="720" fill="#ffffff"/>
+<text x="20" y="30" class="heading">Derived — where a corrector beats leaving the calibration alone</text>
+<text x="20" y="54">Pixel P50: scene mean of the per-frame median reprojection shift, 30 locked nuScenes validation scenes. Lower is better.</text>
+<text x="20" y="74">Axes are CAM_FRONT optical-frame axes: roll = tilt, pitch = pan, yaw = in-plane rotation; x lateral, y vertical, z forward.</text>
+<text x="20" y="94">Squares: identity → learned-mean paired 95% interval above 0 (green, learned better), below 0 (red) or containing 0 (white).</text>
+<text x="20" y="114">Dashed lines: break-even, the smallest fault from which the learned mean is better at both signs. The mean is not an ensemble.</text>
+<line x1="20" x2="38" y1="140" y2="140" stroke="#64748b" stroke-width="2.5"/><text x="44" y="144">identity</text>
+<line x1="170" x2="188" y1="140" y2="140" stroke="#007f7f" stroke-width="2.5"/><text x="194" y="144">classical</text>
+<line x1="320" x2="338" y1="140" y2="140" stroke="#2563eb" stroke-width="2.5"/><text x="344" y="144">learned-17</text>
+<line x1="470" x2="488" y1="140" y2="140" stroke="#b45309" stroke-width="2.5"/><text x="494" y="144">learned-42</text>
+<line x1="620" x2="638" y1="140" y2="140" stroke="#be185d" stroke-width="2.5"/><text x="644" y="144">learned-73</text>
+<g data-axis="roll"><text x="20" y="188" class="panel">roll = tilt</text>
+<line class="grid" x1="52" x2="302" y1="360.00" y2="360.00"/><text text-anchor="end" x="46" y="364.00">0</text>
+<line class="grid" x1="52" x2="302" y1="320.00" y2="320.00"/><text text-anchor="end" x="46" y="324.00">15</text>
+<line class="grid" x1="52" x2="302" y1="280.00" y2="280.00"/><text text-anchor="end" x="46" y="284.00">30</text>
+<line class="grid" x1="52" x2="302" y1="240.00" y2="240.00"/><text text-anchor="end" x="46" y="244.00">45</text>
+<line class="grid" x1="52" x2="302" y1="200.00" y2="200.00"/><text text-anchor="end" x="46" y="204.00">60</text>
+<line class="axis" x1="52.00" x2="52.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="52.00" y="376">-2</text>
+<rect x="48.00" y="386" width="8" height="8" fill="#15803d"><title>roll:-2: after better</title></rect>
+<line class="axis" x1="114.50" x2="114.50" y1="360" y2="364"/>
+<text text-anchor="middle" x="114.50" y="376">-1</text>
+<rect x="110.50" y="386" width="8" height="8" fill="#15803d"><title>roll:-1: after better</title></rect>
+<line class="axis" x1="145.75" x2="145.75" y1="360" y2="364"/>
+<rect x="141.75" y="386" width="8" height="8" fill="#ffffff" stroke="#64748b"><title>roll:-0.5: inconclusive</title></rect>
+<line class="axis" x1="161.38" x2="161.38" y1="360" y2="364"/>
+<rect x="157.38" y="386" width="8" height="8" fill="#b91c1c"><title>roll:-0.25: before better</title></rect>
+<line class="axis" x1="170.75" x2="170.75" y1="360" y2="364"/>
+<rect x="166.75" y="386" width="8" height="8" fill="#b91c1c"><title>roll:-0.1: before better</title></rect>
+<line class="axis" x1="177.00" x2="177.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="177.00" y="376">0</text>
+<rect x="173.00" y="386" width="8" height="8" fill="#b91c1c"><title>roll:0: before better</title></rect>
+<line class="axis" x1="183.25" x2="183.25" y1="360" y2="364"/>
+<rect x="179.25" y="386" width="8" height="8" fill="#b91c1c"><title>roll:0.1: before better</title></rect>
+<line class="axis" x1="192.62" x2="192.62" y1="360" y2="364"/>
+<rect x="188.62" y="386" width="8" height="8" fill="#b91c1c"><title>roll:0.25: before better</title></rect>
+<line class="axis" x1="208.25" x2="208.25" y1="360" y2="364"/>
+<rect x="204.25" y="386" width="8" height="8" fill="#ffffff" stroke="#64748b"><title>roll:0.5: inconclusive</title></rect>
+<line class="axis" x1="239.50" x2="239.50" y1="360" y2="364"/>
+<text text-anchor="middle" x="239.50" y="376">1</text>
+<rect x="235.50" y="386" width="8" height="8" fill="#15803d"><title>roll:1: after better</title></rect>
+<line class="axis" x1="302.00" x2="302.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="302.00" y="376">2</text>
+<rect x="298.00" y="386" width="8" height="8" fill="#15803d"><title>roll:2: after better</title></rect>
+<line x1="114.50" x2="114.50" y1="200" y2="360" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="239.50" x2="239.50" y1="200" y2="360" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="52" y="412" class="note">fault (deg) · break-even ±1°</text>
+<path data-series="identity" d="M52.00,240.36 L114.50,300.14 L145.75,330.06 L161.38,345.03 L170.75,354.01 L177.00,360.00 L183.25,354.01 L192.62,345.03 L208.25,330.06 L239.50,300.15 L302.00,240.36" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="52.00" cy="240.36" r="2.4" fill="#64748b"><title>identity · roll:-2: 44.87 px · metrics.json#/runs/identity/roll:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="300.14" r="2.4" fill="#64748b"><title>identity · roll:-1: 22.45 px · metrics.json#/runs/identity/roll:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="330.06" r="2.4" fill="#64748b"><title>identity · roll:-0.5: 11.23 px · metrics.json#/runs/identity/roll:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="161.38" cy="345.03" r="2.4" fill="#64748b"><title>identity · roll:-0.25: 5.62 px · metrics.json#/runs/identity/roll:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="170.75" cy="354.01" r="2.4" fill="#64748b"><title>identity · roll:-0.1: 2.25 px · metrics.json#/runs/identity/roll:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="360.00" r="2.4" fill="#64748b"><title>identity · roll:0: 0.00 px · metrics.json#/runs/identity/roll:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="183.25" cy="354.01" r="2.4" fill="#64748b"><title>identity · roll:0.1: 2.25 px · metrics.json#/runs/identity/roll:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="192.62" cy="345.03" r="2.4" fill="#64748b"><title>identity · roll:0.25: 5.62 px · metrics.json#/runs/identity/roll:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="330.06" r="2.4" fill="#64748b"><title>identity · roll:0.5: 11.23 px · metrics.json#/runs/identity/roll:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="300.15" r="2.4" fill="#64748b"><title>identity · roll:1: 22.44 px · metrics.json#/runs/identity/roll:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="240.36" r="2.4" fill="#64748b"><title>identity · roll:2: 44.87 px · metrics.json#/runs/identity/roll:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="classical" d="M52.00,256.97 L114.50,294.32 L145.75,306.81 L161.38,309.44 L170.75,308.98 L177.00,308.10 L183.25,307.71 L192.62,308.17 L208.25,312.84 L239.50,312.36 L302.00,292.52" fill="none" stroke="#007f7f" stroke-width="1.6"/>
+<circle cx="52.00" cy="256.97" r="2.4" fill="#007f7f"><title>classical · roll:-2: 38.64 px · metrics.json#/runs/classical/roll:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="294.32" r="2.4" fill="#007f7f"><title>classical · roll:-1: 24.63 px · metrics.json#/runs/classical/roll:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="306.81" r="2.4" fill="#007f7f"><title>classical · roll:-0.5: 19.95 px · metrics.json#/runs/classical/roll:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="161.38" cy="309.44" r="2.4" fill="#007f7f"><title>classical · roll:-0.25: 18.96 px · metrics.json#/runs/classical/roll:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="170.75" cy="308.98" r="2.4" fill="#007f7f"><title>classical · roll:-0.1: 19.13 px · metrics.json#/runs/classical/roll:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="308.10" r="2.4" fill="#007f7f"><title>classical · roll:0: 19.46 px · metrics.json#/runs/classical/roll:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="183.25" cy="307.71" r="2.4" fill="#007f7f"><title>classical · roll:0.1: 19.61 px · metrics.json#/runs/classical/roll:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="192.62" cy="308.17" r="2.4" fill="#007f7f"><title>classical · roll:0.25: 19.44 px · metrics.json#/runs/classical/roll:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="312.84" r="2.4" fill="#007f7f"><title>classical · roll:0.5: 17.68 px · metrics.json#/runs/classical/roll:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="312.36" r="2.4" fill="#007f7f"><title>classical · roll:1: 17.86 px · metrics.json#/runs/classical/roll:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="292.52" r="2.4" fill="#007f7f"><title>classical · roll:2: 25.30 px · metrics.json#/runs/classical/roll:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-17" d="M52.00,325.01 L114.50,328.22 L145.75,327.38 L161.38,327.99 L170.75,328.09 L177.00,328.79 L183.25,328.99 L192.62,328.73 L208.25,328.30 L239.50,329.03 L302.00,327.35" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<circle cx="52.00" cy="325.01" r="2.4" fill="#2563eb"><title>learned-17 · roll:-2: 13.12 px · metrics.json#/runs/learned-17/roll:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="328.22" r="2.4" fill="#2563eb"><title>learned-17 · roll:-1: 11.92 px · metrics.json#/runs/learned-17/roll:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="327.38" r="2.4" fill="#2563eb"><title>learned-17 · roll:-0.5: 12.23 px · metrics.json#/runs/learned-17/roll:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="161.38" cy="327.99" r="2.4" fill="#2563eb"><title>learned-17 · roll:-0.25: 12.01 px · metrics.json#/runs/learned-17/roll:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="170.75" cy="328.09" r="2.4" fill="#2563eb"><title>learned-17 · roll:-0.1: 11.97 px · metrics.json#/runs/learned-17/roll:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="328.79" r="2.4" fill="#2563eb"><title>learned-17 · roll:0: 11.70 px · metrics.json#/runs/learned-17/roll:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="183.25" cy="328.99" r="2.4" fill="#2563eb"><title>learned-17 · roll:0.1: 11.63 px · metrics.json#/runs/learned-17/roll:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="192.62" cy="328.73" r="2.4" fill="#2563eb"><title>learned-17 · roll:0.25: 11.73 px · metrics.json#/runs/learned-17/roll:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="328.30" r="2.4" fill="#2563eb"><title>learned-17 · roll:0.5: 11.89 px · metrics.json#/runs/learned-17/roll:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="329.03" r="2.4" fill="#2563eb"><title>learned-17 · roll:1: 11.61 px · metrics.json#/runs/learned-17/roll:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="327.35" r="2.4" fill="#2563eb"><title>learned-17 · roll:2: 12.24 px · metrics.json#/runs/learned-17/roll:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-42" d="M52.00,337.22 L114.50,339.79 L145.75,337.48 L161.38,338.57 L170.75,338.74 L177.00,338.83 L183.25,339.07 L192.62,339.58 L208.25,339.26 L239.50,341.98 L302.00,342.16" fill="none" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="52.00" cy="337.22" r="2.4" fill="#b45309"><title>learned-42 · roll:-2: 8.54 px · metrics.json#/runs/learned-42/roll:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="339.79" r="2.4" fill="#b45309"><title>learned-42 · roll:-1: 7.58 px · metrics.json#/runs/learned-42/roll:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="337.48" r="2.4" fill="#b45309"><title>learned-42 · roll:-0.5: 8.44 px · metrics.json#/runs/learned-42/roll:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="161.38" cy="338.57" r="2.4" fill="#b45309"><title>learned-42 · roll:-0.25: 8.04 px · metrics.json#/runs/learned-42/roll:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="170.75" cy="338.74" r="2.4" fill="#b45309"><title>learned-42 · roll:-0.1: 7.97 px · metrics.json#/runs/learned-42/roll:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="338.83" r="2.4" fill="#b45309"><title>learned-42 · roll:0: 7.94 px · metrics.json#/runs/learned-42/roll:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="183.25" cy="339.07" r="2.4" fill="#b45309"><title>learned-42 · roll:0.1: 7.85 px · metrics.json#/runs/learned-42/roll:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="192.62" cy="339.58" r="2.4" fill="#b45309"><title>learned-42 · roll:0.25: 7.66 px · metrics.json#/runs/learned-42/roll:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="339.26" r="2.4" fill="#b45309"><title>learned-42 · roll:0.5: 7.78 px · metrics.json#/runs/learned-42/roll:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="341.98" r="2.4" fill="#b45309"><title>learned-42 · roll:1: 6.76 px · metrics.json#/runs/learned-42/roll:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="342.16" r="2.4" fill="#b45309"><title>learned-42 · roll:2: 6.69 px · metrics.json#/runs/learned-42/roll:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-73" d="M52.00,325.18 L114.50,328.02 L145.75,326.63 L161.38,327.21 L170.75,327.69 L177.00,327.98 L183.25,328.23 L192.62,328.26 L208.25,328.24 L239.50,327.71 L302.00,327.92" fill="none" stroke="#be185d" stroke-width="1.6"/>
+<circle cx="52.00" cy="325.18" r="2.4" fill="#be185d"><title>learned-73 · roll:-2: 13.06 px · metrics.json#/runs/learned-73/roll:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="328.02" r="2.4" fill="#be185d"><title>learned-73 · roll:-1: 11.99 px · metrics.json#/runs/learned-73/roll:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="326.63" r="2.4" fill="#be185d"><title>learned-73 · roll:-0.5: 12.52 px · metrics.json#/runs/learned-73/roll:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="161.38" cy="327.21" r="2.4" fill="#be185d"><title>learned-73 · roll:-0.25: 12.30 px · metrics.json#/runs/learned-73/roll:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="170.75" cy="327.69" r="2.4" fill="#be185d"><title>learned-73 · roll:-0.1: 12.12 px · metrics.json#/runs/learned-73/roll:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="327.98" r="2.4" fill="#be185d"><title>learned-73 · roll:0: 12.01 px · metrics.json#/runs/learned-73/roll:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="183.25" cy="328.23" r="2.4" fill="#be185d"><title>learned-73 · roll:0.1: 11.91 px · metrics.json#/runs/learned-73/roll:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="192.62" cy="328.26" r="2.4" fill="#be185d"><title>learned-73 · roll:0.25: 11.90 px · metrics.json#/runs/learned-73/roll:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="328.24" r="2.4" fill="#be185d"><title>learned-73 · roll:0.5: 11.91 px · metrics.json#/runs/learned-73/roll:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="327.71" r="2.4" fill="#be185d"><title>learned-73 · roll:1: 12.11 px · metrics.json#/runs/learned-73/roll:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="327.92" r="2.4" fill="#be185d"><title>learned-73 · roll:2: 12.03 px · metrics.json#/runs/learned-73/roll:2/pixel_frame_p50_px/value</title></circle>
+</g>
+<g data-axis="pitch"><text x="340" y="188" class="panel">pitch = pan</text>
+<line class="grid" x1="372" x2="622" y1="360.00" y2="360.00"/><text text-anchor="end" x="366" y="364.00">0</text>
+<line class="grid" x1="372" x2="622" y1="320.00" y2="320.00"/><text text-anchor="end" x="366" y="324.00">15</text>
+<line class="grid" x1="372" x2="622" y1="280.00" y2="280.00"/><text text-anchor="end" x="366" y="284.00">30</text>
+<line class="grid" x1="372" x2="622" y1="240.00" y2="240.00"/><text text-anchor="end" x="366" y="244.00">45</text>
+<line class="grid" x1="372" x2="622" y1="200.00" y2="200.00"/><text text-anchor="end" x="366" y="204.00">60</text>
+<line class="axis" x1="372.00" x2="372.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="372.00" y="376">-2</text>
+<rect x="368.00" y="386" width="8" height="8" fill="#15803d"><title>pitch:-2: after better</title></rect>
+<line class="axis" x1="434.50" x2="434.50" y1="360" y2="364"/>
+<text text-anchor="middle" x="434.50" y="376">-1</text>
+<rect x="430.50" y="386" width="8" height="8" fill="#15803d"><title>pitch:-1: after better</title></rect>
+<line class="axis" x1="465.75" x2="465.75" y1="360" y2="364"/>
+<rect x="461.75" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:-0.5: before better</title></rect>
+<line class="axis" x1="481.38" x2="481.38" y1="360" y2="364"/>
+<rect x="477.38" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:-0.25: before better</title></rect>
+<line class="axis" x1="490.75" x2="490.75" y1="360" y2="364"/>
+<rect x="486.75" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:-0.1: before better</title></rect>
+<line class="axis" x1="497.00" x2="497.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="497.00" y="376">0</text>
+<rect x="493.00" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:0: before better</title></rect>
+<line class="axis" x1="503.25" x2="503.25" y1="360" y2="364"/>
+<rect x="499.25" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:0.1: before better</title></rect>
+<line class="axis" x1="512.62" x2="512.62" y1="360" y2="364"/>
+<rect x="508.62" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:0.25: before better</title></rect>
+<line class="axis" x1="528.25" x2="528.25" y1="360" y2="364"/>
+<rect x="524.25" y="386" width="8" height="8" fill="#b91c1c"><title>pitch:0.5: before better</title></rect>
+<line class="axis" x1="559.50" x2="559.50" y1="360" y2="364"/>
+<text text-anchor="middle" x="559.50" y="376">1</text>
+<rect x="555.50" y="386" width="8" height="8" fill="#15803d"><title>pitch:1: after better</title></rect>
+<line class="axis" x1="622.00" x2="622.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="622.00" y="376">2</text>
+<rect x="618.00" y="386" width="8" height="8" fill="#15803d"><title>pitch:2: after better</title></rect>
+<line x1="434.50" x2="434.50" y1="200" y2="360" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="559.50" x2="559.50" y1="200" y2="360" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="372" y="412" class="note">fault (deg) · break-even ±1°</text>
+<path data-series="identity" d="M372.00,232.55 L434.50,296.11 L465.75,328.01 L481.38,344.00 L490.75,353.60 L497.00,360.00 L503.25,353.60 L512.62,344.00 L528.25,328.02 L559.50,296.12 L622.00,232.58" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="372.00" cy="232.55" r="2.4" fill="#64748b"><title>identity · pitch:-2: 47.80 px · metrics.json#/runs/identity/pitch:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="296.11" r="2.4" fill="#64748b"><title>identity · pitch:-1: 23.96 px · metrics.json#/runs/identity/pitch:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="328.01" r="2.4" fill="#64748b"><title>identity · pitch:-0.5: 12.00 px · metrics.json#/runs/identity/pitch:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="481.38" cy="344.00" r="2.4" fill="#64748b"><title>identity · pitch:-0.25: 6.00 px · metrics.json#/runs/identity/pitch:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="490.75" cy="353.60" r="2.4" fill="#64748b"><title>identity · pitch:-0.1: 2.40 px · metrics.json#/runs/identity/pitch:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="360.00" r="2.4" fill="#64748b"><title>identity · pitch:0: 0.00 px · metrics.json#/runs/identity/pitch:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="503.25" cy="353.60" r="2.4" fill="#64748b"><title>identity · pitch:0.1: 2.40 px · metrics.json#/runs/identity/pitch:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="512.62" cy="344.00" r="2.4" fill="#64748b"><title>identity · pitch:0.25: 6.00 px · metrics.json#/runs/identity/pitch:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="328.02" r="2.4" fill="#64748b"><title>identity · pitch:0.5: 11.99 px · metrics.json#/runs/identity/pitch:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="296.12" r="2.4" fill="#64748b"><title>identity · pitch:1: 23.95 px · metrics.json#/runs/identity/pitch:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="232.58" r="2.4" fill="#64748b"><title>identity · pitch:2: 47.78 px · metrics.json#/runs/identity/pitch:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="classical" d="M372.00,220.70 L434.50,280.52 L465.75,297.66 L481.38,305.11 L490.75,307.69 L497.00,308.10 L503.25,306.96 L512.62,303.76 L528.25,299.34 L559.50,301.01 L622.00,261.27" fill="none" stroke="#007f7f" stroke-width="1.6"/>
+<circle cx="372.00" cy="220.70" r="2.4" fill="#007f7f"><title>classical · pitch:-2: 52.24 px · metrics.json#/runs/classical/pitch:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="280.52" r="2.4" fill="#007f7f"><title>classical · pitch:-1: 29.80 px · metrics.json#/runs/classical/pitch:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="297.66" r="2.4" fill="#007f7f"><title>classical · pitch:-0.5: 23.38 px · metrics.json#/runs/classical/pitch:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="481.38" cy="305.11" r="2.4" fill="#007f7f"><title>classical · pitch:-0.25: 20.58 px · metrics.json#/runs/classical/pitch:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="490.75" cy="307.69" r="2.4" fill="#007f7f"><title>classical · pitch:-0.1: 19.62 px · metrics.json#/runs/classical/pitch:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="308.10" r="2.4" fill="#007f7f"><title>classical · pitch:0: 19.46 px · metrics.json#/runs/classical/pitch:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="503.25" cy="306.96" r="2.4" fill="#007f7f"><title>classical · pitch:0.1: 19.89 px · metrics.json#/runs/classical/pitch:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="512.62" cy="303.76" r="2.4" fill="#007f7f"><title>classical · pitch:0.25: 21.09 px · metrics.json#/runs/classical/pitch:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="299.34" r="2.4" fill="#007f7f"><title>classical · pitch:0.5: 22.75 px · metrics.json#/runs/classical/pitch:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="301.01" r="2.4" fill="#007f7f"><title>classical · pitch:1: 22.12 px · metrics.json#/runs/classical/pitch:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="261.27" r="2.4" fill="#007f7f"><title>classical · pitch:2: 37.02 px · metrics.json#/runs/classical/pitch:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-17" d="M372.00,315.88 L434.50,328.99 L465.75,330.34 L481.38,329.95 L490.75,329.33 L497.00,328.79 L503.25,327.71 L512.62,326.60 L528.25,324.19 L559.50,326.47 L622.00,313.66" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<circle cx="372.00" cy="315.88" r="2.4" fill="#2563eb"><title>learned-17 · pitch:-2: 16.55 px · metrics.json#/runs/learned-17/pitch:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="328.99" r="2.4" fill="#2563eb"><title>learned-17 · pitch:-1: 11.63 px · metrics.json#/runs/learned-17/pitch:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="330.34" r="2.4" fill="#2563eb"><title>learned-17 · pitch:-0.5: 11.12 px · metrics.json#/runs/learned-17/pitch:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="481.38" cy="329.95" r="2.4" fill="#2563eb"><title>learned-17 · pitch:-0.25: 11.27 px · metrics.json#/runs/learned-17/pitch:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="490.75" cy="329.33" r="2.4" fill="#2563eb"><title>learned-17 · pitch:-0.1: 11.50 px · metrics.json#/runs/learned-17/pitch:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="328.79" r="2.4" fill="#2563eb"><title>learned-17 · pitch:0: 11.70 px · metrics.json#/runs/learned-17/pitch:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="503.25" cy="327.71" r="2.4" fill="#2563eb"><title>learned-17 · pitch:0.1: 12.11 px · metrics.json#/runs/learned-17/pitch:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="512.62" cy="326.60" r="2.4" fill="#2563eb"><title>learned-17 · pitch:0.25: 12.53 px · metrics.json#/runs/learned-17/pitch:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="324.19" r="2.4" fill="#2563eb"><title>learned-17 · pitch:0.5: 13.43 px · metrics.json#/runs/learned-17/pitch:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="326.47" r="2.4" fill="#2563eb"><title>learned-17 · pitch:1: 12.57 px · metrics.json#/runs/learned-17/pitch:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="313.66" r="2.4" fill="#2563eb"><title>learned-17 · pitch:2: 17.38 px · metrics.json#/runs/learned-17/pitch:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-42" d="M372.00,220.02 L434.50,287.42 L465.75,319.06 L481.38,332.24 L490.75,337.88 L497.00,338.83 L503.25,337.01 L512.62,331.22 L528.25,317.61 L559.50,286.34 L622.00,219.14" fill="none" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="372.00" cy="220.02" r="2.4" fill="#b45309"><title>learned-42 · pitch:-2: 52.49 px · metrics.json#/runs/learned-42/pitch:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="287.42" r="2.4" fill="#b45309"><title>learned-42 · pitch:-1: 27.22 px · metrics.json#/runs/learned-42/pitch:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="319.06" r="2.4" fill="#b45309"><title>learned-42 · pitch:-0.5: 15.35 px · metrics.json#/runs/learned-42/pitch:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="481.38" cy="332.24" r="2.4" fill="#b45309"><title>learned-42 · pitch:-0.25: 10.41 px · metrics.json#/runs/learned-42/pitch:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="490.75" cy="337.88" r="2.4" fill="#b45309"><title>learned-42 · pitch:-0.1: 8.30 px · metrics.json#/runs/learned-42/pitch:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="338.83" r="2.4" fill="#b45309"><title>learned-42 · pitch:0: 7.94 px · metrics.json#/runs/learned-42/pitch:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="503.25" cy="337.01" r="2.4" fill="#b45309"><title>learned-42 · pitch:0.1: 8.62 px · metrics.json#/runs/learned-42/pitch:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="512.62" cy="331.22" r="2.4" fill="#b45309"><title>learned-42 · pitch:0.25: 10.79 px · metrics.json#/runs/learned-42/pitch:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="317.61" r="2.4" fill="#b45309"><title>learned-42 · pitch:0.5: 15.89 px · metrics.json#/runs/learned-42/pitch:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="286.34" r="2.4" fill="#b45309"><title>learned-42 · pitch:1: 27.62 px · metrics.json#/runs/learned-42/pitch:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="219.14" r="2.4" fill="#b45309"><title>learned-42 · pitch:2: 52.82 px · metrics.json#/runs/learned-42/pitch:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-73" d="M372.00,322.47 L434.50,326.34 L465.75,326.03 L481.38,326.92 L490.75,327.59 L497.00,327.98 L503.25,328.12 L512.62,328.71 L528.25,329.85 L559.50,331.54 L622.00,323.20" fill="none" stroke="#be185d" stroke-width="1.6"/>
+<circle cx="372.00" cy="322.47" r="2.4" fill="#be185d"><title>learned-73 · pitch:-2: 14.08 px · metrics.json#/runs/learned-73/pitch:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="326.34" r="2.4" fill="#be185d"><title>learned-73 · pitch:-1: 12.62 px · metrics.json#/runs/learned-73/pitch:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="326.03" r="2.4" fill="#be185d"><title>learned-73 · pitch:-0.5: 12.74 px · metrics.json#/runs/learned-73/pitch:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="481.38" cy="326.92" r="2.4" fill="#be185d"><title>learned-73 · pitch:-0.25: 12.41 px · metrics.json#/runs/learned-73/pitch:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="490.75" cy="327.59" r="2.4" fill="#be185d"><title>learned-73 · pitch:-0.1: 12.15 px · metrics.json#/runs/learned-73/pitch:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="327.98" r="2.4" fill="#be185d"><title>learned-73 · pitch:0: 12.01 px · metrics.json#/runs/learned-73/pitch:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="503.25" cy="328.12" r="2.4" fill="#be185d"><title>learned-73 · pitch:0.1: 11.95 px · metrics.json#/runs/learned-73/pitch:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="512.62" cy="328.71" r="2.4" fill="#be185d"><title>learned-73 · pitch:0.25: 11.73 px · metrics.json#/runs/learned-73/pitch:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="329.85" r="2.4" fill="#be185d"><title>learned-73 · pitch:0.5: 11.31 px · metrics.json#/runs/learned-73/pitch:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="331.54" r="2.4" fill="#be185d"><title>learned-73 · pitch:1: 10.67 px · metrics.json#/runs/learned-73/pitch:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="323.20" r="2.4" fill="#be185d"><title>learned-73 · pitch:2: 13.80 px · metrics.json#/runs/learned-73/pitch:2/pixel_frame_p50_px/value</title></circle>
+</g>
+<g data-axis="yaw"><text x="660" y="188" class="panel">yaw = in-plane rotation</text>
+<line class="grid" x1="692" x2="942" y1="360.00" y2="360.00"/><text text-anchor="end" x="686" y="364.00">0</text>
+<line class="grid" x1="692" x2="942" y1="320.00" y2="320.00"/><text text-anchor="end" x="686" y="324.00">15</text>
+<line class="grid" x1="692" x2="942" y1="280.00" y2="280.00"/><text text-anchor="end" x="686" y="284.00">30</text>
+<line class="grid" x1="692" x2="942" y1="240.00" y2="240.00"/><text text-anchor="end" x="686" y="244.00">45</text>
+<line class="grid" x1="692" x2="942" y1="200.00" y2="200.00"/><text text-anchor="end" x="686" y="204.00">60</text>
+<line class="axis" x1="692.00" x2="692.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="692.00" y="376">-2</text>
+<rect x="688.00" y="386" width="8" height="8" fill="#15803d"><title>yaw:-2: after better</title></rect>
+<line class="axis" x1="754.50" x2="754.50" y1="360" y2="364"/>
+<text text-anchor="middle" x="754.50" y="376">-1</text>
+<rect x="750.50" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:-1: before better</title></rect>
+<line class="axis" x1="785.75" x2="785.75" y1="360" y2="364"/>
+<rect x="781.75" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:-0.5: before better</title></rect>
+<line class="axis" x1="801.38" x2="801.38" y1="360" y2="364"/>
+<rect x="797.38" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:-0.25: before better</title></rect>
+<line class="axis" x1="810.75" x2="810.75" y1="360" y2="364"/>
+<rect x="806.75" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:-0.1: before better</title></rect>
+<line class="axis" x1="817.00" x2="817.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="817.00" y="376">0</text>
+<rect x="813.00" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:0: before better</title></rect>
+<line class="axis" x1="823.25" x2="823.25" y1="360" y2="364"/>
+<rect x="819.25" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:0.1: before better</title></rect>
+<line class="axis" x1="832.62" x2="832.62" y1="360" y2="364"/>
+<rect x="828.62" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:0.25: before better</title></rect>
+<line class="axis" x1="848.25" x2="848.25" y1="360" y2="364"/>
+<rect x="844.25" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:0.5: before better</title></rect>
+<line class="axis" x1="879.50" x2="879.50" y1="360" y2="364"/>
+<text text-anchor="middle" x="879.50" y="376">1</text>
+<rect x="875.50" y="386" width="8" height="8" fill="#b91c1c"><title>yaw:1: before better</title></rect>
+<line class="axis" x1="942.00" x2="942.00" y1="360" y2="364"/>
+<text text-anchor="middle" x="942.00" y="376">2</text>
+<rect x="938.00" y="386" width="8" height="8" fill="#15803d"><title>yaw:2: after better</title></rect>
+<line x1="692.00" x2="692.00" y1="200" y2="360" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="942.00" x2="942.00" y1="200" y2="360" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="692" y="412" class="note">fault (deg) · break-even ±2°</text>
+<path data-series="identity" d="M692.00,318.86 L754.50,339.35 L785.75,349.65 L801.38,354.82 L810.75,357.93 L817.00,360.00 L823.25,357.93 L832.62,354.82 L848.25,349.66 L879.50,339.37 L942.00,318.91" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="692.00" cy="318.86" r="2.4" fill="#64748b"><title>identity · yaw:-2: 15.43 px · metrics.json#/runs/identity/yaw:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="339.35" r="2.4" fill="#64748b"><title>identity · yaw:-1: 7.75 px · metrics.json#/runs/identity/yaw:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="349.65" r="2.4" fill="#64748b"><title>identity · yaw:-0.5: 3.88 px · metrics.json#/runs/identity/yaw:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="801.38" cy="354.82" r="2.4" fill="#64748b"><title>identity · yaw:-0.25: 1.94 px · metrics.json#/runs/identity/yaw:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="810.75" cy="357.93" r="2.4" fill="#64748b"><title>identity · yaw:-0.1: 0.78 px · metrics.json#/runs/identity/yaw:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="360.00" r="2.4" fill="#64748b"><title>identity · yaw:0: 0.00 px · metrics.json#/runs/identity/yaw:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="823.25" cy="357.93" r="2.4" fill="#64748b"><title>identity · yaw:0.1: 0.78 px · metrics.json#/runs/identity/yaw:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="832.62" cy="354.82" r="2.4" fill="#64748b"><title>identity · yaw:0.25: 1.94 px · metrics.json#/runs/identity/yaw:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="349.66" r="2.4" fill="#64748b"><title>identity · yaw:0.5: 3.88 px · metrics.json#/runs/identity/yaw:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="339.37" r="2.4" fill="#64748b"><title>identity · yaw:1: 7.74 px · metrics.json#/runs/identity/yaw:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="318.91" r="2.4" fill="#64748b"><title>identity · yaw:2: 15.41 px · metrics.json#/runs/identity/yaw:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="classical" d="M692.00,294.56 L754.50,306.14 L785.75,307.48 L801.38,307.20 L810.75,307.32 L817.00,308.10 L823.25,307.46 L832.62,307.98 L848.25,306.88 L879.50,304.68 L942.00,294.38" fill="none" stroke="#007f7f" stroke-width="1.6"/>
+<circle cx="692.00" cy="294.56" r="2.4" fill="#007f7f"><title>classical · yaw:-2: 24.54 px · metrics.json#/runs/classical/yaw:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="306.14" r="2.4" fill="#007f7f"><title>classical · yaw:-1: 20.20 px · metrics.json#/runs/classical/yaw:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="307.48" r="2.4" fill="#007f7f"><title>classical · yaw:-0.5: 19.70 px · metrics.json#/runs/classical/yaw:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="801.38" cy="307.20" r="2.4" fill="#007f7f"><title>classical · yaw:-0.25: 19.80 px · metrics.json#/runs/classical/yaw:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="810.75" cy="307.32" r="2.4" fill="#007f7f"><title>classical · yaw:-0.1: 19.76 px · metrics.json#/runs/classical/yaw:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="308.10" r="2.4" fill="#007f7f"><title>classical · yaw:0: 19.46 px · metrics.json#/runs/classical/yaw:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="823.25" cy="307.46" r="2.4" fill="#007f7f"><title>classical · yaw:0.1: 19.70 px · metrics.json#/runs/classical/yaw:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="832.62" cy="307.98" r="2.4" fill="#007f7f"><title>classical · yaw:0.25: 19.51 px · metrics.json#/runs/classical/yaw:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="306.88" r="2.4" fill="#007f7f"><title>classical · yaw:0.5: 19.92 px · metrics.json#/runs/classical/yaw:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="304.68" r="2.4" fill="#007f7f"><title>classical · yaw:1: 20.75 px · metrics.json#/runs/classical/yaw:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="294.38" r="2.4" fill="#007f7f"><title>classical · yaw:2: 24.61 px · metrics.json#/runs/classical/yaw:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-17" d="M692.00,328.78 L754.50,328.62 L785.75,328.05 L801.38,328.58 L810.75,328.72 L817.00,328.79 L823.25,329.15 L832.62,328.95 L848.25,328.71 L879.50,328.11 L942.00,327.12" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<circle cx="692.00" cy="328.78" r="2.4" fill="#2563eb"><title>learned-17 · yaw:-2: 11.71 px · metrics.json#/runs/learned-17/yaw:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="328.62" r="2.4" fill="#2563eb"><title>learned-17 · yaw:-1: 11.77 px · metrics.json#/runs/learned-17/yaw:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="328.05" r="2.4" fill="#2563eb"><title>learned-17 · yaw:-0.5: 11.98 px · metrics.json#/runs/learned-17/yaw:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="801.38" cy="328.58" r="2.4" fill="#2563eb"><title>learned-17 · yaw:-0.25: 11.78 px · metrics.json#/runs/learned-17/yaw:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="810.75" cy="328.72" r="2.4" fill="#2563eb"><title>learned-17 · yaw:-0.1: 11.73 px · metrics.json#/runs/learned-17/yaw:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="328.79" r="2.4" fill="#2563eb"><title>learned-17 · yaw:0: 11.70 px · metrics.json#/runs/learned-17/yaw:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="823.25" cy="329.15" r="2.4" fill="#2563eb"><title>learned-17 · yaw:0.1: 11.57 px · metrics.json#/runs/learned-17/yaw:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="832.62" cy="328.95" r="2.4" fill="#2563eb"><title>learned-17 · yaw:0.25: 11.65 px · metrics.json#/runs/learned-17/yaw:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="328.71" r="2.4" fill="#2563eb"><title>learned-17 · yaw:0.5: 11.73 px · metrics.json#/runs/learned-17/yaw:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="328.11" r="2.4" fill="#2563eb"><title>learned-17 · yaw:1: 11.96 px · metrics.json#/runs/learned-17/yaw:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="327.12" r="2.4" fill="#2563eb"><title>learned-17 · yaw:2: 12.33 px · metrics.json#/runs/learned-17/yaw:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-42" d="M692.00,336.26 L754.50,338.22 L785.75,338.08 L801.38,338.76 L810.75,338.94 L817.00,338.83 L823.25,338.95 L832.62,338.88 L848.25,338.80 L879.50,339.21 L942.00,339.22" fill="none" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="692.00" cy="336.26" r="2.4" fill="#b45309"><title>learned-42 · yaw:-2: 8.90 px · metrics.json#/runs/learned-42/yaw:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="338.22" r="2.4" fill="#b45309"><title>learned-42 · yaw:-1: 8.17 px · metrics.json#/runs/learned-42/yaw:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="338.08" r="2.4" fill="#b45309"><title>learned-42 · yaw:-0.5: 8.22 px · metrics.json#/runs/learned-42/yaw:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="801.38" cy="338.76" r="2.4" fill="#b45309"><title>learned-42 · yaw:-0.25: 7.96 px · metrics.json#/runs/learned-42/yaw:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="810.75" cy="338.94" r="2.4" fill="#b45309"><title>learned-42 · yaw:-0.1: 7.90 px · metrics.json#/runs/learned-42/yaw:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="338.83" r="2.4" fill="#b45309"><title>learned-42 · yaw:0: 7.94 px · metrics.json#/runs/learned-42/yaw:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="823.25" cy="338.95" r="2.4" fill="#b45309"><title>learned-42 · yaw:0.1: 7.89 px · metrics.json#/runs/learned-42/yaw:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="832.62" cy="338.88" r="2.4" fill="#b45309"><title>learned-42 · yaw:0.25: 7.92 px · metrics.json#/runs/learned-42/yaw:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="338.80" r="2.4" fill="#b45309"><title>learned-42 · yaw:0.5: 7.95 px · metrics.json#/runs/learned-42/yaw:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="339.21" r="2.4" fill="#b45309"><title>learned-42 · yaw:1: 7.80 px · metrics.json#/runs/learned-42/yaw:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="339.22" r="2.4" fill="#b45309"><title>learned-42 · yaw:2: 7.79 px · metrics.json#/runs/learned-42/yaw:2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-73" d="M692.00,328.80 L754.50,328.95 L785.75,328.31 L801.38,328.18 L810.75,328.23 L817.00,327.98 L823.25,327.97 L832.62,327.52 L848.25,327.16 L879.50,326.86 L942.00,325.11" fill="none" stroke="#be185d" stroke-width="1.6"/>
+<circle cx="692.00" cy="328.80" r="2.4" fill="#be185d"><title>learned-73 · yaw:-2: 11.70 px · metrics.json#/runs/learned-73/yaw:-2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="328.95" r="2.4" fill="#be185d"><title>learned-73 · yaw:-1: 11.64 px · metrics.json#/runs/learned-73/yaw:-1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="328.31" r="2.4" fill="#be185d"><title>learned-73 · yaw:-0.5: 11.89 px · metrics.json#/runs/learned-73/yaw:-0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="801.38" cy="328.18" r="2.4" fill="#be185d"><title>learned-73 · yaw:-0.25: 11.93 px · metrics.json#/runs/learned-73/yaw:-0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="810.75" cy="328.23" r="2.4" fill="#be185d"><title>learned-73 · yaw:-0.1: 11.91 px · metrics.json#/runs/learned-73/yaw:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="327.98" r="2.4" fill="#be185d"><title>learned-73 · yaw:0: 12.01 px · metrics.json#/runs/learned-73/yaw:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="823.25" cy="327.97" r="2.4" fill="#be185d"><title>learned-73 · yaw:0.1: 12.01 px · metrics.json#/runs/learned-73/yaw:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="832.62" cy="327.52" r="2.4" fill="#be185d"><title>learned-73 · yaw:0.25: 12.18 px · metrics.json#/runs/learned-73/yaw:0.25/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="327.16" r="2.4" fill="#be185d"><title>learned-73 · yaw:0.5: 12.31 px · metrics.json#/runs/learned-73/yaw:0.5/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="326.86" r="2.4" fill="#be185d"><title>learned-73 · yaw:1: 12.43 px · metrics.json#/runs/learned-73/yaw:1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="325.11" r="2.4" fill="#be185d"><title>learned-73 · yaw:2: 13.09 px · metrics.json#/runs/learned-73/yaw:2/pixel_frame_p50_px/value</title></circle>
+</g>
+<g data-axis="x"><text x="20" y="448" class="panel">x = lateral offset</text>
+<line class="grid" x1="52" x2="302" y1="620.00" y2="620.00"/><text text-anchor="end" x="46" y="624.00">0</text>
+<line class="grid" x1="52" x2="302" y1="580.00" y2="580.00"/><text text-anchor="end" x="46" y="584.00">15</text>
+<line class="grid" x1="52" x2="302" y1="540.00" y2="540.00"/><text text-anchor="end" x="46" y="544.00">30</text>
+<line class="grid" x1="52" x2="302" y1="500.00" y2="500.00"/><text text-anchor="end" x="46" y="504.00">45</text>
+<line class="grid" x1="52" x2="302" y1="460.00" y2="460.00"/><text text-anchor="end" x="46" y="464.00">60</text>
+<line class="axis" x1="52.00" x2="52.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="52.00" y="636">-0.2</text>
+<rect x="48.00" y="646" width="8" height="8" fill="#15803d"><title>x:-0.2: after better</title></rect>
+<line class="axis" x1="114.50" x2="114.50" y1="620" y2="624"/>
+<text text-anchor="middle" x="114.50" y="636">-0.1</text>
+<rect x="110.50" y="646" width="8" height="8" fill="#ffffff" stroke="#64748b"><title>x:-0.1: inconclusive</title></rect>
+<line class="axis" x1="145.75" x2="145.75" y1="620" y2="624"/>
+<rect x="141.75" y="646" width="8" height="8" fill="#b91c1c"><title>x:-0.05: before better</title></rect>
+<line class="axis" x1="164.50" x2="164.50" y1="620" y2="624"/>
+<rect x="160.50" y="646" width="8" height="8" fill="#b91c1c"><title>x:-0.02: before better</title></rect>
+<line class="axis" x1="177.00" x2="177.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="177.00" y="636">0</text>
+<rect x="173.00" y="646" width="8" height="8" fill="#b91c1c"><title>x:0: before better</title></rect>
+<line class="axis" x1="189.50" x2="189.50" y1="620" y2="624"/>
+<rect x="185.50" y="646" width="8" height="8" fill="#b91c1c"><title>x:0.02: before better</title></rect>
+<line class="axis" x1="208.25" x2="208.25" y1="620" y2="624"/>
+<rect x="204.25" y="646" width="8" height="8" fill="#b91c1c"><title>x:0.05: before better</title></rect>
+<line class="axis" x1="239.50" x2="239.50" y1="620" y2="624"/>
+<text text-anchor="middle" x="239.50" y="636">0.1</text>
+<rect x="235.50" y="646" width="8" height="8" fill="#ffffff" stroke="#64748b"><title>x:0.1: inconclusive</title></rect>
+<line class="axis" x1="302.00" x2="302.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="302.00" y="636">0.2</text>
+<rect x="298.00" y="646" width="8" height="8" fill="#15803d"><title>x:0.2: after better</title></rect>
+<line x1="52.00" x2="52.00" y1="460" y2="620" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="302.00" x2="302.00" y1="460" y2="620" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="52" y="672" class="note">fault (m) · break-even ±0.2 m</text>
+<path data-series="identity" d="M52.00,562.11 L114.50,590.90 L145.75,605.41 L164.50,614.15 L177.00,620.00 L189.50,614.15 L208.25,605.40 L239.50,590.87 L302.00,562.03" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="52.00" cy="562.11" r="2.4" fill="#64748b"><title>identity · x:-0.2: 21.71 px · metrics.json#/runs/identity/x:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="590.90" r="2.4" fill="#64748b"><title>identity · x:-0.1: 10.91 px · metrics.json#/runs/identity/x:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="605.41" r="2.4" fill="#64748b"><title>identity · x:-0.05: 5.47 px · metrics.json#/runs/identity/x:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="164.50" cy="614.15" r="2.4" fill="#64748b"><title>identity · x:-0.02: 2.19 px · metrics.json#/runs/identity/x:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="620.00" r="2.4" fill="#64748b"><title>identity · x:0: 0.00 px · metrics.json#/runs/identity/x:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="189.50" cy="614.15" r="2.4" fill="#64748b"><title>identity · x:0.02: 2.19 px · metrics.json#/runs/identity/x:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="605.40" r="2.4" fill="#64748b"><title>identity · x:0.05: 5.48 px · metrics.json#/runs/identity/x:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="590.87" r="2.4" fill="#64748b"><title>identity · x:0.1: 10.92 px · metrics.json#/runs/identity/x:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="562.03" r="2.4" fill="#64748b"><title>identity · x:0.2: 21.74 px · metrics.json#/runs/identity/x:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="classical" d="M52.00,545.49 L114.50,561.24 L145.75,566.02 L164.50,567.70 L177.00,568.10 L189.50,566.73 L208.25,563.70 L239.50,561.72 L302.00,551.99" fill="none" stroke="#007f7f" stroke-width="1.6"/>
+<circle cx="52.00" cy="545.49" r="2.4" fill="#007f7f"><title>classical · x:-0.2: 27.94 px · metrics.json#/runs/classical/x:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="561.24" r="2.4" fill="#007f7f"><title>classical · x:-0.1: 22.04 px · metrics.json#/runs/classical/x:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="566.02" r="2.4" fill="#007f7f"><title>classical · x:-0.05: 20.24 px · metrics.json#/runs/classical/x:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="164.50" cy="567.70" r="2.4" fill="#007f7f"><title>classical · x:-0.02: 19.61 px · metrics.json#/runs/classical/x:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="568.10" r="2.4" fill="#007f7f"><title>classical · x:0: 19.46 px · metrics.json#/runs/classical/x:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="189.50" cy="566.73" r="2.4" fill="#007f7f"><title>classical · x:0.02: 19.98 px · metrics.json#/runs/classical/x:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="563.70" r="2.4" fill="#007f7f"><title>classical · x:0.05: 21.11 px · metrics.json#/runs/classical/x:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="561.72" r="2.4" fill="#007f7f"><title>classical · x:0.1: 21.86 px · metrics.json#/runs/classical/x:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="551.99" r="2.4" fill="#007f7f"><title>classical · x:0.2: 25.50 px · metrics.json#/runs/classical/x:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-17" d="M52.00,588.87 L114.50,589.41 L145.75,589.65 L164.50,589.25 L177.00,588.79 L189.50,587.49 L208.25,586.05 L239.50,582.90 L302.00,581.88" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<circle cx="52.00" cy="588.87" r="2.4" fill="#2563eb"><title>learned-17 · x:-0.2: 11.67 px · metrics.json#/runs/learned-17/x:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="589.41" r="2.4" fill="#2563eb"><title>learned-17 · x:-0.1: 11.47 px · metrics.json#/runs/learned-17/x:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="589.65" r="2.4" fill="#2563eb"><title>learned-17 · x:-0.05: 11.38 px · metrics.json#/runs/learned-17/x:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="164.50" cy="589.25" r="2.4" fill="#2563eb"><title>learned-17 · x:-0.02: 11.53 px · metrics.json#/runs/learned-17/x:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="588.79" r="2.4" fill="#2563eb"><title>learned-17 · x:0: 11.70 px · metrics.json#/runs/learned-17/x:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="189.50" cy="587.49" r="2.4" fill="#2563eb"><title>learned-17 · x:0.02: 12.19 px · metrics.json#/runs/learned-17/x:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="586.05" r="2.4" fill="#2563eb"><title>learned-17 · x:0.05: 12.73 px · metrics.json#/runs/learned-17/x:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="582.90" r="2.4" fill="#2563eb"><title>learned-17 · x:0.1: 13.91 px · metrics.json#/runs/learned-17/x:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="581.88" r="2.4" fill="#2563eb"><title>learned-17 · x:0.2: 14.29 px · metrics.json#/runs/learned-17/x:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-42" d="M52.00,587.24 L114.50,599.90 L145.75,599.23 L164.50,598.76 L177.00,598.83 L189.50,598.96 L208.25,599.32 L239.50,600.18 L302.00,585.48" fill="none" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="52.00" cy="587.24" r="2.4" fill="#b45309"><title>learned-42 · x:-0.2: 12.29 px · metrics.json#/runs/learned-42/x:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="599.90" r="2.4" fill="#b45309"><title>learned-42 · x:-0.1: 7.54 px · metrics.json#/runs/learned-42/x:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="599.23" r="2.4" fill="#b45309"><title>learned-42 · x:-0.05: 7.79 px · metrics.json#/runs/learned-42/x:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="164.50" cy="598.76" r="2.4" fill="#b45309"><title>learned-42 · x:-0.02: 7.97 px · metrics.json#/runs/learned-42/x:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="598.83" r="2.4" fill="#b45309"><title>learned-42 · x:0: 7.94 px · metrics.json#/runs/learned-42/x:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="189.50" cy="598.96" r="2.4" fill="#b45309"><title>learned-42 · x:0.02: 7.89 px · metrics.json#/runs/learned-42/x:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="599.32" r="2.4" fill="#b45309"><title>learned-42 · x:0.05: 7.75 px · metrics.json#/runs/learned-42/x:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="600.18" r="2.4" fill="#b45309"><title>learned-42 · x:0.1: 7.43 px · metrics.json#/runs/learned-42/x:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="585.48" r="2.4" fill="#b45309"><title>learned-42 · x:0.2: 12.94 px · metrics.json#/runs/learned-42/x:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-73" d="M52.00,585.47 L114.50,585.34 L145.75,586.45 L164.50,587.49 L177.00,587.98 L189.50,588.31 L208.25,588.65 L239.50,588.15 L302.00,586.68" fill="none" stroke="#be185d" stroke-width="1.6"/>
+<circle cx="52.00" cy="585.47" r="2.4" fill="#be185d"><title>learned-73 · x:-0.2: 12.95 px · metrics.json#/runs/learned-73/x:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="114.50" cy="585.34" r="2.4" fill="#be185d"><title>learned-73 · x:-0.1: 13.00 px · metrics.json#/runs/learned-73/x:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="145.75" cy="586.45" r="2.4" fill="#be185d"><title>learned-73 · x:-0.05: 12.58 px · metrics.json#/runs/learned-73/x:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="164.50" cy="587.49" r="2.4" fill="#be185d"><title>learned-73 · x:-0.02: 12.19 px · metrics.json#/runs/learned-73/x:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="177.00" cy="587.98" r="2.4" fill="#be185d"><title>learned-73 · x:0: 12.01 px · metrics.json#/runs/learned-73/x:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="189.50" cy="588.31" r="2.4" fill="#be185d"><title>learned-73 · x:0.02: 11.88 px · metrics.json#/runs/learned-73/x:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="208.25" cy="588.65" r="2.4" fill="#be185d"><title>learned-73 · x:0.05: 11.76 px · metrics.json#/runs/learned-73/x:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="239.50" cy="588.15" r="2.4" fill="#be185d"><title>learned-73 · x:0.1: 11.94 px · metrics.json#/runs/learned-73/x:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="302.00" cy="586.68" r="2.4" fill="#be185d"><title>learned-73 · x:0.2: 12.49 px · metrics.json#/runs/learned-73/x:0.2/pixel_frame_p50_px/value</title></circle>
+</g>
+<g data-axis="y"><text x="340" y="448" class="panel">y = vertical offset</text>
+<line class="grid" x1="372" x2="622" y1="620.00" y2="620.00"/><text text-anchor="end" x="366" y="624.00">0</text>
+<line class="grid" x1="372" x2="622" y1="580.00" y2="580.00"/><text text-anchor="end" x="366" y="584.00">15</text>
+<line class="grid" x1="372" x2="622" y1="540.00" y2="540.00"/><text text-anchor="end" x="366" y="544.00">30</text>
+<line class="grid" x1="372" x2="622" y1="500.00" y2="500.00"/><text text-anchor="end" x="366" y="504.00">45</text>
+<line class="grid" x1="372" x2="622" y1="460.00" y2="460.00"/><text text-anchor="end" x="366" y="464.00">60</text>
+<line class="axis" x1="372.00" x2="372.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="372.00" y="636">-0.2</text>
+<rect x="368.00" y="646" width="8" height="8" fill="#15803d"><title>y:-0.2: after better</title></rect>
+<line class="axis" x1="434.50" x2="434.50" y1="620" y2="624"/>
+<text text-anchor="middle" x="434.50" y="636">-0.1</text>
+<rect x="430.50" y="646" width="8" height="8" fill="#ffffff" stroke="#64748b"><title>y:-0.1: inconclusive</title></rect>
+<line class="axis" x1="465.75" x2="465.75" y1="620" y2="624"/>
+<rect x="461.75" y="646" width="8" height="8" fill="#b91c1c"><title>y:-0.05: before better</title></rect>
+<line class="axis" x1="484.50" x2="484.50" y1="620" y2="624"/>
+<rect x="480.50" y="646" width="8" height="8" fill="#b91c1c"><title>y:-0.02: before better</title></rect>
+<line class="axis" x1="497.00" x2="497.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="497.00" y="636">0</text>
+<rect x="493.00" y="646" width="8" height="8" fill="#b91c1c"><title>y:0: before better</title></rect>
+<line class="axis" x1="509.50" x2="509.50" y1="620" y2="624"/>
+<rect x="505.50" y="646" width="8" height="8" fill="#b91c1c"><title>y:0.02: before better</title></rect>
+<line class="axis" x1="528.25" x2="528.25" y1="620" y2="624"/>
+<rect x="524.25" y="646" width="8" height="8" fill="#b91c1c"><title>y:0.05: before better</title></rect>
+<line class="axis" x1="559.50" x2="559.50" y1="620" y2="624"/>
+<text text-anchor="middle" x="559.50" y="636">0.1</text>
+<rect x="555.50" y="646" width="8" height="8" fill="#ffffff" stroke="#64748b"><title>y:0.1: inconclusive</title></rect>
+<line class="axis" x1="622.00" x2="622.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="622.00" y="636">0.2</text>
+<rect x="618.00" y="646" width="8" height="8" fill="#15803d"><title>y:0.2: after better</title></rect>
+<line x1="372.00" x2="372.00" y1="460" y2="620" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<line x1="622.00" x2="622.00" y1="460" y2="620" stroke="#15803d" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="372" y="672" class="note">fault (m) · break-even ±0.2 m</text>
+<path data-series="identity" d="M372.00,567.20 L434.50,592.44 L465.75,605.81 L484.50,614.23 L497.00,620.00 L509.50,614.15 L528.25,605.36 L559.50,590.73 L622.00,561.46" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="372.00" cy="567.20" r="2.4" fill="#64748b"><title>identity · y:-0.2: 19.80 px · metrics.json#/runs/identity/y:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="592.44" r="2.4" fill="#64748b"><title>identity · y:-0.1: 10.34 px · metrics.json#/runs/identity/y:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="605.81" r="2.4" fill="#64748b"><title>identity · y:-0.05: 5.32 px · metrics.json#/runs/identity/y:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="484.50" cy="614.23" r="2.4" fill="#64748b"><title>identity · y:-0.02: 2.16 px · metrics.json#/runs/identity/y:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="620.00" r="2.4" fill="#64748b"><title>identity · y:0: 0.00 px · metrics.json#/runs/identity/y:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="509.50" cy="614.15" r="2.4" fill="#64748b"><title>identity · y:0.02: 2.20 px · metrics.json#/runs/identity/y:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="605.36" r="2.4" fill="#64748b"><title>identity · y:0.05: 5.49 px · metrics.json#/runs/identity/y:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="590.73" r="2.4" fill="#64748b"><title>identity · y:0.1: 10.98 px · metrics.json#/runs/identity/y:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="561.46" r="2.4" fill="#64748b"><title>identity · y:0.2: 21.95 px · metrics.json#/runs/identity/y:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="classical" d="M372.00,568.18 L434.50,569.31 L465.75,568.63 L484.50,567.33 L497.00,568.10 L509.50,566.97 L528.25,566.88 L559.50,562.06 L622.00,553.09" fill="none" stroke="#007f7f" stroke-width="1.6"/>
+<circle cx="372.00" cy="568.18" r="2.4" fill="#007f7f"><title>classical · y:-0.2: 19.43 px · metrics.json#/runs/classical/y:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="569.31" r="2.4" fill="#007f7f"><title>classical · y:-0.1: 19.01 px · metrics.json#/runs/classical/y:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="568.63" r="2.4" fill="#007f7f"><title>classical · y:-0.05: 19.26 px · metrics.json#/runs/classical/y:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="484.50" cy="567.33" r="2.4" fill="#007f7f"><title>classical · y:-0.02: 19.75 px · metrics.json#/runs/classical/y:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="568.10" r="2.4" fill="#007f7f"><title>classical · y:0: 19.46 px · metrics.json#/runs/classical/y:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="509.50" cy="566.97" r="2.4" fill="#007f7f"><title>classical · y:0.02: 19.89 px · metrics.json#/runs/classical/y:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="566.88" r="2.4" fill="#007f7f"><title>classical · y:0.05: 19.92 px · metrics.json#/runs/classical/y:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="562.06" r="2.4" fill="#007f7f"><title>classical · y:0.1: 21.73 px · metrics.json#/runs/classical/y:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="553.09" r="2.4" fill="#007f7f"><title>classical · y:0.2: 25.09 px · metrics.json#/runs/classical/y:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-17" d="M372.00,585.28 L434.50,587.43 L465.75,587.74 L484.50,588.90 L497.00,588.79 L509.50,588.45 L528.25,588.05 L559.50,588.27 L622.00,588.44" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<circle cx="372.00" cy="585.28" r="2.4" fill="#2563eb"><title>learned-17 · y:-0.2: 13.02 px · metrics.json#/runs/learned-17/y:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="587.43" r="2.4" fill="#2563eb"><title>learned-17 · y:-0.1: 12.21 px · metrics.json#/runs/learned-17/y:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="587.74" r="2.4" fill="#2563eb"><title>learned-17 · y:-0.05: 12.10 px · metrics.json#/runs/learned-17/y:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="484.50" cy="588.90" r="2.4" fill="#2563eb"><title>learned-17 · y:-0.02: 11.66 px · metrics.json#/runs/learned-17/y:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="588.79" r="2.4" fill="#2563eb"><title>learned-17 · y:0: 11.70 px · metrics.json#/runs/learned-17/y:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="509.50" cy="588.45" r="2.4" fill="#2563eb"><title>learned-17 · y:0.02: 11.83 px · metrics.json#/runs/learned-17/y:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="588.05" r="2.4" fill="#2563eb"><title>learned-17 · y:0.05: 11.98 px · metrics.json#/runs/learned-17/y:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="588.27" r="2.4" fill="#2563eb"><title>learned-17 · y:0.1: 11.90 px · metrics.json#/runs/learned-17/y:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="588.44" r="2.4" fill="#2563eb"><title>learned-17 · y:0.2: 11.84 px · metrics.json#/runs/learned-17/y:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-42" d="M372.00,598.65 L434.50,597.21 L465.75,598.91 L484.50,598.83 L497.00,598.83 L509.50,598.55 L528.25,598.57 L559.50,598.48 L622.00,598.56" fill="none" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="372.00" cy="598.65" r="2.4" fill="#b45309"><title>learned-42 · y:-0.2: 8.01 px · metrics.json#/runs/learned-42/y:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="597.21" r="2.4" fill="#b45309"><title>learned-42 · y:-0.1: 8.55 px · metrics.json#/runs/learned-42/y:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="598.91" r="2.4" fill="#b45309"><title>learned-42 · y:-0.05: 7.91 px · metrics.json#/runs/learned-42/y:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="484.50" cy="598.83" r="2.4" fill="#b45309"><title>learned-42 · y:-0.02: 7.94 px · metrics.json#/runs/learned-42/y:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="598.83" r="2.4" fill="#b45309"><title>learned-42 · y:0: 7.94 px · metrics.json#/runs/learned-42/y:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="509.50" cy="598.55" r="2.4" fill="#b45309"><title>learned-42 · y:0.02: 8.05 px · metrics.json#/runs/learned-42/y:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="598.57" r="2.4" fill="#b45309"><title>learned-42 · y:0.05: 8.04 px · metrics.json#/runs/learned-42/y:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="598.48" r="2.4" fill="#b45309"><title>learned-42 · y:0.1: 8.07 px · metrics.json#/runs/learned-42/y:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="598.56" r="2.4" fill="#b45309"><title>learned-42 · y:0.2: 8.04 px · metrics.json#/runs/learned-42/y:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-73" d="M372.00,586.38 L434.50,586.62 L465.75,587.11 L484.50,588.12 L497.00,587.98 L509.50,587.36 L528.25,586.93 L559.50,588.21 L622.00,588.31" fill="none" stroke="#be185d" stroke-width="1.6"/>
+<circle cx="372.00" cy="586.38" r="2.4" fill="#be185d"><title>learned-73 · y:-0.2: 12.61 px · metrics.json#/runs/learned-73/y:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="434.50" cy="586.62" r="2.4" fill="#be185d"><title>learned-73 · y:-0.1: 12.52 px · metrics.json#/runs/learned-73/y:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="465.75" cy="587.11" r="2.4" fill="#be185d"><title>learned-73 · y:-0.05: 12.33 px · metrics.json#/runs/learned-73/y:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="484.50" cy="588.12" r="2.4" fill="#be185d"><title>learned-73 · y:-0.02: 11.96 px · metrics.json#/runs/learned-73/y:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="497.00" cy="587.98" r="2.4" fill="#be185d"><title>learned-73 · y:0: 12.01 px · metrics.json#/runs/learned-73/y:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="509.50" cy="587.36" r="2.4" fill="#be185d"><title>learned-73 · y:0.02: 12.24 px · metrics.json#/runs/learned-73/y:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="528.25" cy="586.93" r="2.4" fill="#be185d"><title>learned-73 · y:0.05: 12.40 px · metrics.json#/runs/learned-73/y:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="559.50" cy="588.21" r="2.4" fill="#be185d"><title>learned-73 · y:0.1: 11.92 px · metrics.json#/runs/learned-73/y:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="622.00" cy="588.31" r="2.4" fill="#be185d"><title>learned-73 · y:0.2: 11.88 px · metrics.json#/runs/learned-73/y:0.2/pixel_frame_p50_px/value</title></circle>
+</g>
+<g data-axis="z"><text x="660" y="448" class="panel">z = forward offset</text>
+<line class="grid" x1="692" x2="942" y1="620.00" y2="620.00"/><text text-anchor="end" x="686" y="624.00">0</text>
+<line class="grid" x1="692" x2="942" y1="580.00" y2="580.00"/><text text-anchor="end" x="686" y="584.00">15</text>
+<line class="grid" x1="692" x2="942" y1="540.00" y2="540.00"/><text text-anchor="end" x="686" y="544.00">30</text>
+<line class="grid" x1="692" x2="942" y1="500.00" y2="500.00"/><text text-anchor="end" x="686" y="504.00">45</text>
+<line class="grid" x1="692" x2="942" y1="460.00" y2="460.00"/><text text-anchor="end" x="686" y="464.00">60</text>
+<line class="axis" x1="692.00" x2="692.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="692.00" y="636">-0.2</text>
+<rect x="688.00" y="646" width="8" height="8" fill="#b91c1c"><title>z:-0.2: before better</title></rect>
+<line class="axis" x1="754.50" x2="754.50" y1="620" y2="624"/>
+<text text-anchor="middle" x="754.50" y="636">-0.1</text>
+<rect x="750.50" y="646" width="8" height="8" fill="#b91c1c"><title>z:-0.1: before better</title></rect>
+<line class="axis" x1="785.75" x2="785.75" y1="620" y2="624"/>
+<rect x="781.75" y="646" width="8" height="8" fill="#b91c1c"><title>z:-0.05: before better</title></rect>
+<line class="axis" x1="804.50" x2="804.50" y1="620" y2="624"/>
+<rect x="800.50" y="646" width="8" height="8" fill="#b91c1c"><title>z:-0.02: before better</title></rect>
+<line class="axis" x1="817.00" x2="817.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="817.00" y="636">0</text>
+<rect x="813.00" y="646" width="8" height="8" fill="#b91c1c"><title>z:0: before better</title></rect>
+<line class="axis" x1="829.50" x2="829.50" y1="620" y2="624"/>
+<rect x="825.50" y="646" width="8" height="8" fill="#b91c1c"><title>z:0.02: before better</title></rect>
+<line class="axis" x1="848.25" x2="848.25" y1="620" y2="624"/>
+<rect x="844.25" y="646" width="8" height="8" fill="#b91c1c"><title>z:0.05: before better</title></rect>
+<line class="axis" x1="879.50" x2="879.50" y1="620" y2="624"/>
+<text text-anchor="middle" x="879.50" y="636">0.1</text>
+<rect x="875.50" y="646" width="8" height="8" fill="#b91c1c"><title>z:0.1: before better</title></rect>
+<line class="axis" x1="942.00" x2="942.00" y1="620" y2="624"/>
+<text text-anchor="middle" x="942.00" y="636">0.2</text>
+<rect x="938.00" y="646" width="8" height="8" fill="#b91c1c"><title>z:0.2: before better</title></rect>
+<text x="692" y="672" class="note">fault (m) · no break-even up to ±0.2 m</text>
+<path data-series="identity" d="M692.00,600.78 L754.50,610.30 L785.75,615.13 L804.50,618.05 L817.00,620.00 L829.50,618.05 L848.25,615.17 L879.50,610.48 L942.00,601.37" fill="none" stroke="#64748b" stroke-width="1.6"/>
+<circle cx="692.00" cy="600.78" r="2.4" fill="#64748b"><title>identity · z:-0.2: 7.21 px · metrics.json#/runs/identity/z:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="610.30" r="2.4" fill="#64748b"><title>identity · z:-0.1: 3.64 px · metrics.json#/runs/identity/z:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="615.13" r="2.4" fill="#64748b"><title>identity · z:-0.05: 1.83 px · metrics.json#/runs/identity/z:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="804.50" cy="618.05" r="2.4" fill="#64748b"><title>identity · z:-0.02: 0.73 px · metrics.json#/runs/identity/z:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="620.00" r="2.4" fill="#64748b"><title>identity · z:0: 0.00 px · metrics.json#/runs/identity/z:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="829.50" cy="618.05" r="2.4" fill="#64748b"><title>identity · z:0.02: 0.73 px · metrics.json#/runs/identity/z:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="615.17" r="2.4" fill="#64748b"><title>identity · z:0.05: 1.81 px · metrics.json#/runs/identity/z:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="610.48" r="2.4" fill="#64748b"><title>identity · z:0.1: 3.57 px · metrics.json#/runs/identity/z:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="601.37" r="2.4" fill="#64748b"><title>identity · z:0.2: 6.99 px · metrics.json#/runs/identity/z:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="classical" d="M692.00,559.91 L754.50,566.99 L785.75,567.18 L804.50,568.19 L817.00,568.10 L829.50,567.98 L848.25,566.55 L879.50,565.35 L942.00,562.20" fill="none" stroke="#007f7f" stroke-width="1.6"/>
+<circle cx="692.00" cy="559.91" r="2.4" fill="#007f7f"><title>classical · z:-0.2: 22.54 px · metrics.json#/runs/classical/z:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="566.99" r="2.4" fill="#007f7f"><title>classical · z:-0.1: 19.88 px · metrics.json#/runs/classical/z:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="567.18" r="2.4" fill="#007f7f"><title>classical · z:-0.05: 19.81 px · metrics.json#/runs/classical/z:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="804.50" cy="568.19" r="2.4" fill="#007f7f"><title>classical · z:-0.02: 19.43 px · metrics.json#/runs/classical/z:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="568.10" r="2.4" fill="#007f7f"><title>classical · z:0: 19.46 px · metrics.json#/runs/classical/z:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="829.50" cy="567.98" r="2.4" fill="#007f7f"><title>classical · z:0.02: 19.51 px · metrics.json#/runs/classical/z:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="566.55" r="2.4" fill="#007f7f"><title>classical · z:0.05: 20.04 px · metrics.json#/runs/classical/z:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="565.35" r="2.4" fill="#007f7f"><title>classical · z:0.1: 20.49 px · metrics.json#/runs/classical/z:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="562.20" r="2.4" fill="#007f7f"><title>classical · z:0.2: 21.67 px · metrics.json#/runs/classical/z:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-17" d="M692.00,586.87 L754.50,587.75 L785.75,588.14 L804.50,588.53 L817.00,588.79 L829.50,588.78 L848.25,588.23 L879.50,588.36 L942.00,588.17" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+<circle cx="692.00" cy="586.87" r="2.4" fill="#2563eb"><title>learned-17 · z:-0.2: 12.42 px · metrics.json#/runs/learned-17/z:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="587.75" r="2.4" fill="#2563eb"><title>learned-17 · z:-0.1: 12.10 px · metrics.json#/runs/learned-17/z:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="588.14" r="2.4" fill="#2563eb"><title>learned-17 · z:-0.05: 11.95 px · metrics.json#/runs/learned-17/z:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="804.50" cy="588.53" r="2.4" fill="#2563eb"><title>learned-17 · z:-0.02: 11.80 px · metrics.json#/runs/learned-17/z:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="588.79" r="2.4" fill="#2563eb"><title>learned-17 · z:0: 11.70 px · metrics.json#/runs/learned-17/z:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="829.50" cy="588.78" r="2.4" fill="#2563eb"><title>learned-17 · z:0.02: 11.71 px · metrics.json#/runs/learned-17/z:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="588.23" r="2.4" fill="#2563eb"><title>learned-17 · z:0.05: 11.92 px · metrics.json#/runs/learned-17/z:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="588.36" r="2.4" fill="#2563eb"><title>learned-17 · z:0.1: 11.86 px · metrics.json#/runs/learned-17/z:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="588.17" r="2.4" fill="#2563eb"><title>learned-17 · z:0.2: 11.93 px · metrics.json#/runs/learned-17/z:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-42" d="M692.00,600.08 L754.50,599.87 L785.75,599.31 L804.50,598.93 L817.00,598.83 L829.50,598.64 L848.25,598.14 L879.50,597.93 L942.00,597.04" fill="none" stroke="#b45309" stroke-width="1.6"/>
+<circle cx="692.00" cy="600.08" r="2.4" fill="#b45309"><title>learned-42 · z:-0.2: 7.47 px · metrics.json#/runs/learned-42/z:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="599.87" r="2.4" fill="#b45309"><title>learned-42 · z:-0.1: 7.55 px · metrics.json#/runs/learned-42/z:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="599.31" r="2.4" fill="#b45309"><title>learned-42 · z:-0.05: 7.76 px · metrics.json#/runs/learned-42/z:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="804.50" cy="598.93" r="2.4" fill="#b45309"><title>learned-42 · z:-0.02: 7.90 px · metrics.json#/runs/learned-42/z:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="598.83" r="2.4" fill="#b45309"><title>learned-42 · z:0: 7.94 px · metrics.json#/runs/learned-42/z:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="829.50" cy="598.64" r="2.4" fill="#b45309"><title>learned-42 · z:0.02: 8.01 px · metrics.json#/runs/learned-42/z:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="598.14" r="2.4" fill="#b45309"><title>learned-42 · z:0.05: 8.20 px · metrics.json#/runs/learned-42/z:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="597.93" r="2.4" fill="#b45309"><title>learned-42 · z:0.1: 8.27 px · metrics.json#/runs/learned-42/z:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="597.04" r="2.4" fill="#b45309"><title>learned-42 · z:0.2: 8.61 px · metrics.json#/runs/learned-42/z:0.2/pixel_frame_p50_px/value</title></circle>
+<path data-series="learned-73" d="M692.00,587.58 L754.50,587.66 L785.75,588.07 L804.50,588.19 L817.00,587.98 L829.50,587.78 L848.25,587.42 L879.50,587.25 L942.00,586.00" fill="none" stroke="#be185d" stroke-width="1.6"/>
+<circle cx="692.00" cy="587.58" r="2.4" fill="#be185d"><title>learned-73 · z:-0.2: 12.16 px · metrics.json#/runs/learned-73/z:-0.2/pixel_frame_p50_px/value</title></circle>
+<circle cx="754.50" cy="587.66" r="2.4" fill="#be185d"><title>learned-73 · z:-0.1: 12.13 px · metrics.json#/runs/learned-73/z:-0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="785.75" cy="588.07" r="2.4" fill="#be185d"><title>learned-73 · z:-0.05: 11.98 px · metrics.json#/runs/learned-73/z:-0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="804.50" cy="588.19" r="2.4" fill="#be185d"><title>learned-73 · z:-0.02: 11.93 px · metrics.json#/runs/learned-73/z:-0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="817.00" cy="587.98" r="2.4" fill="#be185d"><title>learned-73 · z:0: 12.01 px · metrics.json#/runs/learned-73/z:0/pixel_frame_p50_px/value</title></circle>
+<circle cx="829.50" cy="587.78" r="2.4" fill="#be185d"><title>learned-73 · z:0.02: 12.08 px · metrics.json#/runs/learned-73/z:0.02/pixel_frame_p50_px/value</title></circle>
+<circle cx="848.25" cy="587.42" r="2.4" fill="#be185d"><title>learned-73 · z:0.05: 12.22 px · metrics.json#/runs/learned-73/z:0.05/pixel_frame_p50_px/value</title></circle>
+<circle cx="879.50" cy="587.25" r="2.4" fill="#be185d"><title>learned-73 · z:0.1: 12.28 px · metrics.json#/runs/learned-73/z:0.1/pixel_frame_p50_px/value</title></circle>
+<circle cx="942.00" cy="586.00" r="2.4" fill="#be185d"><title>learned-73 · z:0.2: 12.75 px · metrics.json#/runs/learned-73/z:0.2/pixel_frame_p50_px/value</title></circle>
+</g>
+<text x="20" y="710" class="note">Derived by bevcalib.analysis.operating_envelope from the v1.0.0 metrics.json and intervals.json. Not detector or vehicle safety evidence.</text>
+</svg>
