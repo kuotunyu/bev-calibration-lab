@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import html
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from bevcalib.analysis.formal_claims import publication_rows
 from bevcalib.report.evidence import load_display_evidence, original_documents
@@ -18,7 +18,13 @@ def build_formal_report(
     *,
     repository_root: Path,
     include_figures: bool = False,
+    page: str = "index.html",
 ) -> Path:
+    """Write the report page at `page`, a relative path inside `output_dir`.
+
+    Assets keep their places at the top of `output_dir`, so a page placed in a
+    subdirectory links back to them with `../` and every asset URL stays the same.
+    """
     artifacts, registry_bytes, scalar_claims = load_display_evidence(
         claims_path, artifacts_dir, repository_root=repository_root
     )
@@ -26,6 +32,7 @@ def build_formal_report(
 
     identity = artifacts.metrics.identity
     escape = html.escape
+    up = "../" * (len(PurePosixPath(page).parts) - 1)
     parts = [
         '<!doctype html><html lang="en"><meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
@@ -43,13 +50,13 @@ def build_formal_report(
     ]
     for key, text in identity.estimands.items():
         parts.append(f"<dt>{escape(key)}</dt><dd>{escape(text)}</dd>")
-    parts.extend(["</dl>", '<p><a href="claims.yaml">Exact scalar registry</a></p>'])
+    parts.extend(["</dl>", f'<p><a href="{up}claims.yaml">Exact scalar registry</a></p>'])
     for name in figures:
         title = name.replace("-", " ").capitalize()
         parts.append(
-            f'<details><summary>{escape(title)}</summary><p><a href="figures/{name}.svg">'
+            f'<details><summary>{escape(title)}</summary><p><a href="{up}figures/{name}.svg">'
             "Open standalone SVG with exact-value and source tooltips</a></p>"
-            f'<img src="figures/{name}.svg" alt="{escape(title)}" style="width:100%;height:auto"></details>'
+            f'<img src="{up}figures/{name}.svg" alt="{escape(title)}" style="width:100%;height:auto"></details>'
         )
     current = None
     for row in publication_rows(artifacts):
@@ -58,7 +65,7 @@ def build_formal_report(
                 parts.append("</tbody></table></details>")
             current = row.document
             parts.append(
-                f'<details><summary>{escape(current)}</summary><p><a href="evidence/{current}.json">'
+                f'<details><summary>{escape(current)}</summary><p><a href="{up}evidence/{current}.json">'
                 "Original source document</a></p><table><thead><tr><th>Condition and estimand</th>"
                 "<th>Metric unit</th><th>Values and support</th></tr></thead><tbody>"
             )
@@ -91,6 +98,7 @@ def build_formal_report(
         (output_dir / "figures").mkdir()
         for name, svg in figures.items():
             (output_dir / "figures" / f"{name}.svg").write_text(svg, encoding="utf-8", newline="\n")
-    path = output_dir / "index.html"
+    path = output_dir / page
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(parts), encoding="utf-8", newline="\n")
     return path

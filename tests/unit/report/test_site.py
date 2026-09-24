@@ -1,4 +1,4 @@
-"""The Pages assembler packages validated report and synthetic demo assets."""
+"""The Pages assembler packages the landing page, the formal report and the demo."""
 
 from __future__ import annotations
 
@@ -12,6 +12,14 @@ import pytest
 
 DOCUMENTS = ("metrics", "intervals", "recovery", "timing", "exclusions")
 FIGURES = ("recovery-by-fault-level", "bev-error-by-range")
+REPORT = "evidence/index.html"
+OVERVIEW = {
+    "index.html": '<!doctype html><a href="evidence/index.html">report</a>'
+    '<a href="demo/calibration-explorer.html">demo</a>'
+    '<img src="analysis/operating-envelope.svg"></html>\n',
+    "analysis/operating-envelope.json": '{"evidence_type": "derived"}\n',
+    "analysis/operating-envelope.svg": '<svg xmlns="http://www.w3.org/2000/svg"></svg>\n',
+}
 
 
 def _inputs(root: Path) -> tuple[Path, Path]:
@@ -31,9 +39,11 @@ def _formal_builder(
     *,
     repository_root: Path,
     include_figures: bool,
+    page: str,
 ) -> Path:
     assert claims.is_file() and artifacts.is_dir() and repository_root.is_dir()
     assert include_figures is True
+    assert page == REPORT
     output.mkdir()
     (output / "evidence").mkdir()
     (output / "figures").mkdir()
@@ -48,19 +58,28 @@ def _formal_builder(
             encoding="utf-8",
             newline="\n",
         )
-    index = output / "index.html"
-    index.write_text(
-        '<!doctype html><a href="claims.yaml">claims</a>'
-        '<img src="figures/recovery-by-fault-level.svg">'
+    report = output / page
+    report.write_text(
+        '<!doctype html><a href="../claims.yaml">claims</a>'
+        '<img src="../figures/recovery-by-fault-level.svg">'
+        '<a href="metrics.json">source</a>'
         '<a href="https://example.invalid">external</a><a href="#top">top</a></html>\n',
         encoding="utf-8",
         newline="\n",
     )
-    return index
+    return report
 
 
-def _install_seams(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", _formal_builder)
+def _overview(claims: Path, artifacts: Path, *, repository_root: Path) -> dict[str, str]:
+    assert claims.is_file() and artifacts.is_dir() and repository_root.is_dir()
+    return dict(OVERVIEW)
+
+
+def _install_seams(
+    monkeypatch: pytest.MonkeyPatch, formal=_formal_builder, overview=_overview
+) -> None:  # type: ignore[no-untyped-def]
+    monkeypatch.setattr("bevcalib.report.site.build_formal_report", formal)
+    monkeypatch.setattr("bevcalib.report.site.build_overview", overview)
     monkeypatch.setattr(
         "bevcalib.report.site.build_explorer",
         lambda: "<!doctype html><html><p>synthetic</p><p>MIT</p></html>\n",
@@ -70,7 +89,7 @@ def _install_seams(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_site_packages_fixed_assets_links_and_deterministic_inventory(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Catches an omitted demo/link, asset, checksum, or unstable output byte."""
+    """Catches an omitted page/demo/link, asset, checksum, or unstable output byte."""
     from bevcalib.report.site import build_site
 
     _install_seams(monkeypatch)
@@ -81,16 +100,22 @@ def test_build_site_packages_fixed_assets_links_and_deterministic_inventory(
     second = build_site(claims, artifacts, tmp_path / "site-b", repository_root=tmp_path)
 
     assert first == tmp_path / "site-a" / "index.html"
+    assert first.read_text(encoding="utf-8") == OVERVIEW["index.html"]
     assert {path: path.read_bytes() for path in before} == before
-    assert 'href="demo/calibration-explorer.html"' in first.read_text(encoding="utf-8")
+    report = (first.parent / REPORT).read_text(encoding="utf-8")
+    assert 'href="../demo/calibration-explorer.html"' in report
+    assert 'href="../index.html"' in report
     assert "synthetic" in (first.parent / "demo/calibration-explorer.html").read_text(
         encoding="utf-8"
     )
     inventory = json.loads((first.parent / "site-inventory.json").read_bytes())
     expected = {
+        "analysis/operating-envelope.json",
+        "analysis/operating-envelope.svg",
         "claims.yaml",
         "demo/calibration-explorer.html",
         "index.html",
+        REPORT,
         *(f"evidence/{name}.json" for name in DOCUMENTS),
         *(f"figures/{name}.svg" for name in FIGURES),
     }
@@ -135,11 +160,10 @@ def test_build_site_refuses_missing_required_asset(
 
     def incomplete(*args, **kwargs):  # type: ignore[no-untyped-def]
         path = _formal_builder(*args, **kwargs)
-        (path.parent / "figures/recovery-by-fault-level.svg").unlink()
+        (path.parent.parent / "figures/recovery-by-fault-level.svg").unlink()
         return path
 
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", incomplete)
-    monkeypatch.setattr("bevcalib.report.site.build_explorer", lambda: "demo")
+    _install_seams(monkeypatch, formal=incomplete)
     with pytest.raises(ValueError, match="required site asset"):
         build_site(claims, artifacts, tmp_path / "site", repository_root=tmp_path)
 
@@ -154,13 +178,12 @@ def test_build_site_refuses_extra_nested_file_before_inventory(
 
     def extra(*args, **kwargs):  # type: ignore[no-untyped-def]
         path = _formal_builder(*args, **kwargs)
-        nested = path.parent / "unexpected" / "payload.txt"
+        nested = path.parent.parent / "unexpected" / "payload.txt"
         nested.parent.mkdir()
         nested.write_text("untracked deployment payload", encoding="utf-8")
         return path
 
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", extra)
-    monkeypatch.setattr("bevcalib.report.site.build_explorer", lambda: "demo")
+    _install_seams(monkeypatch, formal=extra)
     output = tmp_path / "site"
     with pytest.raises(ValueError, match="unexpected site asset"):
         build_site(claims, artifacts, output, repository_root=tmp_path)
@@ -177,8 +200,7 @@ def test_build_site_refuses_symlink_entry(tmp_path: Path, monkeypatch: pytest.Mo
     def linked(path: Path) -> bool:
         return path.name == "claims.yaml" or original(path)
 
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", _formal_builder)
-    monkeypatch.setattr("bevcalib.report.site.build_explorer", lambda: "demo")
+    _install_seams(monkeypatch)
     monkeypatch.setattr(Path, "is_symlink", linked)
     output = tmp_path / "site"
     with pytest.raises(ValueError, match=r"nonregular site asset: claims\.yaml"):
@@ -186,8 +208,9 @@ def test_build_site_refuses_symlink_entry(tmp_path: Path, monkeypatch: pytest.Mo
     assert not (output / "site-inventory.json").exists()
 
 
+@pytest.mark.parametrize("page", ["report", "landing"])
 def test_build_site_refuses_broken_declared_local_link(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, page: str
 ) -> None:
     """Catches an HTML link whose local target is absent from the package."""
     from bevcalib.report.site import build_site
@@ -199,9 +222,16 @@ def test_build_site_refuses_broken_declared_local_link(
         path.write_text('<a href="missing.html">missing</a></html>\n', encoding="utf-8")
         return path
 
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", broken)
-    monkeypatch.setattr("bevcalib.report.site.build_explorer", lambda: "demo")
-    with pytest.raises(ValueError, match="broken local link"):
+    def broken_overview(*args, **kwargs):  # type: ignore[no-untyped-def]
+        return _overview(*args, **kwargs) | {"index.html": '<a href="gone.html">x</a>\n'}
+
+    if page == "report":
+        _install_seams(monkeypatch, formal=broken)
+        expected = r"broken local link in evidence[\\/]index\.html: missing\.html"
+    else:
+        _install_seams(monkeypatch, overview=broken_overview)
+        expected = r"broken local link in index\.html: gone\.html"
+    with pytest.raises(ValueError, match=expected):
         build_site(claims, artifacts, tmp_path / "site", repository_root=tmp_path)
 
 
@@ -218,8 +248,7 @@ def test_build_site_refuses_formal_page_without_closing_html(
         path.write_text("<!doctype html><p>unfinished", encoding="utf-8")
         return path
 
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", malformed)
-    monkeypatch.setattr("bevcalib.report.site.build_explorer", lambda: "demo")
+    _install_seams(monkeypatch, formal=malformed)
     with pytest.raises(ValueError, match="closing html"):
         build_site(claims, artifacts, tmp_path / "site", repository_root=tmp_path)
 
@@ -237,8 +266,7 @@ def test_build_site_refuses_inputs_changed_during_assembly(
         claims.write_bytes(b"changed\n")
         return path
 
-    monkeypatch.setattr("bevcalib.report.site.build_formal_report", mutating)
-    monkeypatch.setattr("bevcalib.report.site.build_explorer", lambda: "demo")
+    _install_seams(monkeypatch, formal=mutating)
     with pytest.raises(ValueError, match="input changed during site assembly"):
         build_site(claims, artifacts, tmp_path / "site", repository_root=tmp_path)
 
@@ -275,11 +303,13 @@ def test_module_entry_point_exits_after_building(
     """Catches a missing executable module guard for ``python -m`` use."""
     import bevcalib.report.explorer as explorer
     import bevcalib.report.formal as formal
+    import bevcalib.report.landing as landing
     import bevcalib.report.site as site
 
     claims, artifacts = _inputs(tmp_path)
     output = tmp_path / "site"
     monkeypatch.setattr(formal, "build_formal_report", _formal_builder)
+    monkeypatch.setattr(landing, "build_overview", _overview)
     monkeypatch.setattr(explorer, "build_explorer", lambda: "demo")
     monkeypatch.setattr(
         sys,
