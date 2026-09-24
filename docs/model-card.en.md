@@ -66,9 +66,9 @@ identity and the numerical pairing repair. Exact performance numbers should be s
 through the same artifact and claim binding, never replaced by the fact that training
 completed. The README's key findings and the derived
 [operating envelope](analysis/operating-envelope.md) summarize them: the mean of the
-three seeds beats the classical baseline on pose, pixel error and recovery in every
-condition but keeps a residual floor, so it improves on leaving the calibration alone
-only for larger faults.
+three seeds beats the classical baseline on geodesic rotation error, translation-norm
+error, pixel error and recovery in every condition of the fault grid but keeps a
+residual floor, so it improves on leaving the calibration alone only for larger faults.
 
 Input resolution, sensors, data distribution, projection and the ground assumption are
 all fixed. Generalization across cameras, datasets or real-vehicle conditions is not

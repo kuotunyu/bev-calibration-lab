@@ -35,6 +35,6 @@
 
 ## 已有證據與限制
 
-[正式五檔](evidence/README.md)保存 locked-cohort 的 pose、pixel、edge、BEV、recovery、timing 與 exclusions；[重現紀錄](verification/analysis-reproduction.md)說明分析身份與數值配對修復。精確效能數字應從相同 artifact/claim binding 呈現，不能以模型完成訓練代替結果。README 的主要發現與衍生的 [operating envelope](analysis/operating-envelope.md) 整理了這些結果：三個 seed 的平均在每個條件的 pose、像素誤差與 recovery 都勝過 classical 基準，但留有殘差下限，因此只有在較大的故障下才比不修正更好。
+[正式五檔](evidence/README.md)保存 locked-cohort 的 pose、pixel、edge、BEV、recovery、timing 與 exclusions；[重現紀錄](verification/analysis-reproduction.md)說明分析身份與數值配對修復。精確效能數字應從相同 artifact/claim binding 呈現，不能以模型完成訓練代替結果。README 的主要發現與衍生的 [operating envelope](analysis/operating-envelope.md) 整理了這些結果：三個 seed 的平均在故障矩陣的每個條件中，geodesic 旋轉誤差、平移誤差、像素誤差與 recovery 都勝過 classical 基準，但留有殘差下限，因此只有在較大的故障下才比不修正更好。
 
 模型的輸入解析度、感測器、資料分布、投影與地面假設均固定。尚未證明跨相機、跨資料集或實車場景的泛化能力。所有預定故障條件與零故障退步都必須保留；弱恢復的全部原因仍未確定。Seed 42 不修正偏擺（正式 `pitch`）。Random-weight 的 synthetic 測試只驗證 adapter 行為，不能當成正式模型的效能或預訓練 eligibility 證據。

@@ -16,9 +16,10 @@ abstract: >-
   extrinsic of a locked evaluation cohort, and identity, a single-frame
   edge-alignment optimizer and three seeds of a ConvNeXtV2-Tiny corrector are
   compared with paired scene-bootstrap intervals. The mean of the three learned
-  seeds beats the classical optimizer on pose, pixel error and recovery in every
-  fault condition but keeps a residual error floor, so it improves on leaving the
-  calibration alone only for larger faults. Every published number is bound to
+  seeds beats the classical optimizer on geodesic rotation error, translation-norm
+  error, pixel error and recovery in every condition of the fault grid but keeps a
+  residual error floor, so it improves on leaving the calibration alone only for
+  larger faults. Every published number is bound to
   the committed evidence by a machine-checked claims registry.
 keywords:
   - autonomous-driving

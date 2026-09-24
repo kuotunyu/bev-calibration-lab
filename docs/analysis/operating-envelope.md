@@ -30,8 +30,14 @@ For each of the 60 extrinsic conditions, the paired 95% scene-bootstrap interval
 The intervals are pointwise; counting them describes the grid and is not a
 multiple-comparison test.
 
-**Break-even** on an axis is the smallest grid magnitude at which the `after` method
-has a lower pixel P50 at both signs and at every larger magnitude on the grid. Recovery
+The grid lists the zero-fault condition once per axis (`roll:0`, `pitch:0`, `yaw:0`, `x:0`, `y:0` and `z:0`), so the 60 conditions are 54 single-axis faults plus six copies of one zero-fault condition. <!-- bind: 60 = envelope#/grid/conditions ; 54 = envelope#/grid/injected_fault_conditions -->
+The six copies are identical in every source document (`zero_fault_identical` in
+the derived document), so every count below includes the zero-fault result six
+times.
+
+**Break-even** on an axis is the smallest grid magnitude from which the paired 95%
+interval of the `after` method's pixel P50 improvement lies above zero at both signs
+and at every larger magnitude on the grid. Recovery
 against identity is not counted, because of the
 [±0.25° boundary artifact](../errata.md#1-identity-recovery-at-025-is-a-floating-point-boundary-artifact).
 
@@ -107,7 +113,9 @@ Seeds are fixed by the protocol and are never selected on these results.
 
 These counts describe the 30 locked scenes and the three fixed seeds. <!-- bind: 30 = metrics#/runs/identity/roll:1/pixel_frame_p50_px/support/scenes -->
 They are not a guarantee for other scenes, cameras or training runs, and pointwise
-intervals do not control the family-wise error across the grid. Break-even levels are
-grid levels, so the true crossover lies between the break-even level and the next
-smaller one. The implication that online correction needs a miscalibration detector or
-an abstain gate is an argument from these results, not something this study tested.
+intervals do not control the family-wise error across the grid.
+Break-even levels are the grid levels at which the interval first clears zero at both
+signs, and point estimates can cross earlier.
+At ±0.5° tilt the learned mean's pixel P50 is already lower than identity's, by 0.70 px at +0.5° and 0.16 px at -0.5°, but both intervals include zero (lower ends -0.55 and -1.05 px). <!-- bind: 0.70 = intervals#/comparisons/identity->learned-fixed-three-seed-mean/roll:0.5/pixel_frame_p50_px/improvement ; 0.16 = intervals#/comparisons/identity->learned-fixed-three-seed-mean/roll:-0.5/pixel_frame_p50_px/improvement ; -0.55 = intervals#/comparisons/identity->learned-fixed-three-seed-mean/roll:0.5/pixel_frame_p50_px/interval/low ; -1.05 = intervals#/comparisons/identity->learned-fixed-three-seed-mean/roll:-0.5/pixel_frame_p50_px/interval/low -->
+The implication that online correction needs a miscalibration detector or an abstain
+gate is an argument from these results, not something this study tested.
