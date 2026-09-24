@@ -76,7 +76,7 @@ def _axes(break_even: Mapping[str, Any]) -> str:
         "z": ("forward offset", " m"),
     }
     reached = [
-        f"±{format_bound(value['magnitude'], 0 if unit == '°' else 1)}{unit} {name}"
+        f"±{value['magnitude']:g}{unit} {name}"
         for axis, (name, unit) in names.items()
         if (value := break_even[axis])["magnitude"] is not None
     ]
@@ -115,15 +115,21 @@ def build_landing(
         return f'<span data-claim="{escape(str(claim))}">{format_bound(value, decimals)}</span>'
 
     counts = envelope["interval_counts"][VERSUS_CLASSICAL]
-    wins = min(
-        counts[metric]["after_better"]
-        for metric in (
-            "rotation_geodesic_deg",
-            "translation_norm_cm",
-            "pixel_frame_p50_px",
-            "recovery_rate_pct",
+    # Conditions where the learned mean is better on all four estimands at once.
+    wins = len(
+        set.intersection(
+            *(
+                set(counts[metric]["after_better_conditions"])
+                for metric in (
+                    "rotation_geodesic_deg",
+                    "translation_norm_cm",
+                    "pixel_frame_p50_px",
+                    "recovery_rate_pct",
+                )
+            )
         )
     )
+    grid = envelope["grid"]
     residual = envelope["residual"]
     floor = [residual[seed]["rotation_geodesic_deg"] for seed in ("learned-17", "learned-73")]
     low = format_bound(min(item["min"] for item in floor), 2)
@@ -138,10 +144,12 @@ def build_landing(
         "(scene mean of the per-frame median).",
         "A ConvNeXtV2-Tiny corrector (mean of three seeds) beats a single-frame "
         "edge-alignment optimizer on rotation, translation, pixel error and recovery in "
-        f"{wins} of {counts['recovery_rate_pct']['total']} fault conditions, but seeds 17 "
+        f"{wins} of {grid['conditions']} grid conditions ({grid['injected_fault_conditions']} "
+        "single-axis faults plus the zero-fault condition, listed once per axis), but seeds 17 "
         f"and 73 keep a residual rotation error of {low}&ndash;{high}° whatever the fault. "
-        "Compared with leaving the calibration alone it lowers pixel error only "
-        f"{_axes(envelope['break_even'][MEAN])}, and it moves a correct calibration by "
+        "Compared with leaving the calibration alone, its pixel error is lower, with the paired "
+        f"95% interval above zero, only {_axes(envelope['break_even'][MEAN])}, and it moves a "
+        "correct calibration by "
         f"{observed('intervals', f'/comparisons/{MEAN}/pitch:0/rotation_geodesic_deg/after', 2)}° "
         f"(+{observed('intervals', f'/comparisons/{MEAN}/pitch:0/{pixel}/after', 2)} px).",
         "Implication, not tested here: online recalibration needs a miscalibration detector "
@@ -189,14 +197,16 @@ def build_landing(
         "for per-point sources.</figcaption></figure>",
         '<h2 id="key-results">Key results: pixel P50 (px)</h2>',
         '<p class="note">Scene mean of the per-frame median shift between LiDAR points '
-        "projected with the true and with the corrected calibration; lower is better. Formal "
-        "axes are CAM_FRONT optical-frame axes: roll is tilt, pitch is pan and yaw is in-plane "
-        "rotation. Each value carries its verified claim ID (data-claim). Negative levels and "
-        "every other estimand are in the full evidence report.</p>",
+        "projected with the true calibration and with the calibration each method ends with "
+        "(for identity, the faulty one); lower is better. Formal axes are CAM_FRONT "
+        "optical-frame axes: roll is tilt, pitch is pan and yaw is in-plane rotation. Each "
+        "value is bound to a verified claim in claims.yaml; the claim ID is in the page source "
+        "(data-claim). Negative levels and every other estimand are in the full evidence "
+        "report.</p>",
         f'<div class="table"><table><thead><tr><th scope="col">Fault</th>{header}</tr></thead>'
         f"<tbody>{rows}</tbody></table></div>",
         f'<p class="note">Read the <a href="{ERRATA}">known issues</a> before citing identity '
-        "recovery at ±0.25°, the timing stress test or far-range BEV error.</p>",
+        "recovery at ±0.25°, the timing stress test or BEV error beyond 10 m.</p>",
         "<footer><p>Kuo Tun-Yu (kuotunyu). Source code under the MIT licence.</p>"
         "<p>Aggregate results derived from the nuScenes v1.0-trainval dataset (Caesar et al., "
         "CVPR 2020), shared for non-commercial research under the nuScenes terms of use. No "

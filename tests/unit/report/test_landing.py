@@ -115,12 +115,19 @@ def test_landing_page_leads_with_bound_results_and_links_the_evidence(released, 
     } <= set(page.links)
     assert "nuScenes" in html and "Kuo Tun-Yu" in html
     assert "22.44</span>&ndash;" in html and "23.95</span> px" in html
-    assert "in 60 of 60 fault conditions" in html
+    assert (
+        "in 60 of 60 grid conditions (54 single-axis faults plus the zero-fault condition, "
+        "listed once per axis)"
+    ) in html
     assert "0.62&ndash;0.83°" in html
     assert (
-        "from ±1° tilt, ±1° pan, ±2° in-plane rotation, ±0.2 m lateral offset or ±0.2 m "
-        "vertical offset (never for forward offset within the tested range)"
+        "its pixel error is lower, with the paired 95% interval above zero, only from ±1° tilt, "
+        "±1° pan, ±2° in-plane rotation, ±0.2 m lateral offset or ±0.2 m vertical offset (never "
+        "for forward offset within the tested range)"
     ) in html
+    assert "with the calibration each method ends with (for identity, the faulty one)" in html
+    assert "the claim ID is in the page source (data-claim)" in html
+    assert "or BEV error beyond 10 m" in html
     assert "0.60</span>° (+" in html and "10.55</span> px" in html
     assert len(page.claims) == len(claims.requested) == 3 + 2 + 55
     assert page.claims[0].startswith("formal.metrics.")
@@ -140,6 +147,25 @@ def test_axis_summary_names_every_break_even_and_the_axes_without_one() -> None:
     assert _axes(none).startswith("at no tested fault (never for tilt, pan, ")
     single = none | {"z": {"magnitude": 0.2}}
     assert _axes(single).startswith("from ±0.2 m forward offset (never for tilt, pan, ")
+    fine = none | {"roll": {"magnitude": 0.5}, "x": {"magnitude": 0.05}}
+    assert _axes(fine).startswith("from ±0.5° tilt or ±0.05 m lateral offset (never for pan, ")
+
+
+def test_joint_wins_count_conditions_better_on_all_four_estimands(released, envelope) -> None:  # type: ignore[no-untyped-def]
+    from bevcalib.report.landing import build_landing
+
+    other = copy.deepcopy(envelope)
+    counts = other["interval_counts"]["classical->learned-fixed-three-seed-mean"]
+    for metric, missing in (
+        ("rotation_geodesic_deg", {"roll:1", "roll:2"}),
+        ("translation_norm_cm", {"x:0.2", "y:0.2"}),
+    ):
+        kept = [key for key in counts[metric]["after_better_conditions"] if key not in missing]
+        counts[metric]["after_better_conditions"] = kept
+        counts[metric]["after_better"] = len(kept)
+
+    html = build_landing(released, VerifiedClaims(released), other)
+    assert "in 56 of 60 grid conditions" in html
 
 
 @pytest.mark.parametrize("change", ["type", "source"])
