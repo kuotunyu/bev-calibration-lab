@@ -10,6 +10,12 @@ htmlcov/
 *.egg-info/
 build/
 dist/
+# Local runs of the Pages build (site/), mutation testing (mutants/) and the CI
+# reproducibility builds (dist-a/, dist-b/, dist-from-sdist/, .ci/).
+/site/
+/mutants/
+/dist-*/
+/.ci/
 .venv/
 venv/
 
