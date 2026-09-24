@@ -149,6 +149,20 @@ def test_html_is_byte_reproducible_and_self_contained() -> None:
     assert "nuScenes" in first
 
 
+def test_footer_names_only_the_licence_marks_the_bundle_keeps() -> None:
+    """The bundle keeps MapLibre GL JS's identifier and a link, not its licence text."""
+    from bevcalib.report.explorer import build_explorer
+
+    html = build_explorer()
+    footer = html.split("<footer>", 1)[1].split("</footer>", 1)[0]
+    assert "keeps its copyright line and MIT licence identifier" in footer
+    assert "the BSD-3-Clause identifier of the MapLibre GL JS code it includes" in footer
+    assert "a link to the full MapLibre GL JS licence text" in footer
+    assert "notice" not in footer
+    assert "Plotly, Inc." in html and "Licensed under the MIT license" in html
+    assert "@license 3-Clause BSD. Full text of license: https://github.com/maplibre/" in html
+
+
 def test_figure_keeps_unavailable_reconstruction_explicit(monkeypatch: pytest.MonkeyPatch) -> None:
     from bevcalib.report.explorer import explorer_figure
 

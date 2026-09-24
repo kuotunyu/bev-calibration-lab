@@ -146,6 +146,6 @@ v1.0.0 已[發布](https://github.com/kuotunyu/bev-calibration-lab/releases/tag/
 - **原始碼：** MIT，見 [LICENSE](LICENSE)；其中轉述的 nuScenes 衍生數值除外，適用下一項。
 - **Evidence 與圖表：** `docs/evidence/`、claims registry `docs/claims.yaml`、`docs/figures/`、`docs/analysis/`，它們在網站上的副本與表格，以及在本 repository 其他地方轉述的這些數值（例如本 README 的結果表、已知問題、研究卡、座標契約與測試資料），都是由 nuScenes v1.0-trainval 衍生的彙總量測。它們不含影像、點雲、sample token 或場景名稱，依 nuScenes 使用條款（CC BY-NC-SA 4.0）供非商業研究使用。nuScenes 本身由 Motional 散布，不在此轉散布。使用這些結果時請引用 nuScenes（Caesar et al., CVPR 2020），引用資訊見 [NOTICE](NOTICE)。
 - **預訓練權重：** 修正器從 timm 的 `convnextv2_tiny.fcmae_ft_in1k` 初始化，其模型卡宣告 CC BY-NC 4.0 授權。不散布任何訓練後的 checkpoint。
-- **Explorer 頁面：** 內嵌 Plotly.js（MIT），其中包含 MapLibre GL JS（BSD-3-Clause）；兩者的授權聲明都保留在頁面中。
+- **Explorer 頁面：** 內嵌 Plotly.js（MIT），其中包含 MapLibre GL JS（BSD-3-Clause）；頁面保留兩者的授權標示，以及 MapLibre GL JS 授權全文的連結。
 
 [NOTICE](NOTICE) 列出上述條款，[CITATION.cff](CITATION.cff) 提供本 repository 的引用資訊。

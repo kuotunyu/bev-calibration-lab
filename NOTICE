@@ -55,8 +55,8 @@ Embedded JavaScript
 -------------------
 docs/demo/calibration-explorer.html, and its copy on the website, embeds the
 Plotly.js bundle (MIT License). The bundle includes MapLibre GL JS (BSD 3-Clause
-License) and other components; their copyright and licence notices are kept in the
-embedded code.
+License) and other components; the embedded code keeps their licence identifiers and
+links as the upstream bundle carries them.
 
 Python dependencies
 -------------------

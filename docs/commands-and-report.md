@@ -4,8 +4,9 @@
 
 The [explorer](demo/calibration-explorer.html)
 ([hosted copy](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html))
-embeds Plotly.js and preserves its copyright and MIT notice, including the
-BSD-3-Clause notice of the MapLibre GL JS code in the bundle. It needs no dataset, model, server, or
+embeds Plotly.js and preserves its copyright and MIT notice; the MapLibre GL JS code
+in the bundle keeps its BSD-3-Clause identifier and a link to the full licence text.
+It needs no dataset, model, server, or
 network connection. Browser interaction acceptance completed for the release;
 see [release verification](verification/publication-and-interchange.md).
 

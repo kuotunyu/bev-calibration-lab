@@ -66,6 +66,17 @@ def test_notice_covers_values_restated_outside_the_result_files() -> None:
     assert "apart from the nuScenes-derived values they restate" in notice
 
 
+def test_notice_claims_only_the_licence_marks_the_explorer_bundle_keeps() -> None:
+    """The bundle keeps MapLibre GL JS's identifier and a link, not a copyright line."""
+
+    notice = _words((ROOT / "NOTICE").read_text(encoding="utf-8"))
+    explorer = (ROOT / "docs" / "demo" / "calibration-explorer.html").read_text(encoding="utf-8")
+
+    assert "the embedded code keeps their licence identifiers and links" in notice
+    assert "copyright and licence notices are kept" not in notice
+    assert "@license 3-Clause BSD. Full text of license: https://github.com/maplibre/" in explorer
+
+
 @pytest.mark.parametrize(
     ("readme", "heading", "phrase"),
     [

@@ -246,7 +246,8 @@ presentation acceptance and release checks, and the
   `convnextv2_tiny.fcmae_ft_in1k`, whose model card declares CC BY-NC 4.0. No trained
   checkpoint is distributed.
 - **Explorer page:** it embeds Plotly.js (MIT), which bundles MapLibre GL JS
-  (BSD-3-Clause); both notices are kept in the page.
+  (BSD-3-Clause); the page keeps both licence identifiers and a link to the MapLibre
+  GL JS licence text.
 
 [NOTICE](NOTICE) lists these terms, and [CITATION.cff](CITATION.cff) gives the citation
 for this repository.

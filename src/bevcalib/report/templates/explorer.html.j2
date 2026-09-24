@@ -49,7 +49,7 @@ details{margin-top:24px;border-top:1px solid #cddce5;padding-top:16px}summary{cu
 <p>This is first-party synthetic geometry and uses no nuScenes image, point cloud or model weight. The BEV error here is not detection accuracy and says nothing about the learned corrector or real-vehicle safety. The ground plot range adapts to show every point; compare conditions by the metre readouts.</p>
 <p lang="zh-Hant">場景：平面 z=0；相機高度 1.5 m、朝向 +X；X 向前、Y 向左、Z 向上。故障在此合成場景的 global/source frame 注入（true ∘ fault）。三個觀測永遠不變。旋轉以 degrees、平移以 m 表示；不支援多軸插值或 timing。</p>
 <p lang="zh-Hant">這是自建幾何示範，沒有使用 nuScenes 影像、點雲或模型權重。BEV 誤差不是偵測準確率，不代表 learned corrector 或實車安全表現。地面圖座標範圍隨條件調整以顯示全部點；比較不同條件時請以公尺讀數為準。</p></details>
-<footer>Plotly.js is bundled for offline use. Its copyright and MIT license notice, and the BSD-3-Clause notice of the MapLibre GL JS code it includes, are retained in the embedded library. First-party synthetic geometry: bev-calibration-lab.</footer>
+<footer>Plotly.js is bundled for offline use. The embedded library keeps its copyright line and MIT licence identifier, and the BSD-3-Clause identifier of the MapLibre GL JS code it includes with a link to the full MapLibre GL JS licence text. First-party synthetic geometry: bev-calibration-lab.</footer>
 <script>{{ plotly_js | safe }}</script>
 <script id="explorer-states" type="application/json">{{ figure | tojson }}</script>
 <script id="explorer-controls">
