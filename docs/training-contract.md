@@ -26,8 +26,9 @@ metadata for `convnextv2_tiny.fcmae_ft_in22k_in1k` meets those input requirement
 Its default crop/resize is not silently inherited: this study's geometry above is
 bound explicitly. Model weight licenses remain separate from this repository's MIT
 code license. Local random-weight architecture tests are synthetic adapter evidence,
-not proof of pretrained eligibility or accuracy. J records the actual chosen weight
-identity before any formal training.
+not proof of pretrained eligibility or accuracy. The weight identity actually used is
+recorded before any formal training; see the
+[model card](model-card.en.md#weights-and-training-identity).
 
 Verified V2 development/calibration cohorts must be trainval, official-train,
 100/20 scenes, with twenty distinct calibration logs and disjoint log/sample/sensor

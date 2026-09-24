@@ -31,8 +31,9 @@ learned timing recovery; in v1 it carries no information (see
 
 Faults are composed on the camera side of the CAM_FRONT extrinsic, so the formal axis
 names refer to the camera optical frame (x right, y down, z forward), not to vehicle
-axes. The identity column shows how far projected LiDAR points move at 1° or 0.1 m,
-before any correction.
+axes. A formal `yaw` is a rotation about the optical axis, not a heading error. The
+identity column shows how far projected LiDAR points move at 1° or 0.1 m, before any
+correction.
 
 | Formal label | Axis in the optical frame | Physical effect | Identity pixel P50 at 1° or 0.1 m |
 | --- | --- | --- | ---: |

@@ -12,7 +12,7 @@ ConvNeXtV2-Tiny 修正器（三個 seed 的平均）在故障矩陣的全部 60 
 
 ## 主要發現
 
-下表是 pixel P50：以真實標定與修正後標定分別投影 LiDAR 點，每個 frame 取偏移量的中位數，再做場景平均，單位為像素，越低越好。故障名稱見[故障軸對照表](#故障與故障軸)；零故障列為所有軸共用。負向故障、其他指標與所有配對區間見[完整 evidence 報告](https://kuotunyu.github.io/bev-calibration-lab/evidence/)。
+下表是 pixel P50：以真實標定與各方法最後採用的標定（identity 即為有故障的標定）分別投影 LiDAR 點，每個 frame 取偏移量的中位數，再做場景平均，單位為像素，越低越好。故障名稱見[故障軸對照表](#故障與故障軸)；零故障列為所有軸共用。負向故障、其他指標與所有配對區間見[完整 evidence 報告](https://kuotunyu.github.io/bev-calibration-lab/evidence/)。
 
 <!-- bind-table: metrics#/runs/{column}/{row}/pixel_frame_p50_px/value -->
 | 故障 | `identity` | `classical` | `learned-17` | `learned-42` | `learned-73` |
@@ -37,17 +37,17 @@ ConvNeXtV2-Tiny 修正器（三個 seed 的平均）在故障矩陣的全部 60 
 
 ![各相機軸的 pixel P50 對注入故障大小，包含 identity、classical 與三個 learned seed，並標出與不修正相比的損益平衡點](docs/analysis/operating_envelope_v1/operating-envelope.svg)
 
-上圖與上述計數是對已發布 evidence 的衍生分析（derived），有自己的來源身份，見 [operating envelope](docs/analysis/operating-envelope.md)。正式的 [Recovery 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)與 [BEV 誤差圖](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)保留每個方法、seed 與條件，在圖上停留即可看到精確數值與來源。引用 ±0.25° 的 identity recovery、timing 壓力測試或 10 m 以外的 BEV 誤差之前，請先讀[已知問題](docs/errata.zh-TW.md)。
+上圖與上述計數是對已發布 evidence 的衍生分析（derived），記錄自己的內容摘要與所讀每份來源文件的 SHA-256，見 [operating envelope](docs/analysis/operating-envelope.md)。正式的 [Recovery 圖](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)與 [BEV 誤差圖](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)保留每個方法、seed 與條件，在圖上停留即可看到精確數值與來源。引用 ±0.25° 的 identity recovery、timing 壓力測試或 10 m 以外的 BEV 誤差之前，請先讀[已知問題](docs/errata.zh-TW.md)。
 
 ## 對自駕車的意義
 
-相機與 LiDAR 融合依賴外參標定。支架會位移、感測器會更換、結構會老化，系統相信的標定可能逐漸偏離實際安裝，而且不會有任何錯誤訊息：LiDAR 深度只是落到了錯誤的像素上。用 SOTIF（ISO 21448）的語言來說，這種偏移是融合錯誤的觸發條件（triggering condition）。上面的結果支持監測標定、並對線上修正加上閘門，因為在這裡一直開著的修正器會把正確的標定改壞。這是研究性質的專案，不宣稱符合 ISO 21448、ISO 26262 或任何其他標準。
+相機與 LiDAR 融合依賴外參標定。支架會位移、感測器會更換、結構會老化，系統相信的標定可能逐漸偏離實際安裝，而且不會有任何錯誤訊息：LiDAR 深度只是落到了錯誤的像素上。用 SOTIF（ISO 21448）的語言，這種偏移可以當成融合錯誤的觸發條件（triggering condition）來分析。上面的結果支持監測標定、並對線上修正加上閘門，因為在這裡一直開著的修正器會把正確的標定改壞。這是研究性質的專案，不宣稱符合 ISO 21448、ISO 26262 或任何其他標準。
 
 ## 方法
 
 ### 感測器與 cohort
 
-只用 `CAM_FRONT` 與 `LIDAR_TOP`。正式 cohort 是 150 個 nuScenes 場景：100 個官方 train 開發用、20 個來自不同 log 的校準場景、30 個官方 validation 保留給鎖定評估。場景分派依 location 分層並以 token SHA-256 排序，可完整重現，且與任何量測結果無關。nuScenes mini 只用於開發與整合測試，不會出現在任何回報結果中。
+只用 `CAM_FRONT` 與 `LIDAR_TOP`。正式 cohort 是 150 個 nuScenes 場景：100 個官方 train 開發用、20 個來自不同 log、用於選 checkpoint 的校準場景（calibration split）、30 個官方 validation 保留給鎖定評估。場景分派依 location 分層並以 token SHA-256 排序，可完整重現，且與任何量測結果無關。nuScenes mini 只用於開發與整合測試，不會出現在任何回報結果中。
 
 ### 故障與故障軸
 
@@ -62,7 +62,7 @@ ConvNeXtV2-Tiny 修正器（三個 seed 的平均）在故障矩陣的全部 60 
 | `y` | y，向下 | 垂直偏移 | 10.98 px <!-- bind: 10.98 = metrics#/runs/identity/y:0.1/pixel_frame_p50_px/value --> |
 | `z` | z，光軸 | 沿視線方向的前向偏移 | 3.57 px <!-- bind: 3.57 = metrics#/runs/identity/z:0.1/pixel_frame_p50_px/value --> |
 
-旋轉故障的等級是 0、±0.1、±0.25、±0.5、±1、±2°；平移故障是 0、±2、±5、±10、±20 cm（[故障矩陣](configs/perturbations/formal_v1.yaml)）。正式的 `yaw` 是繞光軸的旋轉，不是航向誤差。[合成 explorer](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html) 則用車體座標命名軸，頁面上有對照說明。另有一個只用 identity 的 timing 壓力測試，把相機配上其他 LiDAR sweep；它在 v1 沒有提供資訊（見[已知問題](docs/errata.zh-TW.md#2-v1-的-timing-壓力測試沒有提供資訊)）。
+旋轉故障的等級是 0、±0.1、±0.25、±0.5、±1、±2°；平移故障是 0、±2、±5、±10、±20 cm（[故障矩陣](configs/perturbations/formal_v1.yaml)）。正式的 `yaw` 是繞光軸的旋轉，不是航向誤差。[合成 explorer](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html) 則用車體座標命名軸，頁面上有對照說明。另有一個只用 identity 的 timing 壓力測試，原本要把相機配上其他 LiDAR sweep；v1 幾乎在每個偏移都選到同一個 keyframe sweep，因此沒有提供資訊（見[已知問題](docs/errata.zh-TW.md#2-v1-的-timing-壓力測試沒有提供資訊)）。
 
 ### 方法與指標
 
@@ -122,7 +122,7 @@ uv run --frozen python -m bevcalib.dev verify
 - [`perturbations/apply.py`](src/bevcalib/perturbations/apply.py)：故障建構、source 端組合與精確逆轉換。
 - [`correctors/classical.py`](src/bevcalib/correctors/classical.py)：有界的由粗到細邊緣對齊搜尋。
 - [`metrics/bootstrap.py`](src/bevcalib/metrics/bootstrap.py)：以 SHA-256 counter 產生索引的配對場景 bootstrap。
-- [`test_nuscenes_mini_parity.py`](tests/integration/test_nuscenes_mini_parity.py)：在 v1.0-mini 上與官方 nuScenes devkit 的一致性檢查。
+- [`test_nuscenes_mini_parity.py`](tests/integration/test_nuscenes_mini_parity.py)：在 v1.0-mini 上與官方 nuScenes devkit 的一致性檢查（需要資料，CI 會略過；實際執行紀錄見 [preflight 紀錄](docs/verification/nuscenes-preflight.md#official-devkit-mini-parity)）。
 
 ## 限制
 

@@ -14,10 +14,11 @@ Implication, not tested here: online recalibration needs a miscalibration detect
 ## Key findings
 
 The table gives pixel P50: the scene mean of each frame's median shift, in pixels,
-between LiDAR points projected with the true and with the corrected calibration.
-Lower is better. Fault names follow the [axis table](#faults-and-fault-axes); the zero-fault row
-is shared by all axes. Negative levels, the other estimands and every paired interval
-are in the [full evidence report](https://kuotunyu.github.io/bev-calibration-lab/evidence/).
+between LiDAR points projected with the true calibration and with the calibration each
+method ends with (for identity, the faulty one). Lower is better. Fault names follow
+the [axis table](#faults-and-fault-axes); the zero-fault row is shared by all axes.
+Negative levels, the other estimands and every paired interval are in the
+[full evidence report](https://kuotunyu.github.io/bev-calibration-lab/evidence/).
 
 <!-- bind-table: metrics#/runs/{column}/{row}/pixel_frame_p50_px/value -->
 | Fault | `identity` | `classical` | `learned-17` | `learned-42` | `learned-73` |
@@ -42,8 +43,9 @@ are in the [full evidence report](https://kuotunyu.github.io/bev-calibration-lab
 
 ![Pixel P50 against injected fault on each camera axis for identity, classical and the three learned seeds, with the break-even against leaving the calibration alone](docs/analysis/operating_envelope_v1/operating-envelope.svg)
 
-The figure and the counts above are a derived analysis of the released evidence, with
-its own source identity; see [the operating envelope](docs/analysis/operating-envelope.md).
+The figure and the counts above are a derived analysis of the released evidence,
+recorded with its own content digest and the SHA-256 of every source document it read;
+see [the operating envelope](docs/analysis/operating-envelope.md).
 The formal [recovery](https://kuotunyu.github.io/bev-calibration-lab/figures/recovery-by-fault-level.svg)
 and [BEV error](https://kuotunyu.github.io/bev-calibration-lab/figures/bev-error-by-range.svg)
 figures keep every method, seed and condition, with exact values and sources on hover.
@@ -55,7 +57,7 @@ timing stress test or BEV error beyond 10 m.
 Camera-LiDAR fusion trusts the extrinsic calibration. Mounts shift, sensors are
 replaced and structures age, so the calibration a stack believes in can drift from the
 physical one without any error being raised: LiDAR depth simply lands on the wrong
-image pixels. In the vocabulary of SOTIF (ISO 21448) such a drift is a triggering
+image pixels. In SOTIF (ISO 21448) terms, such a drift can be treated as a triggering
 condition for fusion errors. The results above argue for monitoring the calibration
 and gating any online correction, because an always-on corrector here makes a correct
 calibration worse. This is a research study; it claims no compliance with ISO 21448,
@@ -66,11 +68,11 @@ ISO 26262 or any other standard.
 ### Sensors and cohort
 
 `CAM_FRONT` and `LIDAR_TOP`. The formal cohort is 150 nuScenes scenes: 100 official-train
-development scenes, 20 calibration scenes drawn from distinct logs, and 30
-official-validation scenes reserved for locked evaluation. Scene assignment is
-stratified by location and ordered by token SHA-256, so it is reproducible and
-independent of anything measured. The nuScenes mini split is for development and
-integration only and never appears in a reported result.
+development scenes, 20 checkpoint-selection scenes (the "calibration" split) drawn
+from distinct logs, and 30 official-validation scenes reserved for locked evaluation.
+Scene assignment is stratified by location and ordered by token SHA-256, so it is
+reproducible and independent of anything measured. The nuScenes mini split is for
+development and integration only and never appears in a reported result.
 
 ### Faults and fault axes
 
@@ -94,8 +96,9 @@ Rotation faults take the levels 0, ±0.1, ±0.25, ±0.5, ±1 and ±2°; translat
 A formal `yaw` is a rotation about the optical axis, not a heading error. The
 [synthetic explorer](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html)
 names its axes in a vehicle frame instead, and states the mapping on its page.
-A separate identity-only timing stress test pairs the camera with other LiDAR sweeps;
-in v1 it carries no information ([known issues](docs/errata.md#2-the-v1-timing-stress-carries-no-information)).
+A separate identity-only timing stress test is meant to pair the camera with other
+LiDAR sweeps; in v1 it selected the same keyframe sweep at almost every offset and
+carries no information ([known issues](docs/errata.md#2-the-v1-timing-stress-carries-no-information)).
 
 ### Methods and estimands
 
@@ -191,7 +194,7 @@ Native data, training and evaluation commands are in
 - [`perturbations/apply.py`](src/bevcalib/perturbations/apply.py): fault construction, source-side composition and the exact inverse.
 - [`correctors/classical.py`](src/bevcalib/correctors/classical.py): the bounded coarse-to-fine edge-alignment search.
 - [`metrics/bootstrap.py`](src/bevcalib/metrics/bootstrap.py): the paired scene bootstrap with SHA-256 counter indices.
-- [`test_nuscenes_mini_parity.py`](tests/integration/test_nuscenes_mini_parity.py): agreement with the official nuScenes devkit on v1.0-mini.
+- [`test_nuscenes_mini_parity.py`](tests/integration/test_nuscenes_mini_parity.py): agreement with the official nuScenes devkit on v1.0-mini (it needs the data, so CI skips it; see the [recorded run](docs/verification/nuscenes-preflight.md#official-devkit-mini-parity)).
 
 ## Limitations
 
