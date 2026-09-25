@@ -117,8 +117,10 @@ def test_axis_buttons_replace_slider_and_reset_to_zero() -> None:
         for step in slider["steps"]:
             changed, changed_layout = step["args"]
             state = explorer_state(axis, float(step["label"]))
-            assert changed["x"][1] == [uv[0] for uv in state["overlay_uv"]]
-            assert changed["y"][3] == [xy[0] for xy in state["reconstructed_xy"]]
+            assert changed["x"][1] == pytest.approx([uv[0] for uv in state["overlay_uv"]], abs=5e-7)
+            assert changed["y"][3] == pytest.approx(
+                [xy[0] for xy in state["reconstructed_xy"]], abs=5e-7
+            )
             assert axis in changed_layout["title"]["text"]
             assert state["unit"] in changed_layout["title"]["text"]
             assert "BEV" in changed_layout["title"]["text"]
@@ -147,6 +149,35 @@ def test_html_is_byte_reproducible_and_self_contained() -> None:
     assert "synthetic" in first
     assert "MIT" in first
     assert "nuScenes" in first
+
+
+@pytest.mark.parametrize("direction", [1, -1])
+def test_html_does_not_depend_on_last_bit_float_differences(
+    monkeypatch: pytest.MonkeyPatch, direction: int
+) -> None:
+    """Another platform's maths library may differ in the last bits of the geometry."""
+    import bevcalib.report.explorer as explorer
+
+    expected = explorer.build_explorer()
+    computed = explorer.explorer_state
+
+    def nudge(value: float) -> float:
+        return value + direction * 16 * math.ulp(max(abs(value), 1.0))
+
+    def nudged_state(axis: str, level: float) -> dict[str, object]:
+        state = computed(axis, level)
+        for key in ("observed_uv", "overlay_uv", "reconstructed_xy"):
+            state[key] = [
+                None if pair is None else [nudge(value) for value in pair] for pair in state[key]
+            ]
+        # A BEV error is a distance, so no platform makes it negative.
+        state["bev_errors_m"] = [
+            None if value is None else max(0.0, nudge(value)) for value in state["bev_errors_m"]
+        ]
+        return state
+
+    monkeypatch.setattr(explorer, "explorer_state", nudged_state)
+    assert explorer.build_explorer() == expected
 
 
 def test_footer_names_only_the_licence_marks_the_bundle_keeps() -> None:
