@@ -50,9 +50,10 @@ jobs:
       - name: Verify the pinned release backend
         run: uv run --frozen python -m bevcalib.release backend --project pyproject.toml
 
-      - name: Run the full development gate
-        run: uv run --frozen python -m bevcalib.dev verify
-
+      # This job does not wait for CI, which runs the full gate on each push to main in
+      # a separate workflow, so a commit that fails CI still deploys. The site build
+      # audits every claim against the committed evidence and stops before writing
+      # anything on a mismatch.
       - name: Build the committed evidence site
         run: uv run --frozen python -m bevcalib.report.site --claims docs/claims.yaml --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output-dir site
 

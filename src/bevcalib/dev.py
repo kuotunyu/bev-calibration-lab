@@ -33,16 +33,25 @@ def _stage_commands() -> dict[str, tuple[str, ...]]:
         "format_check": (python, "-m", "ruff", "format", "--check", "."),
         "lint": (python, "-m", "ruff", "check", "."),
         "typecheck": (python, "-m", "mypy", "src", "tests"),
-        "unit_and_integration_tests": (python, "-m", "pytest", "--no-cov"),
-        "branch_coverage_100": (
+        # The suite runs once and records branch coverage. The next stage applies
+        # the 100% threshold to that same data, so a shortfall still fails under
+        # its own stage name instead of as a test failure.
+        "unit_and_integration_tests": (
             python,
             "-m",
             "pytest",
             "--cov=bevcalib",
             "--cov-branch",
-            "--cov-report=term-missing",
             "--cov-report=json:coverage.json",
-            "--cov-fail-under=100",
+            "--cov-fail-under=0",
+        ),
+        "branch_coverage_100": (
+            python,
+            "-m",
+            "coverage",
+            "report",
+            "--show-missing",
+            "--fail-under=100",
         ),
         "schema_contracts": (python, "-m", "bevcalib.dev", "schema-contracts"),
         "docs_links": (python, "-m", "bevcalib.dev", "docs-links"),
@@ -89,21 +98,43 @@ def verify_schema_contracts(repo_root: Path) -> int:
     return 1 if invalid else 0
 
 
+class _GitListingError(RuntimeError):
+    """Raised when Git cannot list tracked files, so the link check cannot pass by default."""
+
+
 def _iter_markdown_files(repo_root: Path) -> list[Path]:
-    excluded = {".git", ".venv", "build", "dist", "htmlcov"}
-    return [
-        path
-        for path in sorted(repo_root.glob("**/*.md"))
-        if not excluded.intersection(path.relative_to(repo_root).parts)
-        and path.relative_to(repo_root).parts[0] != "artifacts"
-    ]
+    """Return the Markdown files in the Git index, the ones a commit publishes.
+
+    Ignored folders such as linked worktrees are never read, so the local gate checks
+    the same files CI does. The private guard lists files from the index the same way.
+    """
+
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--", "*.md"],
+        cwd=repo_root,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        detail = result.stderr.decode("utf-8", errors="replace").strip()
+        raise _GitListingError(detail or f"git exited with code {result.returncode}")
+    names = sorted({name for name in result.stdout.decode("utf-8").split("\0") if name})
+    # A tracked file deleted from the working tree has no text to check; a link to
+    # it from another file is still reported as broken.
+    return [repo_root / name for name in names if (repo_root / name).is_file()]
 
 
 def verify_docs_links(repo_root: Path) -> int:
-    """Report every local file a Markdown link points at that does not exist."""
+    """Report every link in a tracked Markdown file whose local target does not exist."""
+
+    try:
+        markdown_paths = _iter_markdown_files(repo_root)
+    except _GitListingError as error:
+        print(f"unable to list tracked Markdown files: {error}", file=sys.stderr)
+        return 2
 
     broken: list[tuple[Path, str]] = []
-    for markdown_path in _iter_markdown_files(repo_root):
+    for markdown_path in markdown_paths:
         text = markdown_path.read_text(encoding="utf-8")
         for match in _MARKDOWN_LINK.finditer(text):
             raw_target = match.group("target").strip("<>")
