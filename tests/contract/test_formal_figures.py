@@ -158,3 +158,43 @@ def test_bad_or_changed_sources_and_existing_output_are_not_published(
         assert (output / "keep.txt").read_text(encoding="utf-8") == "retain"
     else:
         assert not output.exists()
+
+
+def test_formal_report_in_a_subdirectory_links_back_to_the_shared_assets(
+    formal_claims_path: Path,
+    formal_directory: Path,
+    tmp_path: Path,
+    small_mapping,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:  # type: ignore[no-untyped-def]
+    """The site keeps asset URLs stable while the report page moves to evidence/."""
+    import bevcalib.report.formal as report
+    from bevcalib.analysis.claims import load_registry
+    from bevcalib.analysis.formal_claims import PublicationRow
+    from bevcalib.report.site import _validate_local_links
+
+    source = load_registry(formal_claims_path).claims[0]
+    row = PublicationRow(
+        "metrics",
+        "Synthetic row",
+        "percent",
+        (("value", source.metric_path, source.report_binding.expected_value),),
+    )
+    monkeypatch.setattr(report, "publication_rows", lambda _: iter((row,)))
+    site = tmp_path / "site"
+    page = report.build_formal_report(
+        formal_claims_path,
+        formal_directory,
+        site,
+        repository_root=tmp_path,
+        include_figures=True,
+        page="evidence/index.html",
+    )
+
+    assert page == site / "evidence" / "index.html"
+    assert not (site / "index.html").exists()
+    text = page.read_text(encoding="utf-8")
+    assert 'href="../claims.yaml"' in text
+    assert 'src="../figures/recovery-by-fault-level.svg"' in text
+    assert 'href="../evidence/metrics.json"' in text
+    _validate_local_links(site, (page,))

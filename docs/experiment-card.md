@@ -1,5 +1,7 @@
 # 研究卡：外參故障的敏感度與恢復
 
+[English](experiment-card.en.md)
+
 ## 研究問題
 
 在固定的 nuScenes 感測器觀測上，LiDAR–相機外參偏差如何影響幾何誤差？identity、傳統最佳化與學習式修正能恢復多少？本研究衡量幾何與校正行為，不把地面接觸點重建當成 detector 準確率，也沒有閉迴路 AEB 或實車安全驗證。
@@ -8,7 +10,20 @@
 
 使用 `CAM_FRONT` 與 `LIDAR_TOP`。官方 train 的 100 個 development scenes 用於訓練；官方 train 的 20 個 calibration scenes 來自不同 logs，用於固定校準目標與 checkpoint 選擇；官方 val 的 30 個 scenes 留作 locked evaluation。角色之間檢查 log、scene、sample 與 sensor identifiers 不重疊。mini 只供開發與整合測試。
 
-分派依 location 分層與 token SHA-256 排序，不能依結果換 cohort。固定設定見[protocol](../configs/protocols/nuscenes_calibration_v1.yaml)、[故障矩陣](../configs/perturbations/formal_v1.yaml)與[cohort 契約](cohort-contract.md)。旋轉和平移逐軸施加；timing 是獨立的 identity-only sweep selection 壓力測試，沒有學習式 timing recovery。
+分派依 location 分層與 token SHA-256 排序，不能依結果換 cohort。固定設定見[protocol](../configs/protocols/nuscenes_calibration_v1.yaml)、[故障矩陣](../configs/perturbations/formal_v1.yaml)與[cohort 契約](cohort-contract.md)。旋轉和平移逐軸施加；timing 是獨立的 identity-only sweep selection 壓力測試，沒有學習式 timing recovery，而且在 v1 沒有提供資訊（見[已知問題](errata.zh-TW.md)）。
+
+### 故障軸
+
+故障組合在 CAM_FRONT 外參的相機端，所以正式的軸名稱指的是相機光學座標系（x 向右、y 向下、z 向前），不是車體座標。正式的 `yaw` 是繞光軸的旋轉，不是航向誤差。identity 欄是尚未修正時，1° 或 0.1 m 的故障讓投影 LiDAR 點移動的距離。
+
+| 正式名稱 | 光學座標系中的軸 | 物理效果 | identity 在 1° 或 0.1 m 的 pixel P50 |
+| --- | --- | --- | ---: |
+| `roll` | x（向右） | 俯仰（tilt） | 22.44 px <!-- bind: 22.44 = metrics#/runs/identity/roll:1/pixel_frame_p50_px/value --> |
+| `pitch` | y（向下） | 偏擺（pan） | 23.95 px <!-- bind: 23.95 = metrics#/runs/identity/pitch:1/pixel_frame_p50_px/value --> |
+| `yaw` | z（光軸） | 影像平面內旋轉 | 7.74 px <!-- bind: 7.74 = metrics#/runs/identity/yaw:1/pixel_frame_p50_px/value --> |
+| `x` | x（向右） | 橫向偏移 | 10.92 px <!-- bind: 10.92 = metrics#/runs/identity/x:0.1/pixel_frame_p50_px/value --> |
+| `y` | y（向下） | 垂直偏移 | 10.98 px <!-- bind: 10.98 = metrics#/runs/identity/y:0.1/pixel_frame_p50_px/value --> |
+| `z` | z（光軸） | 前向偏移 | 3.57 px <!-- bind: 3.57 = metrics#/runs/identity/z:0.1/pixel_frame_p50_px/value --> |
 
 學習式模型使用 seeds 17、42、73，各自保留 checkpoint 與結果。依相同 calibration corruption policy，選擇最早達到最低 calibration loss 的 checkpoint；locked evaluation 不參與選模、超參數或圖表條件選擇。[訓練設定](../configs/correctors/convnextv2_tiny_v1.yaml)與[訓練契約](training-contract.md)記錄完整規則。
 
@@ -33,5 +48,7 @@
 校正器會改動原本正確的標定，因此零故障表現也是必要結果。Classical edge objective 改善不保證真實 pose 或 BEV 改善；learned training completion 也不是效果保證。現有結果不能據以宣稱已取得通用、可靠的校正模型。
 
 地面平面假設在真實 box bottom 不落在該平面時，可在零故障留下非零重建誤差。弱恢復與退步的全部原因尚未確定，不能宣稱已證明不存在實作問題。後續診斷應保留失敗，區分程式修復與新的研究假說；不得用已看過的 locked evaluation 直接調參或替換較漂亮的 seed。
+
+發布後找到三項閱讀注意事項：±0.25° 的 identity recovery 是浮點數邊界假象、timing 壓力測試沒有提供資訊，以及 10 m 以外的 BEV 平均值由條件很差的射線主導，見 [v1.0.0 已知問題](errata.zh-TW.md)。修正在哪些範圍有幫助的衍生分析見 [operating envelope](analysis/operating-envelope.md)。
 
 正式報告、互動展示與 v1.0.0 發布已完成驗收，詳見[發布核對](verification/publication-and-interchange.md)。工程驗收不改變上述研究限制。任何新的分析或實驗都需獨立來源身份，不能回寫這份凍結結果。

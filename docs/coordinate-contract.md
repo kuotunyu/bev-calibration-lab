@@ -128,8 +128,11 @@ assumed = true ∘ fault
 The fault is composed on the **source** side, in the sensor's own frame. That is
 what a miscalibrated extrinsic physically is: the sensor is believed to sit
 slightly rotated or shifted from where it really does, measured along its own
-axes. So a 0.2 m fault on the sensor x axis moves the assumed sensor 0.2 m along
-the direction the sensor points, not 0.2 m east.
+axes. In this study the fault is applied to the camera's calibrated transform, so
+those are the CAM_FRONT optical-frame axes: x points right, y down and z forward
+along the viewing direction. A 0.2 m fault on x therefore moves the assumed camera
+0.2 m to its right; only a fault on z moves it along the direction the camera
+points. None of them is 0.2 m east.
 
 Composing on the target side is equally valid arithmetic and answers a different
 question, which is why `tests/unit/perturbations/test_apply.py` asserts both that
@@ -144,6 +147,26 @@ R = Rz(yaw) · Ry(pitch) · Rx(roll)
 Roll about x first, then pitch about y, then yaw about z, all about fixed axes.
 With only one angle nonzero every convention agrees, so the test that pins this
 uses all three at once.
+
+### Formal fault axes are camera axes
+
+Because the fault is composed in the CAM_FRONT optical frame, the names roll,
+pitch and yaw refer to camera axes, not to vehicle axes. Formal `yaw` is a rotation
+about the optical axis, not a heading error. The released identity results show
+how far each fault moves projected LiDAR points before any correction:
+
+| Formal label | Axis in the optical frame | Physical effect | Identity pixel P50 at 1° or 0.1 m |
+| --- | --- | --- | ---: |
+| `roll` | x (right) | tilt | 22.44 px <!-- bind: 22.44 = metrics#/runs/identity/roll:1/pixel_frame_p50_px/value --> |
+| `pitch` | y (down) | pan | 23.95 px <!-- bind: 23.95 = metrics#/runs/identity/pitch:1/pixel_frame_p50_px/value --> |
+| `yaw` | z (optical axis) | in-plane rotation | 7.74 px <!-- bind: 7.74 = metrics#/runs/identity/yaw:1/pixel_frame_p50_px/value --> |
+| `x` | x (right) | lateral offset | 10.92 px <!-- bind: 10.92 = metrics#/runs/identity/x:0.1/pixel_frame_p50_px/value --> |
+| `y` | y (down) | vertical offset | 10.98 px <!-- bind: 10.98 = metrics#/runs/identity/y:0.1/pixel_frame_p50_px/value --> |
+| `z` | z (optical axis) | forward offset | 3.57 px <!-- bind: 3.57 = metrics#/runs/identity/z:0.1/pixel_frame_p50_px/value --> |
+
+The [synthetic calibration explorer](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html)
+composes its fault on the global side of a vehicle-frame scene instead, so its axis
+names differ; its page states the mapping to these formal axes.
 
 Two things a fault never does. It never touches an observation: no point and no
 pixel changes, because an error mixing a sensing change with a calibration change
@@ -283,8 +306,9 @@ its timing conditions have no pose-recovery summary.
 Public summary export contains aggregate numbers and provenance hashes, excluding
 scene, log, sample and sensor tokens. A report consumes safe aggregate JSON and its
 claims registry without requiring the private manifest, row files, data or checkpoints.
-Formal paired scene bootstrap and the final five-document study artifact set remain
-Task J; these descriptive summaries do not substitute for those statistical results.
+The formal paired scene bootstrap and the final five-document study artifact set are
+produced separately, under the [formal analysis contract](contracts/formal-analysis.md);
+these descriptive summaries do not substitute for those statistical results.
 
 ## Dataset readiness verification
 

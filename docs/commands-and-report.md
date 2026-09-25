@@ -2,8 +2,11 @@
 
 ## Offline synthetic calibration explorer
 
-The [explorer](demo/calibration-explorer.html) embeds Plotly.js and
-preserves its copyright and MIT notice. It needs no dataset, model, server, or
+The [explorer](demo/calibration-explorer.html)
+([hosted copy](https://kuotunyu.github.io/bev-calibration-lab/demo/calibration-explorer.html))
+embeds Plotly.js and preserves its copyright and MIT notice; the MapLibre GL JS code
+in the bundle keeps its BSD-3-Clause identifier and a link to the full licence text.
+It needs no dataset, model, server, or
 network connection. Browser interaction acceptance completed for the release;
 see [release verification](verification/publication-and-interchange.md).
 
@@ -194,6 +197,35 @@ to a validated source model or to the registry during construction are refused.
 Copied evidence retains the original source bytes, including omitted optional fields.
 
 Omitting `--formal` keeps the legacy safe-summary report interface.
+
+## Derived operating envelope
+
+The derived analysis in [docs/analysis](analysis/operating-envelope.md) is rebuilt
+from the released evidence with:
+
+```bash
+uv run --frozen python -m bevcalib.analysis.operating_envelope --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output-dir artifacts/operating-envelope
+```
+
+It writes `operating-envelope.json` and `operating-envelope.svg` into a new directory
+and refuses an existing one. It reads `metrics.json`, `intervals.json` and
+`recovery.json` through the formal artifact-set validator, refuses documents whose
+digest differs from the released v1 evidence, and labels its output `derived` with the
+digest of every source. A contract test compares a rebuild with the committed files.
+
+## Pages site
+
+```bash
+uv run --frozen python -m bevcalib.report.site --claims docs/claims.yaml --artifacts-dir docs/evidence/nuscenes_calibration_v1 --output-dir site
+```
+
+The site root `index.html` is a small landing page. It states the result with every
+observed number bound to its verified claim, shows the operating-envelope figure and
+links the explorer, the full report, the repository, the release and the known issues.
+The complete formal report is `evidence/index.html`, next to the five source
+documents it copies; `claims.yaml`, `figures/`, `analysis/` and `demo/` keep fixed
+paths, and `site-inventory.json` lists every file with its SHA-256. The Pages workflow
+runs this command to build the published site.
 
 ## Validate a complete set of study inputs
 

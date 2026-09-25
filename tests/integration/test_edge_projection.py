@@ -127,7 +127,7 @@ def test_a_yaw_fault_makes_the_alignment_score_worse(aligned_scene, yaw_deg: flo
 
 
 def test_a_larger_yaw_fault_scores_worse_than_a_smaller_one(aligned_scene) -> None:  # type: ignore[no-untyped-def]
-    """Monotonicity is what makes the score usable as an optimiser objective at P2-10."""
+    """Monotonicity is what makes the score usable as the classical optimiser's objective."""
 
     sweep, image_edges = aligned_scene
 

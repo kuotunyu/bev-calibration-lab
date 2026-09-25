@@ -130,7 +130,7 @@ no_implicit_optional = true
 warn_unused_configs = true
 
 [tool.mutmut]
-# Release-gate mutation testing of the pure core only (plan task P2-18):
+# Release-gate mutation testing of the pure core only:
 # geometry, perturbations, operators, correctors, metrics and formal pairing/reductions. The nuScenes
 # adapter, the CLI, the training glue and the artifact writers are held to the
 # same 100% branch gate but are not scored here, because their behaviour is
@@ -146,10 +146,22 @@ only_mutate = [
     "src/bevcalib/analysis/estimands.py",
     "src/bevcalib/analysis/aggregate.py",
 ]
-also_copy = ["configs", "schemas", "docs", ".agents", ".github"]
+# Contract tests also read the READMEs, NOTICE and CITATION.cff from the repository
+# root, so those single files are copied into the sandbox as well.
+also_copy = [
+    "configs",
+    "schemas",
+    "docs",
+    ".agents",
+    ".github",
+    "README.md",
+    "README.en.md",
+    "NOTICE",
+    "CITATION.cff",
+]
 # One test file is excluded because it READS first-party source rather than
 # running it: the envelope conformance check scans `src/` for any mention of
-# P1's package, and mutmut rewrites `src/` to create mutants, so inside the
+# driving-risk-metrics' package, and mutmut rewrites `src/` to create mutants, so inside the
 # sandbox that test describes the sandbox rather than the project. It exercises
 # no mutable code path, so excluding it costs no killing power.
 pytest_add_cli_args = [

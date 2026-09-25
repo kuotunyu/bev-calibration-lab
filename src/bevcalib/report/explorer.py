@@ -57,21 +57,35 @@ def explorer_state(axis: str, level: float) -> dict[str, Any]:
     }
 
 
+def _plotted(value: float) -> float:
+    """Round a plotted coordinate so the page does not depend on the platform.
+
+    Maths libraries can differ in the last bits of the geometry. The page shows
+    three decimals, so six keep every shown digit; adding 0.0 turns -0.0 into 0.0.
+    """
+    return round(value, 6) + 0.0
+
+
 def _update(state: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    contacts = state["reconstructed_xy"]
+    observed = [[_plotted(value) for value in uv] for uv in state["observed_uv"]]
+    overlay = [[_plotted(value) for value in uv] for uv in state["overlay_uv"]]
+    contacts = [
+        None if xy is None else [_plotted(value) for value in xy]
+        for xy in state["reconstructed_xy"]
+    ]
     errors = state["bev_errors_m"]
     texts = ["unavailable" if value is None else f"BEV error: {value:.3f} m" for value in errors]
     mean = "unavailable" if None in errors else f"{sum(errors) / len(errors):.3f} m"
     data = {
         "x": [
-            [uv[0] for uv in state["observed_uv"]],
-            [uv[0] for uv in state["overlay_uv"]],
+            [uv[0] for uv in observed],
+            [uv[0] for uv in overlay],
             [xy[1] for xy in state["true_xy"]],
             [None if xy is None else xy[1] for xy in contacts],
         ],
         "y": [
-            [uv[1] for uv in state["observed_uv"]],
-            [uv[1] for uv in state["overlay_uv"]],
+            [uv[1] for uv in observed],
+            [uv[1] for uv in overlay],
             [xy[0] for xy in state["true_xy"]],
             [None if xy is None else xy[0] for xy in contacts],
         ],

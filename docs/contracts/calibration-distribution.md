@@ -9,6 +9,9 @@ the envelope can identify the exporter commit without a self-reference.
 
 The portfolio export is fixed to `method="identity"`, `seed=None`, `axis="yaw"`,
 `level=1.0` (degrees). This choice precedes inspecting the exported distribution.
+The formal `yaw` is a rotation about the CAM_FRONT optical axis, an in-plane image
+rotation, not a vehicle heading error; see the
+[coordinate contract](../coordinate-contract.md#formal-fault-axes-are-camera-axes).
 Do not select a learned seed or change the condition to improve the result.
 
 `export_calibration_distribution` in

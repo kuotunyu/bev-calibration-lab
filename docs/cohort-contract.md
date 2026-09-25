@@ -1,9 +1,10 @@
 # Cohort contract before the first formal freeze
 
-Task F supplies data-independent construction and integrity checks. No formal cohort,
-training result or dataset-derived claim was created here. The synthetic tests use
-invented identifiers and timestamps. Actual preprocessing, the production Torch backend
-and evaluation services belong to Task G; configuration alone does not establish the
+This contract covers data-independent construction and integrity checks. No formal
+cohort, training result or dataset-derived claim was created by it. The synthetic tests
+use invented identifiers and timestamps. Actual preprocessing, the production Torch
+backend and evaluation services are specified in the
+[training contract](training-contract.md); configuration alone does not establish the
 resolution of a real tensor.
 
 ## Protocol identity
@@ -102,7 +103,7 @@ formal consumers refuse their incomplete role counts.
   mixed-log permutation invariance, and a tiny exhaustive assignment oracle independent
   of the production solver. These are synthetic correctness checks, not nuScenes results.
 
-The corrector configuration pins 448 by 800 with positive multiples of 32. Task G must
-apply the same geometry to RGB, projection, validity and camera intrinsics and validate
+The corrector configuration pins 448 by 800 with positive multiples of 32. Preprocessing
+must apply the same geometry to RGB, projection, validity and camera intrinsics and validate
 the final five-channel tensor. The existing array-stacking helper remains compatible
 with explicitly synthetic shapes.

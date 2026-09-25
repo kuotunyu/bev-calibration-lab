@@ -2,9 +2,9 @@
 
 `tests/fixtures/portfolio_artifact_envelope_v1.json` holds the exact bytes of the
 canonical envelope produced by `driving-risk-metrics`. They were copied in, not
-imported: this repository must never depend on P1 at runtime, and a shared package
-would turn three independent implementations into one implementation with three
-call sites, which proves nothing.
+imported: this repository must never depend on driving-risk-metrics at runtime,
+and a shared package would turn three independent implementations into one
+implementation with three call sites, which proves nothing.
 
 If a future change to the envelope specification breaks these tests, the fix is to
 change all three repositories and recopy the fixture, not to relax the test.
@@ -22,7 +22,7 @@ FIXTURE = Path(__file__).resolve().parents[1] / "fixtures" / "portfolio_artifact
 
 
 def test_this_repository_does_not_import_the_p1_package_anywhere() -> None:
-    """Runtime coupling to P1 would make this conformance check circular."""
+    """Runtime coupling to driving-risk-metrics would make this conformance check circular."""
 
     source_root = Path(__file__).resolve().parents[2] / "src"
     offenders = [
@@ -35,7 +35,7 @@ def test_this_repository_does_not_import_the_p1_package_anywhere() -> None:
 
 
 def test_an_artifact_produced_by_p1_is_accepted_here_unchanged() -> None:
-    """The whole point of the envelope: P1 writes it, P2 and P3 read it."""
+    """The point of the envelope: driving-risk-metrics writes it, the other two read it."""
 
     from bevcalib.artifacts.envelope import PortfolioArtifactEnvelopeV1, canonical_json_bytes
 
@@ -50,7 +50,7 @@ def test_an_artifact_produced_by_p1_is_accepted_here_unchanged() -> None:
 
 
 def test_every_portfolio_repository_is_an_accepted_producer() -> None:
-    """P3 consumes P2 artifacts, so the allowlist has to name all three, and only three."""
+    """perception-error-to-aeb consumes this repository's artifacts, so all three are named."""
 
     from bevcalib.artifacts.envelope import PortfolioArtifactEnvelopeV1
 

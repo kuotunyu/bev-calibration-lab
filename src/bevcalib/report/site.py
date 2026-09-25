@@ -1,4 +1,10 @@
-"""Assemble the validated formal report and offline explorer for Pages."""
+"""Assemble the Pages site: a small landing page, the full formal report and the explorer.
+
+The landing page at the site root states the result and links onward. The complete
+formal report lives at `evidence/index.html`, next to the five source documents it
+copies; the claims registry, the formal figures and the explorer keep the URLs they
+had when the report itself was the root page.
+"""
 
 from __future__ import annotations
 
@@ -12,9 +18,11 @@ from urllib.parse import unquote, urlsplit
 
 from bevcalib.report.explorer import build_explorer
 from bevcalib.report.formal import build_formal_report
+from bevcalib.report.landing import build_overview
 
 _DOCUMENTS = ("metrics", "intervals", "recovery", "timing", "exclusions")
 _FIGURES = ("recovery-by-fault-level", "bev-error-by-range")
+_REPORT = "evidence/index.html"
 
 
 def _sha256(path: Path) -> str:
@@ -52,9 +60,12 @@ def _validate_local_links(site_root: Path, pages: Sequence[Path]) -> None:
 
 def _required_assets(output_dir: Path) -> tuple[Path, ...]:
     relative = (
+        "analysis/operating-envelope.json",
+        "analysis/operating-envelope.svg",
         "claims.yaml",
         "demo/calibration-explorer.html",
         "index.html",
+        _REPORT,
         *(f"evidence/{name}.json" for name in _DOCUMENTS),
         *(f"figures/{name}.svg" for name in _FIGURES),
     )
@@ -108,24 +119,35 @@ def build_site(
     if output_dir.exists():
         raise FileExistsError(f"output directory already exists: {output_dir}")
     before = _input_snapshot(claims_path, artifacts_dir)
-    index = build_formal_report(
+    report = build_formal_report(
         claims_path,
         artifacts_dir,
         output_dir,
         repository_root=repository_root,
         include_figures=True,
+        page=_REPORT,
     )
     demo = output_dir / "demo" / "calibration-explorer.html"
     demo.parent.mkdir()
     demo.write_text(build_explorer(), encoding="utf-8", newline="\n")
-    index_text = index.read_text(encoding="utf-8")
+    report_text = report.read_text(encoding="utf-8")
     marker = "</html>"
-    if marker not in index_text:
+    if marker not in report_text:
         raise ValueError("formal report has no closing html element")
-    link = '<p><a href="demo/calibration-explorer.html">Open synthetic calibration explorer</a></p>'
-    index.write_text(index_text.replace(marker, link + marker, 1), encoding="utf-8", newline="\n")
+    link = (
+        '<p><a href="../index.html">Project overview</a> · '
+        '<a href="../demo/calibration-explorer.html">Open synthetic calibration explorer</a></p>'
+    )
+    report.write_text(report_text.replace(marker, link + marker, 1), encoding="utf-8", newline="\n")
+    for relative, text in build_overview(
+        claims_path, artifacts_dir, repository_root=repository_root
+    ).items():
+        target = output_dir / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(text, encoding="utf-8", newline="\n")
+    index = output_dir / "index.html"
     assets = _required_assets(output_dir)
-    _validate_local_links(output_dir, (index, demo))
+    _validate_local_links(output_dir, (index, report, demo))
     if _input_snapshot(claims_path, artifacts_dir) != before:
         raise ValueError("input changed during site assembly")
     _write_inventory(output_dir, assets)

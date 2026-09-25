@@ -1,0 +1,65 @@
+cff-version: 1.2.0
+title: bev-calibration-lab
+message: >-
+  If you use this software or its published evidence, please cite it using the
+  metadata below, and cite nuScenes as listed under references. The code is
+  MIT-licensed; the nuScenes-derived evidence and figures are shared for
+  non-commercial research under the nuScenes terms of use (CC BY-NC-SA 4.0);
+  see NOTICE.
+type: software
+authors:
+  - family-names: Kuo
+    given-names: Tun-Yu
+    alias: kuotunyu
+repository-code: https://github.com/kuotunyu/bev-calibration-lab
+url: https://kuotunyu.github.io/bev-calibration-lab/
+abstract: >-
+  A controlled study of LiDAR-camera extrinsic calibration faults on nuScenes.
+  Single-axis rotation and translation faults are injected into the CAM_FRONT
+  extrinsic of a locked evaluation cohort, and identity, a single-frame
+  edge-alignment optimizer and three seeds of a ConvNeXtV2-Tiny corrector are
+  compared with paired scene-bootstrap intervals. The mean of the three learned
+  seeds beats the classical optimizer on geodesic rotation error, translation-norm
+  error, pixel error and recovery in every condition of the fault grid but keeps a
+  residual error floor, so it improves on leaving the calibration alone only for
+  larger faults. The README's result numbers are checked against the committed
+  evidence: formal values through a machine-checked claims registry, derived counts
+  through a derived document whose source digests are verified.
+keywords:
+  - autonomous-driving
+  - sensor-fusion
+  - lidar-camera-calibration
+  - extrinsic-calibration
+  - nuscenes
+  - reproducibility
+license: MIT
+version: 1.0.0
+date-released: "2026-09-15"
+references:
+  - type: conference-paper
+    title: "nuScenes: A Multimodal Dataset for Autonomous Driving"
+    authors:
+      - family-names: Caesar
+        given-names: Holger
+      - family-names: Bankiti
+        given-names: Varun
+      - family-names: Lang
+        given-names: Alex H.
+      - family-names: Vora
+        given-names: Sourabh
+      - family-names: Liong
+        given-names: Venice Erin
+      - family-names: Xu
+        given-names: Qiang
+      - family-names: Krishnan
+        given-names: Anush
+      - family-names: Pan
+        given-names: Yu
+      - family-names: Baldan
+        given-names: Giancarlo
+      - family-names: Beijbom
+        given-names: Oscar
+    collection-title: >-
+      Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern
+      Recognition (CVPR)
+    year: 2020

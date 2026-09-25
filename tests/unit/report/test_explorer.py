@@ -117,8 +117,10 @@ def test_axis_buttons_replace_slider_and_reset_to_zero() -> None:
         for step in slider["steps"]:
             changed, changed_layout = step["args"]
             state = explorer_state(axis, float(step["label"]))
-            assert changed["x"][1] == [uv[0] for uv in state["overlay_uv"]]
-            assert changed["y"][3] == [xy[0] for xy in state["reconstructed_xy"]]
+            assert changed["x"][1] == pytest.approx([uv[0] for uv in state["overlay_uv"]], abs=5e-7)
+            assert changed["y"][3] == pytest.approx(
+                [xy[0] for xy in state["reconstructed_xy"]], abs=5e-7
+            )
             assert axis in changed_layout["title"]["text"]
             assert state["unit"] in changed_layout["title"]["text"]
             assert "BEV" in changed_layout["title"]["text"]
@@ -141,12 +143,55 @@ def test_html_is_byte_reproducible_and_self_contained() -> None:
 
     first = build_explorer()
     assert first == build_explorer()
-    assert '<html lang="zh-Hant">' in first
+    assert '<html lang="en">' in first
     assert "<script src=" not in first
     assert 'id="calibration-explorer"' in first
     assert "synthetic" in first
     assert "MIT" in first
     assert "nuScenes" in first
+
+
+@pytest.mark.parametrize("direction", [1, -1])
+def test_html_does_not_depend_on_last_bit_float_differences(
+    monkeypatch: pytest.MonkeyPatch, direction: int
+) -> None:
+    """Another platform's maths library may differ in the last bits of the geometry."""
+    import bevcalib.report.explorer as explorer
+
+    expected = explorer.build_explorer()
+    computed = explorer.explorer_state
+
+    def nudge(value: float) -> float:
+        return value + direction * 16 * math.ulp(max(abs(value), 1.0))
+
+    def nudged_state(axis: str, level: float) -> dict[str, object]:
+        state = computed(axis, level)
+        for key in ("observed_uv", "overlay_uv", "reconstructed_xy"):
+            state[key] = [
+                None if pair is None else [nudge(value) for value in pair] for pair in state[key]
+            ]
+        # A BEV error is a distance, so no platform makes it negative.
+        state["bev_errors_m"] = [
+            None if value is None else max(0.0, nudge(value)) for value in state["bev_errors_m"]
+        ]
+        return state
+
+    monkeypatch.setattr(explorer, "explorer_state", nudged_state)
+    assert explorer.build_explorer() == expected
+
+
+def test_footer_names_only_the_licence_marks_the_bundle_keeps() -> None:
+    """The bundle keeps MapLibre GL JS's identifier and a link, not its licence text."""
+    from bevcalib.report.explorer import build_explorer
+
+    html = build_explorer()
+    footer = html.split("<footer>", 1)[1].split("</footer>", 1)[0]
+    assert "keeps its copyright line and MIT licence identifier" in footer
+    assert "the BSD-3-Clause identifier of the MapLibre GL JS code it includes" in footer
+    assert "a link to the full MapLibre GL JS licence text" in footer
+    assert "notice" not in footer
+    assert "Plotly, Inc." in html and "Licensed under the MIT license" in html
+    assert "@license 3-Clause BSD. Full text of license: https://github.com/maplibre/" in html
 
 
 def test_figure_keeps_unavailable_reconstruction_explicit(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -200,3 +245,70 @@ def test_explorer_controls_and_readout_are_outside_two_plot_containers() -> None
     assert 'id="explorer-states" type="application/json"' in html
     assert "切換軸會回到零故障" in html
     assert "重合" in html
+
+
+def test_page_is_english_first_with_chinese_labels_and_states_the_axis_mapping() -> None:
+    """The formal study names camera optical-frame axes; this explorer names vehicle axes."""
+    from bevcalib.report.explorer import build_explorer
+
+    html = build_explorer()
+    note = html.split('<aside class="axis-note"', 1)[1].split("</aside>", 1)[0]
+    for mapping in (
+        "Formal roll (tilt) \u2248 explorer pitch",
+        "formal pitch (pan) = explorer yaw",
+        "formal yaw (in-plane rotation) \u2248 explorer roll with the opposite sign",
+        "Formal x (lateral) = explorer y",
+        "formal y (vertical) = explorer z",
+        "formal z (forward) = explorer x with the opposite sign",
+    ):
+        assert mapping in note
+    assert 'lang="zh-Hant"' in note
+    for axis, meaning in (
+        ("roll", "in-plane"),
+        ("pitch", "tilt"),
+        ("yaw", "pan"),
+        ("x", "forward"),
+        ("y", "lateral"),
+        ("z", "vertical"),
+    ):
+        assert f'data-axis="{axis}"' in html
+        assert f">{axis} \u00b7 {meaning}</button>" in html
+
+
+@pytest.mark.parametrize(
+    ("formal", "explorer", "sign", "tolerance_px"),
+    [
+        ("pitch", "yaw", 1, 1e-9),
+        ("x", "y", 1, 1e-9),
+        ("y", "z", 1, 1e-9),
+        ("z", "x", -1, 1e-9),
+        ("roll", "pitch", 1, 1.0),
+        ("yaw", "roll", -1, 5.0),
+    ],
+)
+def test_axis_note_matches_a_formal_camera_side_fault(
+    formal: str, explorer: str, sign: int, tolerance_px: float
+) -> None:
+    """A formal fault composed on the camera side lands where the note says it does."""
+    import numpy as np
+
+    from bevcalib.artifacts.result_documents import fault_for_condition
+    from bevcalib.geometry.projection import project_camera
+    from bevcalib.geometry.quaternions import matrix_to_quaternion
+    from bevcalib.geometry.se3 import SE3, inverse, transform_points
+    from bevcalib.perturbations.apply import apply_metadata_fault
+
+    level = 2.0 if formal in ("roll", "pitch", "yaw") else 0.2
+    points = np.array([[10.0, -2.0, 0.0], [20.0, 0.0, 0.0], [40.0, 2.0, 0.0]])
+    intrinsic = np.array([[800.0, 0.0, 400.0], [0.0, 800.0, 240.0], [0.0, 0.0, 1.0]])
+    camera_from_global = SE3(
+        matrix_to_quaternion(np.array([[0.0, -1.0, 0.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0]])),
+        (0.0, 1.5, 0.0),
+    )
+    assumed = apply_metadata_fault(inverse(camera_from_global), fault_for_condition(formal, level))
+    formal_uv = project_camera(transform_points(inverse(assumed), points), intrinsic, (800, 480)).uv
+    explorer_uv = np.array(explorer_state(explorer, sign * level)["overlay_uv"])
+
+    assert np.abs(explorer_uv - formal_uv).max() <= tolerance_px
+    other = np.array(explorer_state(explorer, -sign * level)["overlay_uv"])
+    assert np.abs(other - formal_uv).max() > 5.0
